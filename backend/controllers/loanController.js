@@ -213,3 +213,173 @@ export const deleteLoan = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
+/** * Helper: add months to a date */
+
+function addMonths(date, months) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+function safeNumber(val) {
+  const num = Number(val);
+  return isNaN(num) || !isFinite(num) ? 0 : Number(num.toFixed(2));
+}
+
+export function recalculateScheduleWithPrepayment(
+  loan,
+  amount,
+  mode,
+  installment
+) {
+  const repayments = loan.repayments;
+  const monthlyRate = loan.interestRate / 12 / 100;
+  const currentInstallment = Number(installment);
+
+  // Validate selected installment
+  if (!repayments[currentInstallment - 1]) {
+    throw new Error("Invalid installment selected for prepayment");
+  }
+
+  // Outstanding principal at selected installment
+  let outstanding = repayments[currentInstallment - 1].scheduleOS;
+  outstanding -= Number(amount);
+  if (outstanding < 0) outstanding = 0;
+
+  // --- CASE 1: Reduce Tenure (keep EMI same) ---
+  if (mode === "reduceTenure") {
+    // Calculate original EMI from loan amount, tenure, and rate
+    const emi =
+      (loan.loanAmount * monthlyRate) /
+      (1 - Math.pow(1 + monthlyRate, -loan.tenure));
+
+    let newRepayments = [];
+    let i = currentInstallment;
+    const baseDate = repayments[currentInstallment - 1].dueDate;
+
+    while (outstanding > 0) {
+      const interest = outstanding * monthlyRate;
+      let principalPart = emi - interest;
+      if (principalPart > outstanding) principalPart = outstanding;
+      outstanding -= principalPart;
+
+      newRepayments.push({
+        installmentNo: i + 1,
+        dueDate: addMonths(new Date(baseDate), i - currentInstallment + 1),
+        principal: Number(principalPart.toFixed(2)),
+        interest: Number(interest.toFixed(2)),
+        totalEMI: Number((principalPart + interest).toFixed(2)),
+        scheduleOS: Number(outstanding.toFixed(2)),
+        status: "Pending",
+      });
+
+      i++;
+    }
+
+    return {
+      repayments: [
+        ...repayments.slice(0, currentInstallment),
+        ...newRepayments,
+      ],
+    };
+  }
+
+  // --- CASE 2: Reduce EMI (keep tenure same) ---
+  if (mode === "reduceEMI") {
+    const remainingTenure = loan.tenure - currentInstallment;
+    if (remainingTenure <= 0) return { repayments };
+
+    const emi =
+      (outstanding * monthlyRate) /
+      (1 - Math.pow(1 + monthlyRate, -remainingTenure));
+
+    let newRepayments = [];
+    let i = currentInstallment;
+    const baseDate = repayments[currentInstallment - 1].dueDate;
+
+    while (outstanding > 0 && i < loan.tenure) {
+      const interest = outstanding * monthlyRate;
+      let principalPart = emi - interest;
+      if (principalPart > outstanding) principalPart = outstanding;
+      outstanding -= principalPart;
+
+      newRepayments.push({
+        installmentNo: i + 1,
+        dueDate: addMonths(new Date(baseDate), i - currentInstallment + 1),
+        principal: Number(principalPart.toFixed(2)),
+        interest: Number(interest.toFixed(2)),
+        totalEMI: Number((principalPart + interest).toFixed(2)),
+        scheduleOS: Number(outstanding.toFixed(2)),
+        status: "Pending",
+      });
+
+      i++;
+    }
+
+    return {
+      repayments: [
+        ...repayments.slice(0, currentInstallment),
+        ...newRepayments,
+      ],
+    };
+  }
+
+  throw new Error("Invalid prepayment mode");
+}
+
+export const recalculatedSchedule = async (req, res) => {
+  try {
+    const { loanId } = req.params;
+    const { amount, mode, installment } = req.body;
+
+    // Input validations
+    if (!loanId)
+      return res.status(400).json({ message: "Loan ID is required" });
+    if (!amount || amount <= 0)
+      return res.status(400).json({ message: "Prepayment amount must be > 0" });
+    if (!["reduceTenure", "reduceEMI"].includes(mode))
+      return res.status(400).json({ message: "Invalid prepayment mode" });
+
+    const loan = await Loan.findById(loanId);
+    if (!loan) return res.status(404).json({ message: "Loan not found" });
+    if (!installment || installment < 1 || installment > loan.repayments.length)
+      return res.status(400).json({ message: "Invalid installment number" });
+
+    // Recalculate schedule
+    const updated = recalculateScheduleWithPrepayment(
+      loan,
+      amount,
+      mode,
+      installment
+    );
+
+    if (!updated?.repayments)
+      return res
+        .status(500)
+        .json({ message: "Failed to recalculate schedule" });
+
+    // ✅ Save updated repayments
+    loan.repayments = updated.repayments;
+
+    // ✅ Record lump-sum prepayment history
+    loan.lumpSumPayments.push({
+      amount: Number(amount),
+      installment: Number(installment),
+      mode,
+    });
+
+    await loan.save();
+
+    return res.json({
+      message: "Prepayment applied successfully",
+      loan,
+    });
+  } catch (error) {
+    console.error("Error in recalculatedSchedule:", error);
+    return res.status(500).json({
+      message: "An unexpected error occurred",
+      error: error.message,
+    });
+  }
+};

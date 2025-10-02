@@ -9,145 +9,261 @@ export default function UserProfile() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const [profile, setProfile] = useState(null);
+  const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async () => {
+  const fetchData = async () => {
+    if (!user) return;
     try {
       const token = await getToken();
-      const response = await axios.get(
+
+      const profileRes = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/members/${user.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setProfile(response.data);
+      setProfile(profileRes.data);
+
+      const loanRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const loansArray = Array.isArray(loanRes.data)
+        ? loanRes.data
+        : [loanRes.data];
+      setLoans(loansArray);
     } catch (err) {
-      console.error("Error fetching profile:", err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user) fetchProfile();
+    fetchData();
   }, [user]);
 
   if (loading)
-    return <p className="p-6 text-center text-gray-500">Loading profile...</p>;
+    return (
+      <p className="p-4 text-center text-gray-500">Loading dashboard...</p>
+    );
   if (!profile)
-    return <p className="p-6 text-center text-red-500">Profile not found.</p>;
+    return <p className="p-4 text-center text-red-500">Profile not found.</p>;
+
+  const totalLoanAmount = loans.reduce((acc, loan) => acc + loan.loanAmount, 0);
+  const pendingPrincipal = loans.reduce(
+    (acc, loan) =>
+      acc +
+      loan.repayments
+        .filter((r) => r.status === "Pending")
+        .reduce((a, r) => a + r.principal, 0),
+    0
+  );
+  const pendingInstallments = loans.reduce(
+    (acc, loan) =>
+      acc + loan.repayments.filter((r) => r.status === "Pending").length,
+    0
+  );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h2 className="text-4xl font-bold mb-10 text-center text-indigo-600">
-        👤 Member Profile
+    <div className="p-3 sm:p-4 max-w-7xl mx-auto space-y-6">
+      <h2 className="text-xl sm:text-2xl font-bold text-center text-indigo-700">
+        👤 Member Dashboard
       </h2>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Profile Card */}
-        <div className="bg-gradient-to-br from-indigo-100 to-indigo-200 shadow-lg rounded-3xl p-6 flex flex-col items-center">
-          <img
-            src={
-              profile.photo ||
-              `https://ui-avatars.com/api/?name=${profile.name}`
-            }
-            alt={profile.name}
-            className="w-36 h-36 rounded-full shadow-md object-cover"
-          />
-          <h3 className="text-2xl font-semibold mt-4">{profile.name}</h3>
-          <p className="text-indigo-700 font-medium mt-1">
-            {profile.designation}
-          </p>
+        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 shadow-md rounded-xl border border-indigo-200/50 overflow-hidden">
+          {/* Header */}
+          <div className="bg-indigo-900 text-white text-center px-3 sm:px-4 py-4 sm:py-6">
+            <h3 className="text-base sm:text-lg font-semibold">
+              {profile.name}
+            </h3>
+            <p className="text-indigo-200 text-xs sm:text-sm">
+              {profile.designation}
+            </p>
+          </div>
 
-          <div className="mt-6 w-full space-y-2">
-            <Badge label="Role" value={profile.role} color="indigo" />
-            <Badge
-              label="Department"
-              value={profile.department}
-              color="green"
+          {/* Body */}
+          <div className="px-3 sm:px-4 pb-4 flex flex-col items-center space-y-3 mt-4">
+            {/* Avatar */}
+            <img
+              src={
+                profile.photo ||
+                `https://ui-avatars.com/api/?name=${profile.name}`
+              }
+              alt={profile.name}
+              className="w-20 h-20 md:w-24 md:h-24 rounded-full shadow-lg border-4 border-white object-cover -mt-8"
             />
+
+            {/* Badges */}
+            <div className="w-full flex flex-col sm:flex-row sm:flex-wrap gap-2">
+              <Badge label="Role" value={profile.role} color="indigo" />
+              <Badge
+                label="Department"
+                value={profile.department}
+                color="blue"
+              />
+            </div>
+
+            {/* Contact Info */}
+            <div className="w-full space-y-2 pt-3 border-t border-indigo-100">
+              <InfoItem
+                icon={Mail}
+                label="Email"
+                value={profile.email}
+                iconColor="text-blue-600"
+              />
+              <InfoItem
+                icon={Phone}
+                label="Phone"
+                value={profile.phone || "N/A"}
+                iconColor="text-green-600"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Info Cards */}
-        <div className="md:col-span-2 grid gap-4">
-          <InfoCard title="Contact Info" color="yellow">
-            <InfoItem icon={Mail} label="Email" value={profile.email} />
-            <InfoItem
-              icon={Phone}
-              label="Phone"
-              value={profile.phone || "N/A"}
-            />
-          </InfoCard>
-
+        {/* Other Info & Loan Summary */}
+        <div className="md:col-span-2 grid gap-3 sm:gap-4">
           <InfoCard title="Addresses" color="pink">
             <InfoItem
               icon={Home}
               label="Permanent Address"
               value={profile.permanentAddress}
+              iconColor="text-pink-500"
             />
             <InfoItem
               icon={Home}
               label="Current Address"
               value={profile.currentAddress}
+              iconColor="text-pink-500"
             />
           </InfoCard>
 
-          <InfoCard title="Professional Info" color="purple">
-            <InfoItem
-              icon={Briefcase}
-              label="Working College"
-              value={profile.workingCollegeName}
-            />
-            <InfoItem
-              icon={Calendar}
-              label="Date of Birth"
-              value={
-                profile.dob ? new Date(profile.dob).toLocaleDateString() : "N/A"
-              }
-            />
-            <InfoItem icon={User} label="Guardian" value={profile.guardian} />
-            <InfoItem
-              icon={User}
-              label="KGID Number"
-              value={profile.kgidNumber}
-            />
-          </InfoCard>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <InfoCard title="Professional Info" color="purple">
+              <InfoItem
+                icon={Briefcase}
+                label="Working College"
+                value={profile.workingCollegeName}
+                iconColor="text-purple-500"
+              />
+              <InfoItem
+                icon={Calendar}
+                label="Date of Birth"
+                value={
+                  profile.dob
+                    ? new Date(profile.dob).toLocaleDateString()
+                    : "N/A"
+                }
+                iconColor="text-purple-500"
+              />
+              <InfoItem
+                icon={User}
+                label="Guardian"
+                value={profile.guardian}
+                iconColor="text-purple-500"
+              />
+              <InfoItem
+                icon={User}
+                label="KGID Number"
+                value={profile.kgidNumber}
+                iconColor="text-purple-500"
+              />
+            </InfoCard>
+
+            {loans.length > 0 && (
+              <InfoCard title="Loan Summary" color="teal">
+                <InfoItem
+                  label="Total Loan Amount"
+                  value={`₹${totalLoanAmount.toLocaleString()}`}
+                  iconColor="text-teal-600"
+                />
+                <InfoItem
+                  label="Pending Principal"
+                  value={`₹${pendingPrincipal.toLocaleString()}`}
+                  iconColor="text-teal-600"
+                />
+                <InfoItem
+                  label="Pending Installments"
+                  value={pendingInstallments}
+                  iconColor="text-teal-600"
+                />
+                <InfoItem
+                  label="Number of Loans"
+                  value={loans.length}
+                  iconColor="text-teal-600"
+                />
+              </InfoCard>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Reusable Info Item Component
-const InfoItem = ({ icon: Icon, label, value }) => (
-  <div className="flex items-center gap-3 py-2">
-    <Icon className="w-5 h-5 text-indigo-500" />
+// Info Item
+const InfoItem = ({
+  icon: Icon,
+  label,
+  value,
+  iconColor = "text-gray-500",
+}) => (
+  <div className="flex items-center gap-6">
+    {Icon ? (
+      <Icon className={`w-5 h-5 ${iconColor} shrink-0`} />
+    ) : (
+      <span className={`w-5 h-5 ${iconColor} font-bold`}>₹</span>
+    )}
     <div>
-      <p className="text-gray-500 text-sm">{label}</p>
-      <p className="text-gray-800 font-medium">{value}</p>
+      <p className="text-gray-400 text-sm font-semibold">{label}</p>
+      <p className="text-gray-700 text-base font-semibold">{value}</p>
     </div>
   </div>
 );
 
-// Reusable Card Component
-const InfoCard = ({ title, children, color }) => (
-  <div
-    className={`bg-gradient-to-br ${
-      color === "yellow"
-        ? "from-yellow-100 to-yellow-200"
-        : color === "pink"
-        ? "from-pink-100 to-pink-200"
-        : "from-purple-100 to-purple-200"
-    } shadow-md rounded-3xl p-6`}
-  >
-    <h3 className="text-lg font-semibold text-gray-700 mb-4">{title}</h3>
-    <div className="divide-y divide-gray-100">{children}</div>
-  </div>
-);
+// Card Component
+const InfoCard = ({ title, children, color }) => {
+  // Map colors to gradient + darker header bg
+  const colorClasses = {
+    pink: {
+      bg: "from-pink-50 to-pink-100",
+      header: "bg-pink-900 text-white",
+    },
+    purple: {
+      bg: "from-purple-50 to-purple-100",
+      header: "bg-purple-900 text-white",
+    },
+    teal: {
+      bg: "from-teal-50 to-teal-100",
+      header: "bg-teal-900 text-white",
+    },
+  };
 
-// Reusable Badge Component
+  const { bg, header } = colorClasses[color] || {
+    bg: "from-gray-50 to-gray-100",
+    header: "bg-gray-900 text-white",
+  };
+
+  return (
+    <div
+      className={`bg-gradient-to-br ${bg} shadow rounded-xl border border-gray-200`}
+    >
+      <h3
+        className={`text-sm tracking-wide font-semibold px-3 py-2 rounded-t-xl ${header}`}
+      >
+        {title}
+      </h3>
+      <div className="p-4 space-y-2">{children}</div>
+    </div>
+  );
+};
+
+// Badge Component
 const Badge = ({ label, value, color }) => (
   <div
-    className={`flex justify-between px-4 py-2 rounded-xl bg-${color}-200 text-${color}-800 font-medium`}
+    className={`flex justify-between px-2 py-1 rounded-md bg-${color}-100 text-${color}-700 text-sm font-medium`}
   >
     <span>{label}</span>
     <span>{value}</span>

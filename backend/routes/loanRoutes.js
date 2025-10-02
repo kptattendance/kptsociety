@@ -6,6 +6,7 @@ import {
   deleteLoan,
   markRepaymentPaid,
   updateLoan,
+  recalculatedSchedule,
 } from "../controllers/loanController.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -30,6 +31,11 @@ router.patch(
   "/repay/:loanId/:installmentNo",
   requireAuthWithRole(["admin"]),
   markRepaymentPaid
+);
+router.patch(
+  "/prepay/:loanId",
+  requireAuthWithRole(["admin"]),
+  recalculatedSchedule
 );
 
 export default router;

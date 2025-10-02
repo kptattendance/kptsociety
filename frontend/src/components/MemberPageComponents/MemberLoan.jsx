@@ -59,7 +59,7 @@ const MemberLoan = () => {
 
   return (
     <div className="p-2 sm:p-4 max-w-7xl mx-auto">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800 text-center">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800 text-center">
         💰 My Loans & Repayment Schedule
       </h2>
 
@@ -159,65 +159,129 @@ const MemberLoan = () => {
               </table>
             </div>
 
+            {/* Lumpsum Payment History */}
+            {loan.lumpSumPayments && loan.lumpSumPayments.length > 0 && (
+              <>
+                <h3 className="text-lg sm:text-xl font-semibold mt-4 mb-2 text-indigo-700">
+                  Lumpsum Payment History
+                </h3>
+                <div className="overflow-x-auto mb-2">
+                  <table
+                    className="min-w-full text-sm sm:text-base rounded-lg overflow-hidden shadow-lg"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.2)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                    }}
+                  >
+                    <thead
+                      className="text-white"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, rgba(99,102,241,0.8) 0%, rgba(139,92,246,0.8) 100%)",
+                      }}
+                    >
+                      <tr>
+                        <th className="py-2 px-3">#</th>
+                        <th className="py-2 px-3">Payment Date</th>
+                        <th className="py-2 px-3 text-right">Amount Paid</th>
+                        <th className="py-2 px-3 text-right">Mode</th>
+                        <th className="py-2 px-3 text-right">
+                          Installment Number
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loan.lumpSumPayments.map((lump, index) => (
+                        <tr
+                          key={index}
+                          className="transition-colors hover:bg-white/20"
+                        >
+                          <td className="py-1 px-2">{index + 1}</td>
+                          <td className="py-1 px-2">
+                            {new Date(lump.paidAt).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "2-digit",
+                            })}
+                          </td>
+                          <td className="py-1 px-2 text-right">
+                            ₹{lump.amount.toLocaleString()}
+                          </td>
+                          <td className="py-1 px-2 text-right">{lump.mode}</td>
+                          <td className="py-1 px-2 text-right">
+                            {lump.installment}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
             {/* Repayment Schedule */}
-            <h3 className="text-lg sm:text-xl font-semibold mb-2">
+            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-indigo-700">
               Repayment Schedule
             </h3>
             <div className="overflow-x-auto mb-2">
-              <table className="min-w-full bg-gray-50 shadow rounded-lg overflow-hidden text-sm sm:text-base">
-                <thead className="bg-gray-200">
+              <table
+                className="min-w-full text-sm sm:text-base rounded-lg overflow-hidden shadow-lg"
+                style={{
+                  background: "rgba(255, 255, 255, 0.15)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                }}
+              >
+                <thead
+                  className="text-white"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, rgba(16,185,129,0.8) 0%, rgba(34,197,94,0.8) 100%)",
+                  }}
+                >
                   <tr>
-                    <th className="py-1 px-2 sm:py-2 sm:px-4">#</th>
-                    <th className="py-1 px-2 sm:py-2 sm:px-4">Due Date</th>
-                    <th className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                      EMI (Principal)
-                    </th>
-                    <th className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                      EMI (Interest)
-                    </th>
-                    <th className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                      Total EMI
-                    </th>
-                    <th className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                      Outstanding
-                    </th>
-                    <th className="py-1 px-2 sm:py-2 sm:px-4">Status</th>
+                    <th className="py-2 px-3">#</th>
+                    <th className="py-2 px-3">Due Date</th>
+                    <th className="py-2 px-3 text-right">EMI (Principal)</th>
+                    <th className="py-2 px-3 text-right">EMI (Interest)</th>
+                    <th className="py-2 px-3 text-right">Total EMI</th>
+                    <th className="py-2 px-3 text-right">Outstanding</th>
+                    <th className="py-2 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedRepayments.map((repay, index) => (
                     <tr
                       key={index}
-                      className="border-b even:bg-gray-100 hover:bg-gray-200 transition-colors"
+                      className="transition-colors hover:bg-white/20 border-b"
                     >
-                      <td className="py-1 px-2 sm:py-2 sm:px-4">
-                        {startIndex + index + 1}
-                      </td>
-                      <td className="py-1 px-2 sm:py-2 sm:px-4">
+                      <td className="py-1 px-2">{startIndex + index + 1}</td>
+                      <td className="py-1 px-2">
                         {new Date(repay.dueDate).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",
                           year: "2-digit",
                         })}
                       </td>
-                      <td className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                        ₹{repay.principal.toLocaleString()}
+                      <td className="py-1 px-2 text-right">
+                        ₹{repay.principal.toFixed(2).toLocaleString()}
                       </td>
-                      <td className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                        ₹{repay.interest.toLocaleString()}
+                      <td className="py-1 px-2 text-right">
+                        ₹{repay.interest.toFixed(2).toLocaleString()}
                       </td>
-                      <td className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                        ₹{repay.totalEMI.toLocaleString()}
+                      <td className="py-1 px-2 text-right">
+                        ₹{repay.totalEMI.toFixed(2).toLocaleString()}
                       </td>
-                      <td className="py-1 px-2 sm:py-2 sm:px-4 text-right">
-                        ₹{repay.scheduleOS.toLocaleString()}
+                      <td className="py-1 px-2 text-right font-semibold text-blue-700">
+                        ₹{repay.scheduleOS.toFixed(2).toLocaleString()}
                       </td>
-                      <td className="py-1 px-2 sm:py-2 sm:px-4">
+                      <td className="py-1 px-2">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                          className={`px-2 py-1 rounded-2xl text-xs sm:text-sm font-medium ${
                             repay.status === "Paid"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
+                              ? "bg-green-200 text-green-700"
+                              : "bg-orange-200 text-orange-700"
                           }`}
                         >
                           {repay.status}

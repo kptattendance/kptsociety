@@ -6,6 +6,7 @@ import Membership from "../components/HomePageComponents/Membership";
 import Services from "../components/HomePageComponents/Services";
 import Downloads from "../components/HomePageComponents/Downloads";
 import Gallery from "../components/HomePageComponents/Gallery";
+import Footer from "../components/Footer";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <NewsAndAnnouncements />
       <Gallery />
       <ContactUs />
+      <Footer />
     </>
   );
 }
