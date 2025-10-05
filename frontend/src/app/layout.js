@@ -28,8 +28,9 @@ export default function RootLayout({ children }) {
           <Navbar />
 
           {/* Make content grow to fill the remaining space */}
-          <main className="flex-grow">
+          <main className="flex-grow overflow-hidden">
             {children}
+
             <ToastContainer position="top-right" autoClose={3000} />
           </main>
         </body>

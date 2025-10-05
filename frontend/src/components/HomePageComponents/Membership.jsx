@@ -2,7 +2,7 @@
 
 export default function Membership() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50 p-8">
+    <div className="h-full bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50 p-8">
       <div className="max-w-3xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8">
         <h1 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-green-600 to-cyan-600 bg-clip-text text-transparent">
           Membership

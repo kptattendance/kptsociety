@@ -5,13 +5,14 @@ import React, { useState } from "react";
 import MemberSidebar from "../../components/MemberPageComponents/MemberSidebar";
 import UserProfile from "../../components/MemberPageComponents/UserProfile";
 import MemberLoan from "../../components/MemberPageComponents/MemberLoan";
-import AdminRDTable from "../../components/AdminPageComponents/AdminRDTable";
+import MemberRD from "../../components/MemberPageComponents/MemberRD";
+import MemberFD from "../../components/MemberPageComponents/MemberFD";
 
 export default function MemberPage() {
   const [selected, setSelected] = useState("/member-my-profile");
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50">
       <div className="flex flex-1">
         {/* Sidebar */}
         <aside className="hidden md:flex md:flex-col md:w-64 bg-gray-100 border-r">
@@ -25,23 +26,14 @@ export default function MemberPage() {
           <div className="max-w-6xl mx-auto">
             {selected === "/member-my-profile" && <UserProfile />}
             {selected === "/member-loan" && <MemberLoan />}
-            {selected === "/member-rd-list" && <AdminRDTable />}
-            {/* 
-            {selected === "members-list" && <AdminHODList />}
-            {selected === "/add-rd" && <AdminStaffList />}
-            {selected === "/rd-list" && <AdminStudentList />}
-            {selected === "/add-fd" && <AdminSubjectList />}
-            {selected === "/fd-list" && <StudentReports />}
-            {selected === "loan-list" && <StudentReports />}
-            {selected === "settings" && <StudentReports />}
-            {selected === "add-loan" && (
-              <ConsolidatedAttendance />
-            )} */}
-            {selected === "settings" && (
+            {selected === "/member-rd-list" && <MemberRD />}
+            {selected === "/member-fd-list" && <MemberFD />}
+
+            {selected === "/settings" && (
               <div className="bg-white p-6 rounded-lg shadow">
                 <h2 className="text-2xl font-semibold mb-2">Settings</h2>
                 <p className="text-sm text-gray-600">
-                  User-level settings and preferences.
+                  User-level settings and preferences coming soon...
                 </p>
               </div>
             )}

@@ -1,5 +1,6 @@
 import FD from "../models/fdAccount.js";
 import Member from "../models/memberModel.js";
+import mongoose from "mongoose";
 
 // -------------------------------------------------------------------
 // ✅ Create New FD
@@ -80,14 +81,34 @@ export const getAllFDs = async (req, res) => {
 // -------------------------------------------------------------------
 // ✅ Get FDs by Member ID
 // -------------------------------------------------------------------
+
 export const getMemberFDs = async (req, res) => {
   try {
     const { memberId } = req.params;
-    const fds = await FD.find({ memberId })
+
+    let member;
+
+    // Check if it's a valid Mongo ID
+    if (mongoose.Types.ObjectId.isValid(memberId)) {
+      member = await Member.findById(memberId);
+    }
+
+    // If not found by Mongo ID, try as Clerk ID
+    if (!member) {
+      member = await Member.findOne({ clerkId: memberId });
+    }
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    const fds = await FD.find({ memberId: member._id })
       .populate("memberId", "name email")
       .sort({ createdAt: -1 });
+
     res.json(fds);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };

@@ -1,36 +1,77 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Users, PiggyBank, Wallet, CreditCard } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
 
 export default function AdminDashboard() {
-  // 🔹 Replace with real data from API/DB
-  const stats = [
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/admin/stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const data = await res.json();
+        if (data.success) {
+          setStats(data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [getToken]);
+
+  if (loading) {
+    return (
+      <p className="text-gray-500 text-center mt-8">Loading dashboard...</p>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <p className="text-red-500 text-center mt-8">Failed to load stats.</p>
+    );
+  }
+
+  const dashboardCards = [
     {
       id: "members",
       label: "Active Members",
-      value: 128, // <-- dummy count
+      value: stats.members,
       icon: Users,
       color: "from-blue-500 to-indigo-600",
     },
     {
       id: "rd",
       label: "RD Accounts",
-      value: 45,
+      value: stats.rds,
       icon: PiggyBank,
       color: "from-green-500 to-emerald-600",
     },
     {
       id: "fd",
       label: "FD Accounts",
-      value: 32,
+      value: stats.fds,
       icon: Wallet,
       color: "from-purple-500 to-pink-600",
     },
     {
       id: "loan",
       label: "Loan Accounts",
-      value: 18,
+      value: stats.loans,
       icon: CreditCard,
       color: "from-orange-500 to-red-600",
     },
@@ -38,7 +79,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat) => {
+      {dashboardCards.map((stat) => {
         const Icon = stat.icon;
         return (
           <div

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-
 import AdminSidebar from "../../components/AdminPageComponents/AdminSidebar";
 import AdminAddMember from "../../components/AdminPageComponents/AdminAddMember";
 import AdminDashboard from "../../components/AdminPageComponents/AdminDashboard";
@@ -17,17 +16,15 @@ export default function AdminPage() {
   const [selected, setSelected] = useState("/admindashboard");
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50">
       <div className="flex flex-1">
-        {/* Sidebar */}
-        <aside className="hidden md:flex md:flex-col md:w-64 bg-gray-100 border-r">
-          <div className="flex-1 overflow-y-auto">
-            <AdminSidebar selected={selected} setSelected={setSelected} />
-          </div>
-        </aside>
+        {/* Sidebar (Responsive inside component) */}
+        <div className="md:w-64">
+          <AdminSidebar selected={selected} setSelected={setSelected} />
+        </div>
 
-        {/* Main content */}
-        <main className="flex-1 px-6 py-8 bg-gray-50">
+        {/* Main Content */}
+        <main className="flex-1 px-4 md:px-6 py-8 bg-gray-50 overflow-y-auto">
           <div className="max-w-6xl mx-auto">
             {selected === "/admindashboard" && <AdminDashboard />}
             {selected === "/add-member" && <AdminAddMember />}
@@ -39,11 +36,7 @@ export default function AdminPage() {
             {selected === "/add-rd" && <AdminRDForm />}
             {selected === "/rd-list" && <AdminRDTable />}
 
-            {/* 
-            {selected === "/members-list" && <AdminHODList />}
-            {selected === "/settings" && <StudentReports />}
-            */}
-            {selected === "settings" && (
+            {selected === "/settings" && (
               <div className="bg-white p-6 rounded-lg shadow">
                 <h2 className="text-2xl font-semibold mb-2">Settings</h2>
                 <p className="text-sm text-gray-600">

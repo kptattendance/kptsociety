@@ -1,5 +1,6 @@
 import RD from "../models/rdAccount.js";
 import Member from "../models/memberModel.js";
+import mongoose from "mongoose";
 
 // ------------------- Create RD -------------------
 export const createRD = async (req, res) => {
@@ -78,12 +79,24 @@ export const getAllRDs = async (req, res) => {
 };
 
 // ------------------- Get all RDs of a member -------------------
+
 export const getMemberRDs = async (req, res) => {
   try {
     const { memberId } = req.params;
-    const rds = await RD.find({ memberId }).populate("memberId", "name email");
+
+    // Check if the passed ID is a valid Mongo ObjectId
+    const isMongoId = mongoose.Types.ObjectId.isValid(memberId);
+
+    // Build query condition dynamically
+    const query = isMongoId
+      ? { memberId } // Mongo ObjectId of Member collection
+      : { clerkId: memberId }; // Clerk user ID (string)
+
+    const rds = await RD.find(query).populate("memberId", "name email");
+
     res.json(rds);
   } catch (err) {
+    console.error("Error in getMemberRDs:", err);
     res.status(500).json({ error: err.message });
   }
 };
