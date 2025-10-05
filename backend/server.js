@@ -4,6 +4,8 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import memberRoutes from "./routes/memberRoutes.js"; // fixed path
 import loanRoutes from "./routes/loanRoutes.js"; // fixed path
+import fdRoutes from "./routes/fdRoutes.js"; // fixed path
+import rdRoutes from "./routes/rdRoutes.js"; // fixed path
 
 const app = express();
 dotenv.config();
@@ -16,6 +18,8 @@ connectDB();
 // Routes
 app.use("/api/members", memberRoutes);
 app.use("/api/loans", loanRoutes);
+app.use("/api/fd", fdRoutes);
+app.use("/api/rd", rdRoutes);
 
 app.get("/", (req, res) => {
   res.send("KPT Society Backend Running");

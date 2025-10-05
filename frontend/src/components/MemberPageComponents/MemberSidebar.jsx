@@ -12,7 +12,7 @@ import {
 
 const menuItems = [
   { id: "/member-my-profile", label: "My Profile", icon: Home },
-  { id: "/add-rd", label: "My RD", icon: PiggyBank },
+  { id: "/member-rd-list", label: "My RD", icon: PiggyBank },
   { id: "/add-fd", label: "My FD", icon: Wallet },
   { id: "/member-loan", label: "My Loan", icon: CreditCard },
   { id: "/settings", label: "Settings", icon: Settings },

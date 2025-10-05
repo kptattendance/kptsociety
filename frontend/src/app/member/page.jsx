@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import MemberSidebar from "../../components/MemberPageComponents/MemberSidebar";
 import UserProfile from "../../components/MemberPageComponents/UserProfile";
 import MemberLoan from "../../components/MemberPageComponents/MemberLoan";
+import AdminRDTable from "../../components/AdminPageComponents/AdminRDTable";
 
 export default function MemberPage() {
   const [selected, setSelected] = useState("/member-my-profile");
@@ -24,6 +25,7 @@ export default function MemberPage() {
           <div className="max-w-6xl mx-auto">
             {selected === "/member-my-profile" && <UserProfile />}
             {selected === "/member-loan" && <MemberLoan />}
+            {selected === "/member-rd-list" && <AdminRDTable />}
             {/* 
             {selected === "members-list" && <AdminHODList />}
             {selected === "/add-rd" && <AdminStaffList />}

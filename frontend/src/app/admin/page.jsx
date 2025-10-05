@@ -8,6 +8,10 @@ import AdminDashboard from "../../components/AdminPageComponents/AdminDashboard"
 import MembersList from "../../components/AdminPageComponents/MembersList";
 import AdminLoanApplicationForm from "../../components/AdminPageComponents/AdminLoanApplicationForm";
 import AdminLoanList from "../../components/AdminPageComponents/AdminLoanList";
+import AdminFDForm from "../../components/AdminPageComponents/AdminFDForm";
+import AdminFDTable from "../../components/AdminPageComponents/AdminFDTable";
+import AdminRDForm from "../../components/AdminPageComponents/AdminRDForm";
+import AdminRDTable from "../../components/AdminPageComponents/AdminRDTable";
 
 export default function AdminPage() {
   const [selected, setSelected] = useState("/admindashboard");
@@ -30,13 +34,14 @@ export default function AdminPage() {
             {selected === "/members-list" && <MembersList />}
             {selected === "/add-loan" && <AdminLoanApplicationForm />}
             {selected === "/loan-list" && <AdminLoanList />}
+            {selected === "/add-fd" && <AdminFDForm />}
+            {selected === "/fd-list" && <AdminFDTable />}
+            {selected === "/add-rd" && <AdminRDForm />}
+            {selected === "/rd-list" && <AdminRDTable />}
+
             {/* 
-            {selected === "members-list" && <AdminHODList />}
-            {selected === "/add-rd" && <AdminStaffList />}
-            {selected === "/rd-list" && <AdminStudentList />}
-            {selected === "/add-fd" && <AdminSubjectList />}
-            {selected === "/fd-list" && <StudentReports />}
-            {selected === "settings" && <StudentReports />}
+            {selected === "/members-list" && <AdminHODList />}
+            {selected === "/settings" && <StudentReports />}
             */}
             {selected === "settings" && (
               <div className="bg-white p-6 rounded-lg shadow">
