@@ -1,5 +1,8 @@
 "use client";
+
 import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import {
   useUser,
   SignedIn,
@@ -18,8 +21,11 @@ import {
   Wallet,
   Menu,
   X,
+  PlusCircle,
+  Settings,
+  ClipboardList,
+  FileText,
 } from "lucide-react";
-import Image from "next/image";
 
 export default function Navbar() {
   const { user } = useUser();
@@ -27,16 +33,27 @@ export default function Navbar() {
 
   const role = user?.publicMetadata?.role || null;
 
+  // ✅ Clean & unique admin links
   const adminLinks = [
     { href: "/admin", label: "Dashboard", icon: Home },
-    { href: "/members", label: "Manage Members", icon: Users },
-    { href: "/transactions", label: "Transactions", icon: CreditCard },
+    { href: "/admin/members-list", label: "Members", icon: Users },
+    { href: "/admin/loans-list", label: "Loan Accounts", icon: ClipboardList },
+    { href: "/admin/fd-list", label: "FD Accounts", icon: FileText },
+    { href: "/admin/rd-list", label: "RD Accounts", icon: FileText },
+    { href: "/admin/add-member", label: "Add Member", icon: PlusCircle },
+    { href: "/admin/add-loan", label: "Add Loan", icon: Wallet },
+    { href: "/admin/add-rd", label: "Add RD", icon: PiggyBank },
+    { href: "/admin/add-fd", label: "Add FD", icon: CreditCard },
   ];
 
+  // ✅ Clean & unique member links
   const memberLinks = [
-    { href: "/member", label: "Dashboard", icon: User },
-    { href: "/savings", label: "My Savings", icon: PiggyBank },
-    { href: "/loans", label: "My Loans", icon: Wallet },
+    // { href: "/member", label: "Dashboard", icon: Home },
+    { href: "/member/profile", label: "Profile", icon: User },
+    { href: "/member/loan", label: "Loan Accounts", icon: Wallet },
+    { href: "/member/rd-list", label: "RD Accounts", icon: PiggyBank },
+    { href: "/member/fd-list", label: "FD Accounts", icon: CreditCard },
+    { href: "/member/settings", label: "Settings", icon: Settings },
   ];
 
   const links = role === "admin" ? adminLinks : memberLinks;
@@ -49,25 +66,25 @@ export default function Navbar() {
       className="flex justify-between items-center px-6 py-3 bg-white shadow-lg sticky top-0 z-50"
     >
       {/* Left: Logo + App Name */}
-      <a
+      <Link
         href="/"
         className="flex items-center gap-2 text-xl font-bold text-indigo-600"
       >
         <Image src="/logo1.png" alt="KPT Society Logo" width={32} height={32} />
         <span>KPT Society</span>
-      </a>
+      </Link>
 
       {/* Middle: Navigation Links (Desktop) */}
       <SignedIn>
         <div className="hidden md:flex gap-6">
           {links.map(({ href, label, icon: Icon }) => (
-            <a
+            <Link
               key={href}
               href={href}
               className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition-colors font-medium"
             >
               <Icon className="w-4 h-4" /> {label}
-            </a>
+            </Link>
           ))}
         </div>
       </SignedIn>
@@ -104,14 +121,14 @@ export default function Navbar() {
         <SignedIn>
           <div className="absolute top-16 left-0 w-full bg-white shadow-lg flex flex-col items-start px-6 py-4 gap-4 md:hidden">
             {links.map(({ href, label, icon: Icon }) => (
-              <a
+              <Link
                 key={href}
                 href={href}
                 className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition-colors font-medium"
                 onClick={() => setIsOpen(false)}
               >
                 <Icon className="w-4 h-4" /> {label}
-              </a>
+              </Link>
             ))}
 
             <div className="flex flex-col gap-2 w-full border-t pt-4">
