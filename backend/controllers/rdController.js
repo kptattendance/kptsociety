@@ -71,7 +71,7 @@ export const createRD = async (req, res) => {
 
 export const getAllRDs = async (req, res) => {
   try {
-    const rds = await RD.find().populate("memberId", "name email");
+    const rds = await RD.find().populate("memberId", "name email phone photo");
     res.json(rds);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -92,7 +92,10 @@ export const getMemberRDs = async (req, res) => {
       ? { memberId } // Mongo ObjectId of Member collection
       : { clerkId: memberId }; // Clerk user ID (string)
 
-    const rds = await RD.find(query).populate("memberId", "name email");
+    const rds = await RD.find(query).populate(
+      "memberId",
+      "name email phone photo"
+    );
 
     res.json(rds);
   } catch (err) {
@@ -210,6 +213,37 @@ export const deleteRD = async (req, res) => {
     if (!rd) return res.status(404).json({ error: "RD not found" });
 
     res.json({ message: "RD deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ------------------- Update RD Installment Status -------------------
+export const updateRDInstallmentStatus = async (req, res) => {
+  try {
+    const { rdId, installmentNo } = req.params;
+    const { status } = req.body;
+
+    const rd = await RD.findById(rdId);
+    if (!rd) return res.status(404).json({ error: "RD not found" });
+
+    const installmentIndex = Number(installmentNo) - 1;
+    if (installmentIndex < 0 || installmentIndex >= rd.installments.length) {
+      return res.status(400).json({ error: "Invalid installment number" });
+    }
+
+    const inst = rd.installments[installmentIndex];
+
+    if (status === "Paid") {
+      inst.status = "Paid";
+      inst.paidAt = new Date();
+    } else {
+      inst.status = "Pending";
+      inst.paidAt = null;
+    }
+
+    await rd.save();
+    res.json(rd);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

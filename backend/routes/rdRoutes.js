@@ -9,6 +9,7 @@ import {
   closeRD,
   deleteRD,
   getAllRDs,
+  updateRDInstallmentStatus,
 } from "../controllers/rdController.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -40,5 +41,11 @@ router.put("/close/:rdId", requireAuthWithRole(["admin"]), closeRD);
 
 // Delete RD (admin use only)
 router.delete("/:rdId", requireAuthWithRole(["admin"]), deleteRD);
+
+router.patch(
+  "/installment/:rdId/:installmentNo",
+  requireAuthWithRole(["admin"]),
+  updateRDInstallmentStatus
+);
 
 export default router;

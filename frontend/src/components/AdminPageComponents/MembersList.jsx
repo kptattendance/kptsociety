@@ -4,16 +4,18 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { Pencil, Trash2, Save, X } from "lucide-react";
+import LoadOverlay from "../../components/LoadOverlay"; // ✅ Import overlay
+import { toast } from "react-toastify";
 
 export default function MembersList() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("Fetching members...");
   const [editingMemberId, setEditingMemberId] = useState(null);
   const [editData, setEditData] = useState({});
   const [preview, setPreview] = useState(null);
   const { getToken } = useAuth();
 
-  // Dropdown options
   const departments = [
     { value: "at", label: "Automobile Engineering" },
     { value: "ch", label: "Chemical Engineering" },
@@ -40,6 +42,8 @@ export default function MembersList() {
   // Fetch all members
   const fetchMembers = async () => {
     try {
+      setLoading(true);
+      setLoadingMessage("Fetching members...");
       const token = await getToken();
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/members`,
@@ -61,16 +65,20 @@ export default function MembersList() {
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
     try {
+      setLoading(true);
+      setLoadingMessage("Deleting member...");
       const token = await getToken();
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/members/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMembers(members.filter((m) => m._id !== id));
-      alert("Member deleted successfully");
+      toast.success("Member deleted successfully");
     } catch (err) {
       console.error("Error deleting member:", err);
-      alert("Failed to delete member");
+      toast.error("Failed to delete member");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,6 +97,8 @@ export default function MembersList() {
   // Handle update
   const handleUpdate = async (id) => {
     try {
+      setLoading(true);
+      setLoadingMessage("Updating member...");
       const token = await getToken();
       const formData = new FormData();
 
@@ -109,23 +119,23 @@ export default function MembersList() {
         }
       );
 
-      alert("✅ Member updated successfully");
+      toast.success("Member updated successfully");
       setEditingMemberId(null);
       setPreview(null);
       fetchMembers();
     } catch (err) {
       console.error("Error updating member:", err);
-      alert("❌ Failed to update member");
+      toast.error("Failed to update member");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading)
-    return (
-      <div className="p-6 text-center text-gray-600">⏳ Loading members...</div>
-    );
-
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* ✅ Loading overlay */}
+      <LoadOverlay show={loading} message={loadingMessage} />
+
       <h2 className="text-3xl font-bold mb-6 text-gray-800 border-b pb-3">
         👥 Members List
       </h2>

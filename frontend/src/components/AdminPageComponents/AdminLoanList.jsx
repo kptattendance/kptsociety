@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Trash2, Edit } from "lucide-react";
-import LoanRepaymentModal from "./LoanRepaymentModal"; // import modal component
+import { Trash2, Edit, Check, X } from "lucide-react";
+import Swal from "sweetalert2";
+import LoanRepaymentModal from "./LoanRepaymentModal";
+import { toast } from "react-toastify";
+import LoadOverlay from "../../components/LoadOverlay"; // ✅ Import overlay
 
 export default function AdminLoanList() {
   const { getToken } = useAuth();
+  const [loadingMessage, setLoadingMessage] = useState("Processing loans...");
+
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingLoanId, setEditingLoanId] = useState(null);
@@ -19,8 +24,10 @@ export default function AdminLoanList() {
   });
   const [selectedLoanId, setSelectedLoanId] = useState(null); // modal state
 
+  // Fetch Loans
   const fetchLoans = async () => {
     try {
+      setLoading(true);
       const token = await getToken();
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans`,
@@ -31,11 +38,11 @@ export default function AdminLoanList() {
 
       const loansWithMember = await Promise.all(
         res.data.map(async (loan) => {
+          if (!loan.memberId?._id) return loan; // skip if memberId is missing
+
           try {
             const memberRes = await axios.get(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/members/${
-                loan.memberId?._id || loan.clerkId
-              }?clerkId=${loan.clerkId}`,
+              `${process.env.NEXT_PUBLIC_API_URL}/api/members/${loan.memberId._id}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
             return { ...loan, memberId: memberRes.data };
@@ -49,6 +56,7 @@ export default function AdminLoanList() {
       setLoans(loansWithMember);
     } catch (err) {
       console.error(err);
+      toast.error("❌ Failed to fetch loans");
     } finally {
       setLoading(false);
     }
@@ -58,19 +66,45 @@ export default function AdminLoanList() {
     fetchLoans();
   }, []);
 
+  // SweetAlert Confirm
+  const showConfirm = async (title, text) => {
+    const result = await Swal.fire({
+      title,
+      text,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    });
+    return result.isConfirmed;
+  };
+
+  // Delete Loan
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this loan?")) return;
+    const confirmed = await showConfirm(
+      "Delete Loan?",
+      "This action cannot be undone!"
+    );
+    if (!confirmed) return;
     try {
+      setLoading(true);
       const token = await getToken();
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/loans/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLoans(loans.filter((loan) => loan._id !== id));
+      toast.success("🗑️ Loan deleted successfully");
     } catch (err) {
       console.error(err);
+      toast.error("❌ Failed to delete loan");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Start editing
   const startEditing = (loan) => {
     setEditingLoanId(loan._id);
     setEditForm({
@@ -86,30 +120,48 @@ export default function AdminLoanList() {
     setEditForm({ ...editForm, [name]: value });
   };
 
+  // Submit edit
   const submitEdit = async (loanId) => {
     try {
       const token = await getToken();
-      const res = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}`,
-        editForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+      setLoading(true);
+      // Optimistic UI update
+      setLoans((prevLoans) =>
+        prevLoans.map((loan) =>
+          loan._id === loanId ? { ...loan, ...editForm } : loan
+        )
       );
 
-      setLoans(loans.map((loan) => (loan._id === loanId ? res.data : loan)));
-      fetchLoans();
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}`,
+        editForm,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success("✅ Loan updated successfully");
       setEditingLoanId(null);
     } catch (err) {
       console.error(err);
+      toast.error("❌ Failed to update loan");
+      fetchLoans(); // fallback to refresh data if error
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading)
-    return <p className="p-6 text-center text-gray-500">Loading loans...</p>;
+  if (loading) return <LoadOverlay show={true} message={loadingMessage} />;
+
   if (!loans.length)
-    return <p className="p-6 text-center text-gray-500">No loans found.</p>;
+    return (
+      <p className="p-6 text-center text-gray-500 italic">No loans found.</p>
+    );
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
+      <LoadOverlay show={loading} message={loadingMessage} />
+
       <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">
         💰 Loan Applications
       </h2>
@@ -184,15 +236,15 @@ export default function AdminLoanList() {
                     <td className="py-3 px-4 flex justify-center gap-2">
                       <button
                         onClick={() => submitEdit(loan._id)}
-                        className="p-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200"
+                        className="p-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200"
                       >
-                        Save
+                        <Check className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setEditingLoanId(null)}
-                        className="p-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                        className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
                       >
-                        Cancel
+                        <X className="w-4 h-4" />
                       </button>
                     </td>
                   </>
@@ -231,7 +283,7 @@ export default function AdminLoanList() {
                         onClick={() => handleDelete(loan._id)}
                         className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
                       >
-                        Delete
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
                   </>

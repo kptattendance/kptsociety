@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
+import LoadOverlay from "../../components/LoadOverlay"; // ✅ Import overlay
 
 export default function AdminFDForm() {
   const { getToken } = useAuth();
@@ -51,7 +52,7 @@ export default function AdminFDForm() {
   // ✅ Submit FD
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); // show overlay
     setMessage("");
 
     try {
@@ -90,13 +91,16 @@ export default function AdminFDForm() {
       console.error("FD creation error:", error);
       setMessage("❌ Error creating FD");
     } finally {
-      setLoading(false);
+      setLoading(false); // hide overlay
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 to-indigo-200 p-4">
-      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg">
+      {/* ✅ Loader overlay (covers whole screen when loading) */}
+      <LoadOverlay show={loading} />
+
+      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg relative z-10">
         <h1 className="text-2xl font-bold text-center text-indigo-700 mb-6">
           🏦 Create New Fixed Deposit
         </h1>

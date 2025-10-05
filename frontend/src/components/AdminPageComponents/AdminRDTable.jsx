@@ -3,25 +3,35 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { Pencil, Trash2, Check, X, Lock } from "lucide-react";
+import RDScheduleModal from "./RDScheduleModal";
+import LoadOverlay from "../../components/LoadOverlay"; // ✅ Import overlay
+import { toast } from "react-toastify";
 
 export default function AdminRDTable() {
   const { getToken } = useAuth();
   const [rds, setRDs] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // ✅ Start as true
+  const [loadingMessage, setLoadingMessage] = useState("Fetching RDs...");
   const [message, setMessage] = useState("");
+  const [selectedRDId, setSelectedRDId] = useState(null);
 
   // ✅ Fetch all RDs
   const fetchRDs = async () => {
     try {
+      setLoading(true);
+      setLoadingMessage("Fetching RDs...");
       const token = await getToken();
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/rd`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRDs(res.data);
+      console.log(res.data);
     } catch (error) {
       console.error("Error fetching RDs:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,15 +43,18 @@ export default function AdminRDTable() {
   const handleDelete = async (rdId) => {
     if (!confirm("Are you sure you want to delete this RD?")) return;
     try {
+      setLoading(true);
+      setLoadingMessage("Deleting RD...");
       const token = await getToken();
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/rd/${rdId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setMessage("🗑️ RD deleted successfully");
+      toast.success("RD deleted successfully");
       fetchRDs();
     } catch (error) {
       console.error("Delete failed:", error);
-      setMessage("❌ Failed to delete RD");
+      toast.error("Failed to delete RD");
+      setLoading(false);
     }
   };
 
@@ -62,6 +75,8 @@ export default function AdminRDTable() {
 
   const handleSave = async (rdId) => {
     try {
+      setLoading(true);
+      setLoadingMessage("Updating RD...");
       const token = await getToken();
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/rd/${rdId}`,
@@ -69,11 +84,12 @@ export default function AdminRDTable() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setEditingId(null);
-      setMessage("✅ RD updated successfully");
+      toast.success("RD updated successfully");
       fetchRDs();
     } catch (error) {
       console.error("Update failed:", error);
-      setMessage("❌ Failed to update RD");
+      toast.error("Failed to update RD");
+      setLoading(false);
     }
   };
 
@@ -81,22 +97,28 @@ export default function AdminRDTable() {
   const handleClose = async (rdId) => {
     if (!confirm("Close this RD?")) return;
     try {
+      setLoading(true);
+      setLoadingMessage("Closing RD...");
       const token = await getToken();
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/rd/close/${rdId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMessage("✅ RD closed successfully");
+      toast.success("RD closed successfully");
       fetchRDs();
     } catch (error) {
       console.error("Close failed:", error);
-      setMessage("❌ Failed to close RD");
+      toast.error("Failed to close RD");
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-50 to-teal-100 p-6">
+      {/* ✅ Global Loading Overlay */}
+      <LoadOverlay show={loading} message={loadingMessage} />
+
       <div className="bg-white shadow-xl rounded-2xl p-6">
         <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">
           💰 Recurring Deposit Records
@@ -126,13 +148,14 @@ export default function AdminRDTable() {
                 <th className="px-4 py-2 text-left">Maturity Date</th>
                 <th className="px-4 py-2 text-left">Maturity Amount</th>
                 <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Notes</th>
-                <th className="px-4 py-2 text-center">Actions</th>
+                <th className="px-4 py-2 text-left">Actions</th>
+                <th className="px-4 py-2 text-center">View</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-200 bg-white">
-              {rds.length === 0 && (
+              {/* ✅ Show only when NOT loading */}
+              {!loading && rds.length === 0 && (
                 <tr>
                   <td
                     colSpan="10"
@@ -145,9 +168,21 @@ export default function AdminRDTable() {
 
               {rds.map((rd) => (
                 <tr key={rd._id} className="hover:bg-gray-50">
-                  {/* Member */}
-                  <td className="px-4 py-2">
-                    {rd.memberId?.name || "Unknown"}
+                  <td className="px-4 py-2 flex items-center gap-3">
+                    {/* Avatar */}
+                    <img
+                      src={rd.memberId?.photo || "/default-avatar.png"}
+                      alt={rd.memberId?.name || "Member"}
+                      className="w-10 h-10 rounded-full object-cover border"
+                    />
+                    <div>
+                      <p className="font-medium">
+                        {rd.memberId?.name || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {rd.memberId?.phone || "-"}
+                      </p>
+                    </div>
                   </td>
 
                   {/* Deposit */}
@@ -239,22 +274,6 @@ export default function AdminRDTable() {
                     )}
                   </td>
 
-                  {/* Notes */}
-                  <td className="px-4 py-2">
-                    {editingId === rd._id ? (
-                      <input
-                        type="text"
-                        value={editForm.notes}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, notes: e.target.value })
-                        }
-                        className="border rounded-md px-2 py-1 w-full"
-                      />
-                    ) : (
-                      rd.notes || "-"
-                    )}
-                  </td>
-
                   {/* Actions */}
 
                   <td className="px-4 py-2 text-center space-x-2">
@@ -264,13 +283,13 @@ export default function AdminRDTable() {
                           onClick={() => handleSave(rd._id)}
                           className="text-green-600 hover:text-green-800"
                         >
-                          <Check size={18} />
+                          <Check size={16} />
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
                           className="text-red-500 hover:text-red-700"
                         >
-                          <X size={18} />
+                          <X size={16} />
                         </button>
                       </>
                     ) : (
@@ -279,29 +298,44 @@ export default function AdminRDTable() {
                           onClick={() => handleEditClick(rd)}
                           className="text-blue-600 hover:text-blue-800"
                         >
-                          <Pencil size={18} />
+                          <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(rd._id)}
                           className="text-red-600 hover:text-red-800"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                         {rd.status === "Active" && (
                           <button
                             onClick={() => handleClose(rd._id)}
                             className="text-gray-600 hover:text-gray-800"
                           >
-                            <Lock size={18} />
+                            <Lock size={16} />
                           </button>
                         )}
                       </>
                     )}
                   </td>
+
+                  <td>
+                    <button
+                      onClick={() => setSelectedRDId(rd._id)}
+                      className="text-teal-500 cursor-pointer hover:text-green-800"
+                    >
+                      Schedule
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {selectedRDId && (
+            <RDScheduleModal
+              rdId={selectedRDId}
+              onClose={() => setSelectedRDId(null)}
+            />
+          )}
         </div>
       </div>
     </div>
