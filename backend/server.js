@@ -7,6 +7,8 @@ import loanRoutes from "./routes/loanRoutes.js"; // fixed path
 import fdRoutes from "./routes/fdRoutes.js"; // fixed path
 import rdRoutes from "./routes/rdRoutes.js"; // fixed path
 import adminRoutes from "./routes/adminRoutes.js";
+import shareRoutes from "./routes/shareRoutes.js";
+import cdRoutes from "./routes/cdRoutes.js";
 
 const app = express();
 dotenv.config();
@@ -22,7 +24,8 @@ app.use("/api/loans", loanRoutes);
 app.use("/api/fd", fdRoutes);
 app.use("/api/rd", rdRoutes);
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/share", shareRoutes);
+app.use("/api/cd", cdRoutes);
 app.get("/", (req, res) => {
   res.send("KPT Society Backend Running");
 });

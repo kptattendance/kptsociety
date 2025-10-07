@@ -130,112 +130,114 @@ export default function MembersList() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto bg-gradient-to-br from-gray-50 via-white to-gray-100 rounded-xl shadow-inner">
-      <LoadOverlay show={loading} message={loadingMessage} />
+    <div className="min-h-screen bg-gradient-to-r from-violet-50 to-violet-100 p-6">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto bg-gradient-to-br from-gray-50 via-white to-gray-100 rounded-xl shadow-inner">
+        <LoadOverlay show={loading} message={loadingMessage} />
 
-      <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
-        👥 Members List
-      </h2>
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
+          👥 Members List
+        </h2>
 
-      <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">
-        <table className="min-w-full text-sm sm:text-base text-gray-700">
-          <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-            <tr>
-              {[
-                "Photo",
-                "Name",
-                "Email",
-                "Phone",
-                "Department",
-                "KGID",
-                "Guardian",
-                "DOB",
-                "Designation",
-                "Working College",
-                "Permanent Address",
-                "Current Address",
-                "Role",
-                "Actions",
-              ].map((head) => (
-                <th
-                  key={head}
-                  className="px-3 py-3 text-left font-medium whitespace-nowrap"
-                >
-                  {head}
-                </th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {members.length === 0 ? (
+        <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">
+          <table className="min-w-full text-sm sm:text-base text-gray-700">
+            <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
               <tr>
-                <td colSpan="14" className="text-center py-6 text-gray-500">
-                  No members found.
-                </td>
+                {[
+                  "Photo",
+                  "Name",
+                  "Email",
+                  "Phone",
+                  "Department",
+                  "KGID",
+                  "Guardian",
+                  "DOB",
+                  "Designation",
+                  "Working College",
+                  "Permanent Address",
+                  "Current Address",
+                  "Role",
+                  "Actions",
+                ].map((head) => (
+                  <th
+                    key={head}
+                    className="px-3 py-3 text-left font-medium whitespace-nowrap"
+                  >
+                    {head}
+                  </th>
+                ))}
               </tr>
-            ) : (
-              members.map((member) => (
-                <tr
-                  key={member._id}
-                  className="border-b hover:bg-indigo-50 transition duration-200"
-                >
-                  {/* Photo */}
-                  <td className="px-3 py-2 text-center">
-                    {editingMemberId === member._id ? (
-                      <div>
-                        <input
-                          type="file"
-                          name="photo"
-                          accept="image/*"
-                          onChange={handleEditChange}
-                        />
-                        {(preview || member.photo) && (
-                          <img
-                            src={preview || member.photo}
-                            alt={member.name}
-                            className="w-12 h-12 rounded-full object-cover mt-1 mx-auto"
-                          />
-                        )}
-                      </div>
-                    ) : member.photo ? (
-                      <img
-                        src={member.photo}
-                        alt={member.name}
-                        className="w-12 h-12 rounded-full object-cover mx-auto"
-                      />
-                    ) : (
-                      <span className="text-gray-400 italic">No Photo</span>
-                    )}
-                  </td>
+            </thead>
 
-                  {/* Editable or Read-only */}
-                  {editingMemberId === member._id ? (
-                    <>
-                      <EditableRow
-                        member={member}
-                        editData={editData}
-                        handleEditChange={handleEditChange}
-                        handleUpdate={handleUpdate}
-                        setEditingMemberId={setEditingMemberId}
-                        setPreview={setPreview}
-                        departments={departments}
-                        designations={designations}
-                      />
-                    </>
-                  ) : (
-                    <ReadOnlyRow
-                      member={member}
-                      setEditingMemberId={setEditingMemberId}
-                      setEditData={setEditData}
-                      handleDelete={handleDelete}
-                    />
-                  )}
+            <tbody>
+              {members.length === 0 ? (
+                <tr>
+                  <td colSpan="14" className="text-center py-6 text-gray-500">
+                    No members found.
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                members.map((member) => (
+                  <tr
+                    key={member._id}
+                    className="border-b hover:bg-indigo-50 transition duration-200"
+                  >
+                    {/* Photo */}
+                    <td className="px-3 py-2 text-center">
+                      {editingMemberId === member._id ? (
+                        <div>
+                          <input
+                            type="file"
+                            name="photo"
+                            accept="image/*"
+                            onChange={handleEditChange}
+                          />
+                          {(preview || member.photo) && (
+                            <img
+                              src={preview || member.photo}
+                              alt={member.name}
+                              className="w-12 h-12 rounded-full object-cover mt-1 mx-auto"
+                            />
+                          )}
+                        </div>
+                      ) : member.photo ? (
+                        <img
+                          src={member.photo}
+                          alt={member.name}
+                          className="w-12 h-12 rounded-full object-cover mx-auto"
+                        />
+                      ) : (
+                        <span className="text-gray-400 italic">No Photo</span>
+                      )}
+                    </td>
+
+                    {/* Editable or Read-only */}
+                    {editingMemberId === member._id ? (
+                      <>
+                        <EditableRow
+                          member={member}
+                          editData={editData}
+                          handleEditChange={handleEditChange}
+                          handleUpdate={handleUpdate}
+                          setEditingMemberId={setEditingMemberId}
+                          setPreview={setPreview}
+                          departments={departments}
+                          designations={designations}
+                        />
+                      </>
+                    ) : (
+                      <ReadOnlyRow
+                        member={member}
+                        setEditingMemberId={setEditingMemberId}
+                        setEditData={setEditData}
+                        handleDelete={handleDelete}
+                      />
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
