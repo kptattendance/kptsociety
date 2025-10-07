@@ -4,8 +4,7 @@ import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { Pencil, Trash2, Check, X, Lock } from "lucide-react";
 import Swal from "sweetalert2";
-import LoadOverlay from "../../../components/LoadOverlay"; // ✅ Import overlay
-
+import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
 
 export default function AdminFDTable() {
@@ -15,6 +14,9 @@ export default function AdminFDTable() {
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Processing FDs...");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 15;
 
   // ✅ Fetch all FDs
   const fetchFDs = async () => {
@@ -37,14 +39,13 @@ export default function AdminFDTable() {
     fetchFDs();
   }, []);
 
-  // ✅ Custom Confirm Dialog
   const showConfirm = async (title, text) => {
     const result = await Swal.fire({
       title,
       text,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb", // blue
+      confirmButtonColor: "#2563eb",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes",
       cancelButtonText: "No",
@@ -96,11 +97,11 @@ export default function AdminFDTable() {
       setEditingId(null);
       toast.success("✅ FD updated successfully");
       fetchFDs();
-      setLoading(true);
     } catch (error) {
       console.error("Update failed:", error);
       toast.error("❌ Failed to update FD");
-      setLoading(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -126,6 +127,27 @@ export default function AdminFDTable() {
     }
   };
 
+  // ✅ Filtered FDs by search (name or phone)
+  const filteredFDs = fds.filter((fd) => {
+    const name = fd.memberId?.name?.toLowerCase() || "";
+    const phone = fd.memberId?.phone?.toLowerCase() || "";
+    const search = searchTerm.toLowerCase();
+    return name.includes(search) || phone.includes(search);
+  });
+
+  // ✅ Pagination Logic
+  const totalPages = Math.ceil(filteredFDs.length / recordsPerPage);
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const currentRecords = filteredFDs.slice(
+    startIndex,
+    startIndex + recordsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-50 to-blue-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
@@ -134,6 +156,20 @@ export default function AdminFDTable() {
         <h2 className="text-2xl font-bold text-indigo-700 mb-6 text-center">
           💼 Fixed Deposit Records
         </h2>
+
+        {/* 🔍 Search Bar */}
+        <div className="flex justify-between items-center mb-4">
+          <input
+            type="text"
+            placeholder="🔍 Search by name or phone..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-indigo-400 outline-none"
+          />
+        </div>
 
         <div className="overflow-x-auto">
           {loading ? (
@@ -144,6 +180,7 @@ export default function AdminFDTable() {
             <table className="min-w-full divide-y divide-gray-300 text-sm">
               <thead className="bg-indigo-100 text-gray-700">
                 <tr>
+                  <th className="px-4 py-2 text-left">SL No.</th>
                   <th className="px-4 py-2 text-left">Member</th>
                   <th className="px-4 py-2 text-left">Principal (₹)</th>
                   <th className="px-4 py-2 text-left">Interest (%)</th>
@@ -157,7 +194,7 @@ export default function AdminFDTable() {
               </thead>
 
               <tbody className="divide-y divide-gray-200 bg-white">
-                {fds.length === 0 ? (
+                {currentRecords.length === 0 ? (
                   <tr>
                     <td
                       colSpan="10"
@@ -167,19 +204,32 @@ export default function AdminFDTable() {
                     </td>
                   </tr>
                 ) : (
-                  fds.map((fd) => (
+                  currentRecords.map((fd, index) => (
                     <tr key={fd._id} className="hover:bg-gray-50">
-                      {/* Member */}
-                      <td className="px-4 py-2">
-                        {fd.memberId?.name || "Unknown"}
+                      <td className="px-4 py-2 text-gray-600">
+                        {startIndex + index + 1}
                       </td>
 
-                      {/* Principal */}
+                      <td className="px-4 py-2 flex items-center space-x-3">
+                        <img
+                          src={fd.memberId?.photo || "/default-avatar.png"}
+                          alt="member"
+                          className="w-8 h-8 rounded-full border"
+                        />
+                        <div>
+                          <div className="font-medium text-gray-800">
+                            {fd.memberId?.name || "Unknown"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            📞 {fd.memberId?.phone || "N/A"}
+                          </div>
+                        </div>
+                      </td>
+
                       <td className="px-4 py-2 font-medium text-gray-700">
                         ₹{fd.principal?.toLocaleString()}
                       </td>
 
-                      {/* Interest Rate */}
                       <td className="px-4 py-2">
                         {editingId === fd._id ? (
                           <input
@@ -199,7 +249,6 @@ export default function AdminFDTable() {
                         )}
                       </td>
 
-                      {/* Tenure */}
                       <td className="px-4 py-2">
                         {editingId === fd._id ? (
                           <input
@@ -219,12 +268,10 @@ export default function AdminFDTable() {
                         )}
                       </td>
 
-                      {/* Start Date */}
                       <td className="px-4 py-2 text-gray-600">
                         {new Date(fd.startDate).toLocaleDateString("en-GB")}
                       </td>
 
-                      {/* Maturity Date */}
                       <td className="px-4 py-2 text-gray-600">
                         {fd.maturityDate
                           ? new Date(fd.maturityDate).toLocaleDateString(
@@ -233,7 +280,6 @@ export default function AdminFDTable() {
                           : "-"}
                       </td>
 
-                      {/* Maturity Amount */}
                       <td className="px-4 py-2 font-medium text-green-700">
                         ₹
                         {fd.maturityAmount
@@ -247,7 +293,6 @@ export default function AdminFDTable() {
                           : "-"}
                       </td>
 
-                      {/* Status */}
                       <td className="px-4 py-2">
                         {editingId === fd._id ? (
                           <select
@@ -281,7 +326,6 @@ export default function AdminFDTable() {
                         )}
                       </td>
 
-                      {/* Actions */}
                       <td className="px-4 py-2 text-center space-x-2">
                         {editingId === fd._id ? (
                           <>
@@ -330,6 +374,41 @@ export default function AdminFDTable() {
             </table>
           )}
         </div>
+
+        {/* ✅ Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center mt-6 space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-md border text-sm bg-white hover:bg-indigo-50 disabled:opacity-40"
+            >
+              Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded-md border text-sm ${
+                  currentPage === i + 1
+                    ? "bg-indigo-500 text-white"
+                    : "bg-white hover:bg-indigo-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-md border text-sm bg-white hover:bg-indigo-50 disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

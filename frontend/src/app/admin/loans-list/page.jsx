@@ -7,12 +7,11 @@ import { Trash2, Edit, Check, X } from "lucide-react";
 import Swal from "sweetalert2";
 import LoanRepaymentModal from "../../../components/AdminPageComponents/LoanRepaymentModal";
 import { toast } from "react-toastify";
-import LoadOverlay from "../../../components/LoadOverlay"; // ✅ Import overlay
+import LoadOverlay from "../../../components/LoadOverlay";
 
 export default function AdminLoanList() {
   const { getToken } = useAuth();
   const [loadingMessage, setLoadingMessage] = useState("Processing loans...");
-
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingLoanId, setEditingLoanId] = useState(null);
@@ -22,9 +21,12 @@ export default function AdminLoanList() {
     tenure: "",
     status: "",
   });
-  const [selectedLoanId, setSelectedLoanId] = useState(null); // modal state
+  const [selectedLoanId, setSelectedLoanId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15; // ✅ 15 records per page
 
-  // Fetch Loans
+  // ✅ Fetch Loans with member data
   const fetchLoans = async () => {
     try {
       setLoading(true);
@@ -38,8 +40,7 @@ export default function AdminLoanList() {
 
       const loansWithMember = await Promise.all(
         res.data.map(async (loan) => {
-          if (!loan.memberId?._id) return loan; // skip if memberId is missing
-
+          if (!loan.memberId?._id) return loan;
           try {
             const memberRes = await axios.get(
               `${process.env.NEXT_PUBLIC_API_URL}/api/members/${loan.memberId._id}`,
@@ -66,7 +67,6 @@ export default function AdminLoanList() {
     fetchLoans();
   }, []);
 
-  // SweetAlert Confirm
   const showConfirm = async (title, text) => {
     const result = await Swal.fire({
       title,
@@ -81,7 +81,7 @@ export default function AdminLoanList() {
     return result.isConfirmed;
   };
 
-  // Delete Loan
+  // ✅ Delete Loan
   const handleDelete = async (id) => {
     const confirmed = await showConfirm(
       "Delete Loan?",
@@ -104,7 +104,7 @@ export default function AdminLoanList() {
     }
   };
 
-  // Start editing
+  // ✅ Start Editing
   const startEditing = (loan) => {
     setEditingLoanId(loan._id);
     setEditForm({
@@ -120,12 +120,11 @@ export default function AdminLoanList() {
     setEditForm({ ...editForm, [name]: value });
   };
 
-  // Submit edit
+  // ✅ Submit Edit
   const submitEdit = async (loanId) => {
     try {
       const token = await getToken();
       setLoading(true);
-      // Optimistic UI update
       setLoans((prevLoans) =>
         prevLoans.map((loan) =>
           loan._id === loanId ? { ...loan, ...editForm } : loan
@@ -135,9 +134,7 @@ export default function AdminLoanList() {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}`,
         editForm,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("✅ Loan updated successfully");
@@ -145,10 +142,29 @@ export default function AdminLoanList() {
     } catch (err) {
       console.error(err);
       toast.error("❌ Failed to update loan");
-      fetchLoans(); // fallback to refresh data if error
+      fetchLoans();
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Filter loans by name or phone
+  const filteredLoans = loans.filter((loan) => {
+    const name = loan.memberId?.name?.toLowerCase() || "";
+    const phone = loan.memberId?.phone?.toLowerCase() || "";
+    const search = searchTerm.toLowerCase();
+    return name.includes(search) || phone.includes(search);
+  });
+
+  // ✅ Pagination logic
+  const totalPages = Math.ceil(filteredLoans.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentLoans = filteredLoans.slice(indexOfFirstItem, indexOfLastItem);
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
 
   if (loading) return <LoadOverlay show={true} message={loadingMessage} />;
@@ -167,10 +183,22 @@ export default function AdminLoanList() {
           💰 Loan Applications
         </h2>
 
+        {/* 🔍 Search Bar */}
+        <div className="flex justify-between items-center mb-4">
+          <input
+            type="text"
+            placeholder="🔍 Search by name or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-orange-400 outline-none"
+          />
+        </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white shadow-lg rounded-lg overflow-hidden">
             <thead className="bg-indigo-600 text-white">
               <tr>
+                <th className="py-3 px-4 text-left">Sl. No.</th>
                 <th className="py-3 px-4 text-left">Member</th>
                 <th className="py-3 px-4 text-left">Loan Type</th>
                 <th className="py-3 px-4 text-right">Amount</th>
@@ -183,14 +211,31 @@ export default function AdminLoanList() {
             </thead>
 
             <tbody>
-              {loans.map((loan) => (
+              {currentLoans.map((loan, index) => (
                 <tr
                   key={loan._id}
                   className="border-b even:bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <td className="py-3 px-4">
-                    {loan.memberId?.name || "Unknown"}
+                  <td className="px-4 py-2 text-gray-600">
+                    {(currentPage - 1) * itemsPerPage + index + 1}
                   </td>
+
+                  <td className="py-3 px-4 flex items-center space-x-3">
+                    <img
+                      src={loan.memberId?.photo || "/default-avatar.png"}
+                      alt="member"
+                      className="w-8 h-8 rounded-full border"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-800">
+                        {loan.memberId?.name || "Unknown"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        📞 {loan.memberId?.phone || "N/A"}
+                      </div>
+                    </div>
+                  </td>
+
                   <td className="py-3 px-4">{loan.loanType}</td>
 
                   {editingLoanId === loan._id ? (
@@ -290,7 +335,6 @@ export default function AdminLoanList() {
                     </>
                   )}
 
-                  {/* Repayment Schedule Button */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => setSelectedLoanId(loan._id)}
@@ -305,7 +349,47 @@ export default function AdminLoanList() {
           </table>
         </div>
 
-        {/* Repayment Schedule Modal */}
+        {/* ✅ Pagination Controls */}
+        <div className="flex justify-center items-center mt-6 gap-2">
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-3 py-1 rounded-md ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-indigo-500 text-white hover:bg-indigo-600"
+            }`}
+          >
+            Prev
+          </button>
+
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goToPage(i + 1)}
+              className={`px-3 py-1 rounded-md ${
+                currentPage === i + 1
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1 rounded-md ${
+              currentPage === totalPages
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-indigo-500 text-white hover:bg-indigo-600"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+
         {selectedLoanId && (
           <LoanRepaymentModal
             loanId={selectedLoanId}

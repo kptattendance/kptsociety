@@ -14,6 +14,10 @@ export default function MembersList() {
   const [editingMemberId, setEditingMemberId] = useState(null);
   const [editData, setEditData] = useState({});
   const [preview, setPreview] = useState(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 15;
+
   const { getToken } = useAuth();
 
   const departments = [
@@ -39,7 +43,31 @@ export default function MembersList() {
     "Superintendent",
   ];
 
-  // Fetch members
+  // 🔍 Filtered + Paginated Data
+  const filteredMembers = members.filter((member) => {
+    const term = search.toLowerCase();
+    return (
+      member.name?.toLowerCase().includes(term) ||
+      member.phone?.toLowerCase().includes(term) ||
+      member.department?.toLowerCase().includes(term) ||
+      member.kgidNumber?.toLowerCase().includes(term) ||
+      member.designation?.toLowerCase().includes(term) ||
+      member.workingCollegeName?.toLowerCase().includes(term) ||
+      member.role?.toLowerCase().includes(term)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredMembers.length / rowsPerPage);
+  const paginatedMembers = filteredMembers.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+  }, [filteredMembers, totalPages]);
+
+  // 🧾 Fetch members
   const fetchMembers = async () => {
     try {
       setLoading(true);
@@ -62,7 +90,7 @@ export default function MembersList() {
     fetchMembers();
   }, []);
 
-  // Delete member
+  // ❌ Delete member
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
     try {
@@ -83,7 +111,7 @@ export default function MembersList() {
     }
   };
 
-  // Handle input change
+  // ✏️ Handle input change
   const handleEditChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "photo") {
@@ -95,7 +123,7 @@ export default function MembersList() {
     }
   };
 
-  // Update member
+  // 💾 Update member
   const handleUpdate = async (id) => {
     try {
       setLoading(true);
@@ -129,6 +157,7 @@ export default function MembersList() {
     }
   };
 
+  // 🌈 UI
   return (
     <div className="min-h-screen bg-gradient-to-r from-violet-50 to-violet-100 p-6">
       <div className="p-4 sm:p-6 max-w-7xl mx-auto bg-gradient-to-br from-gray-50 via-white to-gray-100 rounded-xl shadow-inner">
@@ -138,11 +167,27 @@ export default function MembersList() {
           👥 Members List
         </h2>
 
+        {/* 🔍 Search Bar */}
+        <div className="flex justify-between items-center mb-4">
+          <input
+            type="text"
+            placeholder="Search by name, phone, dept, KGID..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3 shadow-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+          />
+        </div>
+
+        {/* 🧾 Table */}
         <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">
           <table className="min-w-full text-sm sm:text-base text-gray-700">
             <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
               <tr>
                 {[
+                  "Sl. No.",
                   "Photo",
                   "Name",
                   "Email",
@@ -169,18 +214,23 @@ export default function MembersList() {
             </thead>
 
             <tbody>
-              {members.length === 0 ? (
+              {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="14" className="text-center py-6 text-gray-500">
+                  <td colSpan="15" className="text-center py-6 text-gray-500">
                     No members found.
                   </td>
                 </tr>
               ) : (
-                members.map((member) => (
+                paginatedMembers.map((member, index) => (
                   <tr
                     key={member._id}
                     className="border-b hover:bg-indigo-50 transition duration-200"
                   >
+                    {/* SL. No. */}
+                    <td className="px-4 py-2 text-gray-600">
+                      {(currentPage - 1) * rowsPerPage + index + 1}
+                    </td>
+
                     {/* Photo */}
                     <td className="px-3 py-2 text-center">
                       {editingMemberId === member._id ? (
@@ -210,20 +260,18 @@ export default function MembersList() {
                       )}
                     </td>
 
-                    {/* Editable or Read-only */}
+                    {/* Editable / Read-only Rows */}
                     {editingMemberId === member._id ? (
-                      <>
-                        <EditableRow
-                          member={member}
-                          editData={editData}
-                          handleEditChange={handleEditChange}
-                          handleUpdate={handleUpdate}
-                          setEditingMemberId={setEditingMemberId}
-                          setPreview={setPreview}
-                          departments={departments}
-                          designations={designations}
-                        />
-                      </>
+                      <EditableRow
+                        member={member}
+                        editData={editData}
+                        handleEditChange={handleEditChange}
+                        handleUpdate={handleUpdate}
+                        setEditingMemberId={setEditingMemberId}
+                        setPreview={setPreview}
+                        departments={departments}
+                        designations={designations}
+                      />
                     ) : (
                       <ReadOnlyRow
                         member={member}
@@ -238,12 +286,45 @@ export default function MembersList() {
             </tbody>
           </table>
         </div>
+
+        {/* 📄 Pagination Controls */}
+        {filteredMembers.length > rowsPerPage && (
+          <div className="flex justify-between items-center mt-6 text-sm sm:text-base">
+            <p className="text-gray-600">
+              Page {currentPage} of {totalPages}
+            </p>
+            <div className="flex gap-3">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className={`px-4 py-2 rounded-lg ${
+                  currentPage === 1
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-indigo-500 text-white hover:bg-indigo-600"
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className={`px-4 py-2 rounded-lg ${
+                  currentPage === totalPages
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-indigo-500 text-white hover:bg-indigo-600"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// ✅ Helper Components for clarity
+// ✅ Helper Components
 
 function ReadOnlyRow({
   member,

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Trash2, Lock } from "lucide-react";
+import { Trash2, Lock, Search } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import CDScheduleModal from "./CDScheduleModal";
 import { toast } from "react-toastify";
@@ -10,11 +10,15 @@ import { toast } from "react-toastify";
 export default function AdminCDList() {
   const { getToken } = useAuth();
   const [cds, setCDs] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Fetching CDs...");
   const [selectedCDId, setSelectedCDId] = useState(null);
 
-  // Fetch all CDs
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 15;
+
+  // ✅ Fetch all CDs
   const fetchCDs = async () => {
     try {
       setLoading(true);
@@ -36,7 +40,30 @@ export default function AdminCDList() {
     fetchCDs();
   }, []);
 
-  // Delete CD
+  // ✅ Filter CDs
+  const filteredCDs = cds.filter((cd) => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return (
+      cd.memberId?.name?.toLowerCase().includes(lowerSearch) ||
+      cd.memberId?.phone?.toLowerCase().includes(lowerSearch) ||
+      cd.accountNumber?.toLowerCase().includes(lowerSearch)
+    );
+  });
+
+  // ✅ Pagination Logic
+  const totalPages = Math.ceil(filteredCDs.length / recordsPerPage);
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const currentRecords = filteredCDs.slice(
+    startIndex,
+    startIndex + recordsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
+  // ✅ Delete CD
   const handleDelete = async (cdId) => {
     if (!confirm("Are you sure you want to delete this CD?")) return;
     try {
@@ -55,7 +82,7 @@ export default function AdminCDList() {
     }
   };
 
-  // Close CD
+  // ✅ Close CD
   const handleClose = async (cdId) => {
     if (!confirm("Close this CD account?")) return;
     try {
@@ -76,7 +103,7 @@ export default function AdminCDList() {
     }
   };
 
-  // Refresh when modal updates or closes
+  // ✅ Refresh when modal closes
   const handleModalClose = (updated = false) => {
     setSelectedCDId(null);
     if (updated) fetchCDs();
@@ -91,10 +118,32 @@ export default function AdminCDList() {
           💰 CD Accounts
         </h2>
 
+        {/* 🔍 Search Bar */}
+        <div className="flex items-center justify-end mb-4">
+          <div className="relative w-full max-w-sm">
+            <Search
+              className="absolute left-3 top-2.5 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search by name, phone, or account #"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+            />
+          </div>
+        </div>
+
+        {/* ✅ Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-300 text-sm">
             <thead className="bg-teal-100 text-gray-700">
               <tr>
+                <th className="px-4 py-2 text-left">SL No.</th>
                 <th className="px-4 py-2 text-left">Account #</th>
                 <th className="px-4 py-2 text-left">Member</th>
                 <th className="px-4 py-2 text-left">Monthly Deposit (₹)</th>
@@ -102,16 +151,16 @@ export default function AdminCDList() {
                 <th className="px-4 py-2 text-left">Total Withdrawn</th>
                 <th className="px-4 py-2 text-left">Balance</th>
                 <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Actions</th>
+                <th className="px-4 py-2 text-center">Actions</th>
                 <th className="px-4 py-2 text-center">Schedule</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-200 bg-white">
-              {!loading && cds.length === 0 && (
+              {!loading && currentRecords.length === 0 && (
                 <tr>
                   <td
-                    colSpan="9"
+                    colSpan="10"
                     className="text-center py-4 text-gray-500 italic"
                   >
                     No CD accounts found.
@@ -119,8 +168,12 @@ export default function AdminCDList() {
                 </tr>
               )}
 
-              {cds.map((cd) => (
+              {currentRecords.map((cd, index) => (
                 <tr key={cd._id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 text-gray-600">
+                    {startIndex + index + 1}
+                  </td>
+
                   <td className="px-4 py-2 font-medium">{cd.accountNumber}</td>
 
                   <td className="px-4 py-2 flex items-center gap-3">
@@ -157,9 +210,7 @@ export default function AdminCDList() {
                           ? "bg-green-100 text-green-700"
                           : cd.status === "Closed"
                           ? "bg-gray-200 text-gray-600"
-                          : cd.status === "Partial"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : ""
+                          : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
                       {cd.status}
@@ -200,6 +251,41 @@ export default function AdminCDList() {
             <CDScheduleModal cdId={selectedCDId} onClose={handleModalClose} />
           )}
         </div>
+
+        {/* ✅ Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center mt-6 space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-md border text-sm bg-white hover:bg-teal-50 disabled:opacity-40"
+            >
+              Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded-md border text-sm ${
+                  currentPage === i + 1
+                    ? "bg-teal-500 text-white"
+                    : "bg-white hover:bg-teal-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-md border text-sm bg-white hover:bg-teal-50 disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

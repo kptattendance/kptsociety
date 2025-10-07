@@ -70,7 +70,7 @@ export const createFD = async (req, res) => {
 export const getAllFDs = async (req, res) => {
   try {
     const fds = await FD.find()
-      .populate("memberId", "name email")
+      .populate("memberId", "name email photo phone")
       .sort({ createdAt: -1 });
     res.json(fds);
   } catch (err) {

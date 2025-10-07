@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Pencil, Trash2, Check, X, Lock, Eye } from "lucide-react";
+import { Pencil, Trash2, Check, X, Lock, Eye, Search } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
 
@@ -14,8 +14,12 @@ export default function AdminShareTable() {
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Fetching Shares...");
   const [selectedShare, setSelectedShare] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // ✅ Fetch all share accounts
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 15;
+
   const fetchShares = async () => {
     try {
       setLoading(true);
@@ -40,7 +44,6 @@ export default function AdminShareTable() {
     fetchShares();
   }, []);
 
-  // ✅ Delete Share
   const handleDelete = async (shareId) => {
     if (!confirm("Are you sure you want to delete this Share Account?")) return;
     try {
@@ -49,7 +52,9 @@ export default function AdminShareTable() {
       const token = await getToken();
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/${shareId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       toast.success("Share account deleted successfully");
       fetchShares();
@@ -60,7 +65,6 @@ export default function AdminShareTable() {
     }
   };
 
-  // ✅ Edit Share
   const handleEditClick = (share) => {
     setEditingId(share._id);
     setEditForm({
@@ -79,7 +83,9 @@ export default function AdminShareTable() {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/${shareId}`,
         editForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       toast.success("Share account updated successfully");
       setEditingId(null);
@@ -91,7 +97,6 @@ export default function AdminShareTable() {
     }
   };
 
-  // ✅ Close Share
   const handleClose = async (shareId) => {
     if (!confirm("Close this Share Account?")) return;
     try {
@@ -101,7 +106,9 @@ export default function AdminShareTable() {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/close/${shareId}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       toast.success("Share account closed successfully");
       fetchShares();
@@ -112,6 +119,27 @@ export default function AdminShareTable() {
     }
   };
 
+  // Filter shares based on search
+  const filteredShares = shares.filter((share) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      share.memberId?.name?.toLowerCase().includes(search) ||
+      share.memberId?.phone?.toLowerCase().includes(search) ||
+      share.status?.toLowerCase().includes(search)
+    );
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredShares.length / rowsPerPage);
+  const paginatedShares = filteredShares.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+  }, [filteredShares, totalPages]);
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-yellow-50 to-teal-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
@@ -121,10 +149,31 @@ export default function AdminShareTable() {
           🪙 Share Accounts
         </h2>
 
+        {/* Search bar */}
+        <div className="flex items-center justify-end mb-4">
+          <div className="relative w-full md:w-1/3">
+            <Search
+              size={18}
+              className="absolute left-3 top-2.5 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder="Search by name, phone, or status..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border border-gray-300 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            />
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-300 text-sm">
             <thead className="bg-indigo-100 text-gray-700">
               <tr>
+                <th className="px-4 py-2 text-left">Sl No</th>
                 <th className="px-4 py-2 text-left">Member</th>
                 <th className="px-4 py-2 text-left">Total Shares</th>
                 <th className="px-4 py-2 text-left">Share Price (₹)</th>
@@ -135,10 +184,10 @@ export default function AdminShareTable() {
             </thead>
 
             <tbody className="divide-y divide-gray-200 bg-white">
-              {!loading && shares.length === 0 && (
+              {!loading && filteredShares.length === 0 && (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     className="text-center py-4 text-gray-500 italic"
                   >
                     No share accounts found.
@@ -146,9 +195,12 @@ export default function AdminShareTable() {
                 </tr>
               )}
 
-              {shares.map((share) => (
+              {paginatedShares.map((share, index) => (
                 <tr key={share._id} className="hover:bg-gray-50">
-                  {/* Member Info */}
+                  <td className="px-4 py-2 font-medium text-gray-600">
+                    {(currentPage - 1) * rowsPerPage + index + 1}
+                  </td>
+
                   <td className="px-4 py-2 flex items-center gap-3">
                     <img
                       src={share.memberId?.photo || "/default-avatar.png"}
@@ -165,7 +217,6 @@ export default function AdminShareTable() {
                     </div>
                   </td>
 
-                  {/* Total Shares */}
                   <td className="px-4 py-2 font-medium text-gray-700">
                     {editingId === share._id ? (
                       <input
@@ -184,7 +235,6 @@ export default function AdminShareTable() {
                     )}
                   </td>
 
-                  {/* Share Price */}
                   <td className="px-4 py-2">
                     {editingId === share._id ? (
                       <input
@@ -203,12 +253,10 @@ export default function AdminShareTable() {
                     )}
                   </td>
 
-                  {/* Total Amount */}
                   <td className="px-4 py-2 font-medium text-gray-700">
                     ₹{share.totalAmount?.toLocaleString()}
                   </td>
 
-                  {/* Status */}
                   <td className="px-4 py-2">
                     {editingId === share._id ? (
                       <select
@@ -234,7 +282,6 @@ export default function AdminShareTable() {
                     )}
                   </td>
 
-                  {/* Actions */}
                   <td className="px-4 py-2 space-x-2">
                     {editingId === share._id ? (
                       <>
@@ -278,7 +325,6 @@ export default function AdminShareTable() {
                           className="text-indigo-600 hover:text-indigo-800"
                         >
                           <Eye size={16} />
-                          {/* View */}
                         </button>
                       </>
                     )}
@@ -287,10 +333,43 @@ export default function AdminShareTable() {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          {filteredShares.length > rowsPerPage && (
+            <div className="flex justify-between items-center mt-4 text-sm">
+              <p className="text-gray-600">
+                Page {currentPage} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                  className={`px-3 py-1 rounded-lg ${
+                    currentPage === 1
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-indigo-500 text-white hover:bg-indigo-600"
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  className={`px-3 py-1 rounded-lg ${
+                    currentPage === totalPages
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-indigo-500 text-white hover:bg-indigo-600"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ✅ Purchase History Modal */}
+      {/* Purchase History Modal */}
       {selectedShare && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl w-[90%] md:w-[700px] p-6 relative">

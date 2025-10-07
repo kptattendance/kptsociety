@@ -2,6 +2,8 @@ import express from "express";
 import Member from "../models/memberModel.js";
 import RD from "../models/rdAccount.js";
 import FD from "../models/fdAccount.js";
+import CD from "../models/cdAccount.js";
+import ShareAccount from "../models/shareModel.js";
 import Loan from "../models/loanModel.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -9,10 +11,12 @@ const router = express.Router();
 
 router.get("/stats", requireAuthWithRole(["admin"]), async (req, res) => {
   try {
-    const [members, rds, fds, loans] = await Promise.all([
+    const [members, rds, fds, cds, shares, loans] = await Promise.all([
       Member.countDocuments(),
       RD.countDocuments(),
       FD.countDocuments(),
+      CD.countDocuments(),
+      ShareAccount.countDocuments(),
       Loan.countDocuments(),
     ]);
 
@@ -23,6 +27,8 @@ router.get("/stats", requireAuthWithRole(["admin"]), async (req, res) => {
         rds,
         fds,
         loans,
+        cds,
+        shares,
       },
     });
   } catch (error) {

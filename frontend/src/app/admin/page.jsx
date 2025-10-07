@@ -129,6 +129,20 @@ export default function AdminDashboard() {
       icon: CreditCard,
       gradient: "bg-gradient-to-br from-amber-400 via-orange-500 to-red-500",
     },
+    {
+      id: "cd",
+      label: "CD Accounts",
+      value: stats.cds, // ✅ New
+      icon: Wallet,
+      gradient: "bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500",
+    },
+    {
+      id: "shares",
+      label: "Shares",
+      value: stats.shares, // ✅ New
+      icon: PiggyBank,
+      gradient: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500",
+    },
   ];
 
   return (
