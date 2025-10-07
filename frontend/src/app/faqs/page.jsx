@@ -1,4 +1,5 @@
 "use client";
+import Footer from "../../components/Footer";
 import { useState } from "react";
 
 export default function FAQsPage() {
@@ -57,35 +58,38 @@ export default function FAQsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-8">
-      <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-          Frequently Asked Questions (FAQs)
-        </h1>
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div
-              key={index}
-              className="border border-gray-200 rounded-lg shadow-sm"
-            >
-              <button
-                onClick={() => toggleFAQ(index)}
-                className="w-full text-left px-4 py-3 focus:outline-none flex justify-between items-center"
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-8">
+        <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-8">
+          <h1 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+            Frequently Asked Questions (FAQs)
+          </h1>
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg shadow-sm"
               >
-                <span className="font-medium text-gray-800">
-                  {faq.question}
-                </span>
-                <span className="text-gray-500">
-                  {openIndex === index ? "−" : "+"}
-                </span>
-              </button>
-              {openIndex === index && (
-                <div className="px-4 pb-4 text-gray-600">{faq.answer}</div>
-              )}
-            </div>
-          ))}
+                <button
+                  onClick={() => toggleFAQ(index)}
+                  className="w-full text-left px-4 py-3 focus:outline-none flex justify-between items-center"
+                >
+                  <span className="font-medium text-gray-800">
+                    {faq.question}
+                  </span>
+                  <span className="text-gray-500">
+                    {openIndex === index ? "−" : "+"}
+                  </span>
+                </button>
+                {openIndex === index && (
+                  <div className="px-4 pb-4 text-gray-600">{faq.answer}</div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }
