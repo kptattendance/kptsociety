@@ -160,7 +160,11 @@ export const getLoan = async (req, res) => {
     let loan;
 
     loan = await Loan.findOne({ clerkId: id }).populate("memberId");
-    if (!loan) loan = await Loan.findById(id).populate("memberId");
+    if (!loan)
+      loan = await Loan.findById(id).populate(
+        "memberId",
+        "name email photo phone"
+      );
 
     if (!loan) return res.status(404).json({ message: "Loan not found" });
 
@@ -176,7 +180,6 @@ export const markRepaymentPaid = async (req, res) => {
   try {
     const { loanId, installmentNo } = req.params; // installmentNo is 1-based index
     const loan = await Loan.findById(loanId);
-    console.log(loan);
     if (!loan) return res.status(404).json({ message: "Loan not found" });
 
     const index = parseInt(installmentNo, 10) - 1;

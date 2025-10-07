@@ -21,7 +21,7 @@ const MemberFD = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+      console.log(res.data);
       setFDs(Array.isArray(res.data) ? res.data : [res.data]);
     } catch (err) {
       console.error("Error fetching FDs:", err);
@@ -57,8 +57,32 @@ const MemberFD = () => {
     return Math.max(totalMonths - elapsedMonths, 0);
   };
 
+  // ✅ Take member details from first FD (since all FDs belong to same member)
+  const member = fds[0]?.memberId;
+
   return (
     <div className="p-4 max-w-5xl mx-auto space-y-6">
+      {/* ✅ Member Info */}
+      {member && (
+        <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 bg-white shadow-md rounded-lg p-4">
+          <img
+            src={member.photo}
+            alt="Member"
+            className="w-20 h-20 rounded-full border-2 border-green-400 object-cover"
+          />
+          <div className="text-center sm:text-left">
+            <h3 className="text-xl font-semibold text-green-700">
+              {member.name}
+            </h3>
+            <p className="text-gray-600">
+              📞 {member.phone || "Not Available"}
+            </p>
+            <p className="text-gray-600">📧 {member.email}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ FD Accounts */}
       <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800">
         💰 My Fixed Deposit Accounts
       </h2>
@@ -82,7 +106,7 @@ const MemberFD = () => {
               </div>
               <div>
                 <p className="text-gray-500 text-xs sm:text-sm">Principal</p>
-                <p className="font-medium">₹{fd.principal.toLocaleString()}</p>
+                <p className="font-medium">₹{fd.principal?.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-gray-500 text-xs sm:text-sm">Tenure</p>

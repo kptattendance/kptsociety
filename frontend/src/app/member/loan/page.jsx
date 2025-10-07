@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 
-const ITEMS_PER_PAGE = 10; // Pagination rows
+const ITEMS_PER_PAGE = 10;
 
 const MemberLoan = () => {
   const { getToken } = useAuth();
@@ -16,8 +16,8 @@ const MemberLoan = () => {
   const fetchLoanSchedule = async () => {
     try {
       if (!user) return;
-
       const token = await getToken();
+
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
         {
@@ -79,13 +79,19 @@ const MemberLoan = () => {
         );
         const totalPages = Math.ceil(loan.repayments.length / ITEMS_PER_PAGE);
 
+        const member = loan.memberId || {};
+
         return (
           <div key={loan._id} className="mb-8 sm:mb-12">
+            {/* Loan Details */}
             {/* Loan Details */}
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white shadow-lg rounded-lg overflow-hidden mb-4 text-sm sm:text-base">
                 <thead className="bg-indigo-600 text-white">
                   <tr>
+                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-left">
+                      Member
+                    </th>
                     <th className="py-2 px-2 sm:py-3 sm:px-4 text-left">
                       Loan Type
                     </th>
@@ -117,6 +123,26 @@ const MemberLoan = () => {
                 </thead>
                 <tbody>
                   <tr className="border-b even:bg-gray-50 hover:bg-gray-100 transition-colors">
+                    {/* ✅ Member Column */}
+                    <td className="py-2 px-2 sm:py-3 sm:px-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={member.photo}
+                          alt="Member"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-green-400"
+                        />
+                        <div>
+                          <p className="font-semibold text-green-700">
+                            {member.name}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {member.phone}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Existing Columns */}
                     <td className="py-2 px-2 sm:py-3 sm:px-4">
                       {loan.loanType}
                     </td>

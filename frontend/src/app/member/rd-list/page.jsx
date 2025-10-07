@@ -83,6 +83,7 @@ const MemberRD = () => {
               <table className="min-w-full bg-white shadow-lg rounded-lg overflow-hidden mb-4 text-sm sm:text-base">
                 <thead className="bg-indigo-600 text-white">
                   <tr>
+                    <th className="py-2 px-3 text-left">Member</th>
                     <th className="py-2 px-3 text-left">Account No</th>
                     <th className="py-2 px-3 text-right">Deposit</th>
                     <th className="py-2 px-3 text-right">Tenure (months)</th>
@@ -96,6 +97,26 @@ const MemberRD = () => {
 
                 <tbody>
                   <tr className="border-b even:bg-gray-50 hover:bg-gray-100 transition-colors">
+                    {/* ✅ Member Info Column */}
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={rd.memberId.photo}
+                          alt="Member"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-green-400"
+                        />
+                        <div>
+                          <p className="font-semibold text-green-700">
+                            {rd.memberId.name}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {rd.memberId.phone}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* ✅ Existing Columns */}
                     <td className="py-2 px-3">{rd.accountNumber}</td>
                     <td className="py-2 px-3 text-right">
                       ₹{rd.depositAmount.toLocaleString()}

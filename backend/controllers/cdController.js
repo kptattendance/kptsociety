@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 // ------------------- Create CD Account -------------------
 export const createCD = async (req, res) => {
   try {
-    const { memberId, monthlyDeposit, clerkId, startDate } = req.body;
+    const { memberId, monthlyDeposit, startDate } = req.body;
 
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ error: "Member not found" });
@@ -17,7 +17,7 @@ export const createCD = async (req, res) => {
     const cd = new CD({
       accountNumber: `CD-${Date.now()}`,
       memberId,
-      clerkId,
+      clerkId: member.clerkId,
       monthlyDeposit: monthlyDeposit || 500,
       balance: 0,
       totalDeposited: 0,
@@ -60,14 +60,18 @@ export const getAllCDs = async (req, res) => {
 export const getMemberCDs = async (req, res) => {
   try {
     const { memberId } = req.params;
+
     const isMongoId = mongoose.Types.ObjectId.isValid(memberId);
     const query = isMongoId ? { memberId } : { clerkId: memberId };
+
     const cds = await CD.find(query).populate(
       "memberId",
       "name email phone photo"
     );
+
     res.json(cds);
   } catch (err) {
+    console.error("Error fetching member CDs:", err);
     res.status(500).json({ error: err.message });
   }
 };

@@ -103,7 +103,7 @@ export const getMemberFDs = async (req, res) => {
     }
 
     const fds = await FD.find({ memberId: member._id })
-      .populate("memberId", "name email")
+      .populate("memberId", "name email photo phone")
       .sort({ createdAt: -1 });
 
     res.json(fds);

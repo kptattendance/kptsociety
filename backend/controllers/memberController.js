@@ -107,7 +107,6 @@ export const getMember = async (req, res) => {
   try {
     const { id } = req.params;
     const member = await findMemberByIdOrClerk(id);
-
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }

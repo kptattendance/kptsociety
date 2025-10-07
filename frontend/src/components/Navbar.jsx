@@ -51,6 +51,8 @@ export default function Navbar() {
     { href: "/member/loan", label: "Loan Accounts", icon: Wallet },
     { href: "/member/rd-list", label: "RD Accounts", icon: PiggyBank },
     { href: "/member/fd-list", label: "FD Accounts", icon: CreditCard },
+    { href: "/member/cd-list", label: "CD Accounts", icon: CreditCard },
+    { href: "/member/shares", label: "Shares", icon: CreditCard },
     { href: "/member/settings", label: "Settings", icon: Settings },
   ];
 

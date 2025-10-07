@@ -53,7 +53,6 @@ export default function AdminCDForm() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd`,
         {
           ...formData,
-          clerkId: userId,
           amount: 500, // Fixed monthly deposit
           type: "deposit",
           date: new Date(),
