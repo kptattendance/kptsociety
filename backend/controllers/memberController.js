@@ -1,7 +1,6 @@
 import Member from "../models/memberModel.js";
 import cloudinary from "../config/cloudinary.js";
 import { clerkClient } from "@clerk/express";
-
 import XLSX from "xlsx";
 
 // -------------------- BULK UPLOAD MEMBERS --------------------
@@ -19,7 +18,16 @@ export const bulkUploadMembers = async (req, res) => {
     const createdMembers = [];
 
     for (const row of worksheet) {
-      const { email, role, ...rest } = row;
+      const {
+        email,
+        role,
+        memberType,
+        joiningDate,
+        resignDate,
+        societyNumber,
+        status,
+        ...rest
+      } = row;
 
       if (!email) continue; // skip if no email
 
@@ -29,12 +37,20 @@ export const bulkUploadMembers = async (req, res) => {
         publicMetadata: { role: role || "member" },
       });
 
-      // 2️⃣ Save in MongoDB
+      // 2️⃣ Auto-close if resignDate present
+      const finalStatus = resignDate ? "closed" : status || "active";
+
+      // 3️⃣ Save in MongoDB
       const member = new Member({
         ...rest,
         clerkId: clerkUser.id,
         email,
         role: role || "member",
+        memberType,
+        joiningDate,
+        resignDate: resignDate || null,
+        societyNumber,
+        status: finalStatus,
         photo: null, // no image for bulk
       });
 
@@ -56,22 +72,38 @@ export const bulkUploadMembers = async (req, res) => {
 // -------------------- ADD MEMBER --------------------
 export const addMember = async (req, res) => {
   try {
-    const { email, role, ...rest } = req.body;
+    const {
+      email,
+      role,
+      memberType,
+      joiningDate,
+      resignDate,
+      societyNumber,
+      status,
+      ...rest
+    } = req.body;
 
     // 1️⃣ Create Clerk user
     const clerkUser = await clerkClient.users.createUser({
       emailAddress: [email],
-      // password: "Test@1234", // Temporary password
-      publicMetadata: { role },
+      publicMetadata: { role: role || "member" },
     });
 
-    // 2️⃣ Save member in MongoDB
+    // 2️⃣ Determine status
+    const finalStatus = resignDate ? "closed" : status || "active";
+
+    // 3️⃣ Save member in MongoDB
     const member = new Member({
       ...rest,
       clerkId: clerkUser.id,
       email,
-      role,
-      photo: req.file?.cloudinaryUrl || null, // Use your upload middleware
+      role: role || "member",
+      memberType,
+      joiningDate,
+      resignDate: resignDate || null,
+      societyNumber,
+      status: finalStatus,
+      photo: req.file?.cloudinaryUrl || null,
     });
 
     await member.save();
@@ -92,13 +124,12 @@ export const getMembers = async (req, res) => {
   }
 };
 
+// Helper function
 const findMemberByIdOrClerk = async (id) => {
-  // If it's a valid Mongo ObjectId, try that first
   if (/^[0-9a-fA-F]{24}$/.test(id)) {
     const member = await Member.findById(id);
     if (member) return member;
   }
-  // Otherwise, fall back to Clerk ID
   return await Member.findOne({ clerkId: id });
 };
 
@@ -122,7 +153,16 @@ export const getMember = async (req, res) => {
 export const updateMember = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, role, ...rest } = req.body;
+    const {
+      email,
+      role,
+      memberType,
+      joiningDate,
+      resignDate,
+      societyNumber,
+      status,
+      ...rest
+    } = req.body;
 
     let member = await findMemberByIdOrClerk(id);
     if (!member) return res.status(404).json({ message: "Member not found" });
@@ -144,6 +184,18 @@ export const updateMember = async (req, res) => {
       });
       member.email = email || member.email;
       member.role = role || member.role;
+    }
+
+    // Assign new fields
+    if (memberType) member.memberType = memberType;
+    if (joiningDate) member.joiningDate = joiningDate;
+    if (societyNumber) member.societyNumber = societyNumber;
+
+    if (resignDate) {
+      member.resignDate = resignDate;
+      member.status = "closed";
+    } else if (status) {
+      member.status = status;
     }
 
     Object.assign(member, rest);

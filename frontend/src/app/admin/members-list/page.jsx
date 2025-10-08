@@ -43,7 +43,8 @@ export default function MembersList() {
     "Superintendent",
   ];
 
-  // 🔍 Filtered + Paginated Data
+  const statuses = ["active", "closed"];
+
   const filteredMembers = members.filter((member) => {
     const term = search.toLowerCase();
     return (
@@ -53,7 +54,8 @@ export default function MembersList() {
       member.kgidNumber?.toLowerCase().includes(term) ||
       member.designation?.toLowerCase().includes(term) ||
       member.workingCollegeName?.toLowerCase().includes(term) ||
-      member.role?.toLowerCase().includes(term)
+      member.role?.toLowerCase().includes(term) ||
+      member.status?.toLowerCase().includes(term)
     );
   });
 
@@ -67,7 +69,6 @@ export default function MembersList() {
     if (currentPage > totalPages) setCurrentPage(1);
   }, [filteredMembers, totalPages]);
 
-  // 🧾 Fetch members
   const fetchMembers = async () => {
     try {
       setLoading(true);
@@ -90,7 +91,6 @@ export default function MembersList() {
     fetchMembers();
   }, []);
 
-  // ❌ Delete member
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
     try {
@@ -111,7 +111,6 @@ export default function MembersList() {
     }
   };
 
-  // ✏️ Handle input change
   const handleEditChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "photo") {
@@ -123,7 +122,6 @@ export default function MembersList() {
     }
   };
 
-  // 💾 Update member
   const handleUpdate = async (id) => {
     try {
       setLoading(true);
@@ -157,7 +155,6 @@ export default function MembersList() {
     }
   };
 
-  // 🌈 UI
   return (
     <div className="min-h-screen bg-gradient-to-r from-violet-50 to-violet-100 p-6">
       <div className="p-4 sm:p-6 max-w-7xl mx-auto bg-gradient-to-br from-gray-50 via-white to-gray-100 rounded-xl shadow-inner">
@@ -167,11 +164,10 @@ export default function MembersList() {
           👥 Members List
         </h2>
 
-        {/* 🔍 Search Bar */}
         <div className="flex justify-between items-center mb-4">
           <input
             type="text"
-            placeholder="Search by name, phone, dept, KGID..."
+            placeholder="Search by name, phone, dept, status..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -181,7 +177,6 @@ export default function MembersList() {
           />
         </div>
 
-        {/* 🧾 Table */}
         <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">
           <table className="min-w-full text-sm sm:text-base text-gray-700">
             <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
@@ -200,7 +195,11 @@ export default function MembersList() {
                   "Working College",
                   "Permanent Address",
                   "Current Address",
-                  "Role",
+                  "Member Type",
+                  "Joining Date",
+                  "Resign Date",
+                  "Society Number",
+                  "Status",
                   "Actions",
                 ].map((head) => (
                   <th
@@ -216,7 +215,7 @@ export default function MembersList() {
             <tbody>
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="15" className="text-center py-6 text-gray-500">
+                  <td colSpan="16" className="text-center py-6 text-gray-500">
                     No members found.
                   </td>
                 </tr>
@@ -226,12 +225,9 @@ export default function MembersList() {
                     key={member._id}
                     className="border-b hover:bg-indigo-50 transition duration-200"
                   >
-                    {/* SL. No. */}
                     <td className="px-4 py-2 text-gray-600">
                       {(currentPage - 1) * rowsPerPage + index + 1}
                     </td>
-
-                    {/* Photo */}
                     <td className="px-3 py-2 text-center">
                       {editingMemberId === member._id ? (
                         <div>
@@ -260,7 +256,6 @@ export default function MembersList() {
                       )}
                     </td>
 
-                    {/* Editable / Read-only Rows */}
                     {editingMemberId === member._id ? (
                       <EditableRow
                         member={member}
@@ -271,6 +266,7 @@ export default function MembersList() {
                         setPreview={setPreview}
                         departments={departments}
                         designations={designations}
+                        statuses={statuses}
                       />
                     ) : (
                       <ReadOnlyRow
@@ -286,46 +282,12 @@ export default function MembersList() {
             </tbody>
           </table>
         </div>
-
-        {/* 📄 Pagination Controls */}
-        {filteredMembers.length > rowsPerPage && (
-          <div className="flex justify-between items-center mt-6 text-sm sm:text-base">
-            <p className="text-gray-600">
-              Page {currentPage} of {totalPages}
-            </p>
-            <div className="flex gap-3">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className={`px-4 py-2 rounded-lg ${
-                  currentPage === 1
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-indigo-500 text-white hover:bg-indigo-600"
-                }`}
-              >
-                Previous
-              </button>
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                className={`px-4 py-2 rounded-lg ${
-                  currentPage === totalPages
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-indigo-500 text-white hover:bg-indigo-600"
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
-// ✅ Helper Components
-
+// ✅ Read-only Row
 function ReadOnlyRow({
   member,
   setEditingMemberId,
@@ -347,28 +309,42 @@ function ReadOnlyRow({
       <td className="px-3 py-2">{member.workingCollegeName}</td>
       <td className="px-3 py-2">{member.permanentAddress}</td>
       <td className="px-3 py-2">{member.currentAddress}</td>
-      <td className="px-3 py-2">{member.role}</td>
+      <td className="px-3 py-2">{member.memberType}</td>
+      <td className="px-3 py-2">
+        {member.joiningDate
+          ? new Date(member.joiningDate).toLocaleDateString("en-GB")
+          : ""}
+      </td>
+      <td className="px-3 py-2">
+        {member.resignDate
+          ? new Date(member.resignDate).toLocaleDateString("en-GB")
+          : ""}
+      </td>
+
+      <td className="px-3 py-2">{member.societyNumber}</td>
+      <td className="px-3 py-2">{member.status || "active"}</td>
       <td className="px-3 py-2 flex gap-2 justify-center">
         <button
           onClick={() => {
             setEditingMemberId(member._id);
             setEditData(member);
           }}
-          className="px-3 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded flex items-center gap-1 hover:opacity-90 transition"
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          <Pencil className="w-4 h-4" /> Edit
+          <Pencil className="w-4 h-4 inline-block" /> Edit
         </button>
         <button
           onClick={() => handleDelete(member._id)}
-          className="px-3 py-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded flex items-center gap-1 hover:opacity-90 transition"
+          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
         >
-          <Trash2 className="w-4 h-4" /> Delete
+          <Trash2 className="w-4 h-4 inline-block" /> Delete
         </button>
       </td>
     </>
   );
 }
 
+// ✅ Editable Row
 function EditableRow({
   member,
   editData,
@@ -378,7 +354,10 @@ function EditableRow({
   setPreview,
   departments,
   designations,
+  statuses,
 }) {
+  const memberTypes = ["A", "B", "C"];
+
   return (
     <>
       <td className="px-3 py-2">
@@ -387,19 +366,22 @@ function EditableRow({
           name="name"
           value={editData.name || ""}
           onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full focus:ring focus:ring-indigo-300"
+          className="border rounded px-2 py-1 w-full"
         />
       </td>
-      <td className="px-3 py-2">{member.email}</td>
+
+      <td className="px-3 py-2 text-gray-500 italic">{member.email}</td>
+
       <td className="px-3 py-2">
         <input
           type="text"
           name="phone"
           value={editData.phone || ""}
           onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full focus:ring focus:ring-indigo-300"
+          className="border rounded px-2 py-1 w-full"
         />
       </td>
+
       <td className="px-3 py-2">
         <select
           name="department"
@@ -414,6 +396,7 @@ function EditableRow({
           ))}
         </select>
       </td>
+
       <td className="px-3 py-2">
         <input
           type="text"
@@ -423,6 +406,7 @@ function EditableRow({
           className="border rounded px-2 py-1 w-full"
         />
       </td>
+
       <td className="px-3 py-2">
         <input
           type="text"
@@ -432,6 +416,7 @@ function EditableRow({
           className="border rounded px-2 py-1 w-full"
         />
       </td>
+
       <td className="px-3 py-2">
         <input
           type="date"
@@ -444,6 +429,7 @@ function EditableRow({
           className="border rounded px-2 py-1 w-full"
         />
       </td>
+
       <td className="px-3 py-2">
         <select
           name="designation"
@@ -458,6 +444,7 @@ function EditableRow({
           ))}
         </select>
       </td>
+
       <td className="px-3 py-2">
         <input
           type="text"
@@ -467,6 +454,7 @@ function EditableRow({
           className="border rounded px-2 py-1 w-full"
         />
       </td>
+
       <td className="px-3 py-2">
         <textarea
           name="permanentAddress"
@@ -475,6 +463,7 @@ function EditableRow({
           className="border rounded px-2 py-1 w-full"
         />
       </td>
+
       <td className="px-3 py-2">
         <textarea
           name="currentAddress"
@@ -483,32 +472,98 @@ function EditableRow({
           className="border rounded px-2 py-1 w-full"
         />
       </td>
+
+      {/* Member Type */}
       <td className="px-3 py-2">
         <select
-          name="role"
-          value={editData.role || "member"}
+          name="memberType"
+          value={editData.memberType || ""}
           onChange={handleEditChange}
           className="border rounded px-2 py-1 w-full"
         >
-          <option value="member">Member</option>
-          <option value="admin">Admin</option>
+          <option value="">Select</option>
+          {memberTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
         </select>
       </td>
+
+      {/* Joining Date */}
+      <td className="px-3 py-2">
+        <input
+          type="date"
+          name="joiningDate"
+          value={
+            editData.joiningDate ||
+            (member.joiningDate
+              ? new Date(member.joiningDate).toISOString().split("T")[0]
+              : "")
+          }
+          onChange={handleEditChange}
+          className="border rounded px-2 py-1 w-full"
+        />
+      </td>
+
+      {/* Resign Date */}
+      <td className="px-3 py-2">
+        <input
+          type="date"
+          name="resignDate"
+          value={
+            editData.resignDate ||
+            (member.resignDate
+              ? new Date(member.resignDate).toISOString().split("T")[0]
+              : "")
+          }
+          onChange={handleEditChange}
+          className="border rounded px-2 py-1 w-full"
+        />
+      </td>
+
+      {/* Society Number */}
+      <td className="px-3 py-2">
+        <input
+          type="text"
+          name="societyNumber"
+          value={editData.societyNumber || ""}
+          onChange={handleEditChange}
+          className="border rounded px-2 py-1 w-full"
+        />
+      </td>
+
+      {/* Status */}
+      <td className="px-3 py-2">
+        <select
+          name="status"
+          value={editData.status || "active"}
+          onChange={handleEditChange}
+          className="border rounded px-2 py-1 w-full"
+        >
+          {statuses.map((s) => (
+            <option key={s} value={s}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </option>
+          ))}
+        </select>
+      </td>
+
       <td className="px-3 py-2 flex gap-2 justify-center">
         <button
           onClick={() => handleUpdate(member._id)}
-          className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded flex items-center gap-1 hover:opacity-90 transition"
+          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
         >
-          <Save className="w-4 h-4" /> Save
+          <Save className="w-4 h-4 inline-block" /> Save
         </button>
         <button
           onClick={() => {
             setEditingMemberId(null);
             setPreview(null);
           }}
-          className="px-3 py-1 bg-gradient-to-r from-gray-500 to-gray-700 text-white rounded flex items-center gap-1 hover:opacity-90 transition"
+          className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
         >
-          <X className="w-4 h-4" /> Cancel
+          <X className="w-4 h-4 inline-block" /> Cancel
         </button>
       </td>
     </>

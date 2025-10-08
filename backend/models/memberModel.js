@@ -16,6 +16,21 @@ const memberSchema = new mongoose.Schema(
     dob: { type: Date },
     designation: { type: String, required: true },
     workingCollegeName: { type: String },
+
+    memberType: {
+      type: String,
+      enum: ["A", "B", "C"],
+      required: true,
+    },
+    joiningDate: { type: Date, required: true },
+    resignDate: { type: Date },
+    societyNumber: { type: String, unique: true },
+    status: {
+      type: String,
+      enum: ["active", "closed"],
+      default: "active",
+      required: true,
+    },
   },
   { timestamps: true }
 );

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import LoadOverlay from "../../../components/LoadOverlay";
+import AdminShareBulkUpload from "./AdminShareBulkUpload";
 
 export default function AdminShareForm() {
   const { getToken } = useAuth();
@@ -13,9 +14,6 @@ export default function AdminShareForm() {
 
   const [formData, setFormData] = useState({
     memberId: "",
-    paymentMode: "",
-    reference: "",
-    notes: "",
   });
 
   const [totalPayable, setTotalPayable] = useState("");
@@ -94,9 +92,6 @@ export default function AdminShareForm() {
       setMessage("✅ Share purchase added successfully!");
       setFormData({
         memberId: "",
-        paymentMode: "",
-        reference: "",
-        notes: "",
       });
       setSelectedMember(null);
       setTotalPayable("");
@@ -113,6 +108,8 @@ export default function AdminShareForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 via-indigo-100 to-teal-100 p-8">
       <LoadOverlay show={loading} />
+
+      <AdminShareBulkUpload />
 
       <div className="bg-white/80 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-5xl mx-auto border border-white/50">
         <h1 className="text-2xl font-extrabold text-center bg-gradient-to-r from-pink-600 via-indigo-600 to-teal-600 bg-clip-text text-transparent mb-10 drop-shadow-md">
@@ -203,57 +200,6 @@ export default function AdminShareForm() {
               value={fee}
               readOnly
               className="w-full bg-gray-100 border rounded-lg p-2"
-            />
-          </div>
-
-          {/* Payment Mode */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Payment Mode
-            </label>
-            <select
-              name="paymentMode"
-              value={formData.paymentMode}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl 
-              focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
-            >
-              <option value="">-- Select Mode --</option>
-              <option value="Cash">Cash</option>
-              <option value="Online">Online</option>
-              <option value="Cheque">Cheque</option>
-            </select>
-          </div>
-
-          {/* Reference */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Payment Reference
-            </label>
-            <input
-              type="text"
-              name="reference"
-              value={formData.reference}
-              onChange={handleChange}
-              placeholder="Enter reference or cheque no."
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl 
-              focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm"
-            />
-          </div>
-
-          {/* Notes */}
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Notes
-            </label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows={3}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl 
-              focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm"
             />
           </div>
 

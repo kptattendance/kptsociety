@@ -21,6 +21,11 @@ export default function AdminAddMember() {
     designation: "",
     workingCollegeName: "",
     role: "member",
+    memberType: "",
+    joiningDate: "",
+    resignDate: "",
+    societyNumber: "",
+    status: "active",
   });
 
   const [previewData, setPreviewData] = useState([]);
@@ -73,16 +78,13 @@ export default function AdminAddMember() {
     const file = e.target.files[0];
     if (file) {
       setBulkFile(file);
-
       const reader = new FileReader();
       reader.onload = (evt) => {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: "array" });
-
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
         setPreviewData(jsonData.slice(0, 5));
       };
       reader.readAsArrayBuffer(file);
@@ -126,6 +128,7 @@ export default function AdminAddMember() {
     { value: "me", label: "Mechanical Engineering" },
     { value: "po", label: "Polymer Engineering" },
     { value: "sc", label: "Science and English" },
+    { value: "--", label: "Other" },
   ];
 
   const designations = [
@@ -136,10 +139,14 @@ export default function AdminAddMember() {
     "SDA",
     "FDA",
     "Registrar",
-    "Superindent",
+    "Superintendent",
+    "Instructor",
+    "Other",
   ];
 
   const roles = ["member", "admin"];
+  const memberTypes = ["A", "B", "C"];
+  const statuses = ["active", "closed"];
 
   const inputStyle =
     "mt-1 w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500";
@@ -180,7 +187,6 @@ export default function AdminAddMember() {
           </p>
         )}
 
-        {/* Preview Table */}
         {previewData.length > 0 && (
           <div className="mt-6 overflow-x-auto">
             <h3 className="font-semibold text-gray-800">
@@ -222,7 +228,7 @@ export default function AdminAddMember() {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          {/* Name */}
+          {/* Basic Info */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Full Name
@@ -237,7 +243,6 @@ export default function AdminAddMember() {
             />
           </div>
 
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Email
@@ -251,7 +256,6 @@ export default function AdminAddMember() {
             />
           </div>
 
-          {/* Role */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Role
@@ -270,7 +274,6 @@ export default function AdminAddMember() {
             </select>
           </div>
 
-          {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Phone
@@ -282,6 +285,79 @@ export default function AdminAddMember() {
               className={inputStyle}
               placeholder="10 digit phone number"
             />
+          </div>
+
+          {/* Additional Fields */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Member Type
+            </label>
+            <select
+              name="memberType"
+              onChange={handleChange}
+              className={inputStyle}
+            >
+              <option value="">Select Type</option>
+              {memberTypes.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Society Number
+            </label>
+            <input
+              type="text"
+              name="societyNumber"
+              onChange={handleChange}
+              className={inputStyle}
+              placeholder="e.g. KPT-001"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Joining Date
+            </label>
+            <input
+              type="date"
+              name="joiningDate"
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Resign Date
+            </label>
+            <input
+              type="date"
+              name="resignDate"
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Status
+            </label>
+            <select
+              name="status"
+              onChange={handleChange}
+              className={inputStyle}
+            >
+              {statuses.map((s) => (
+                <option key={s} value={s}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Department */}
@@ -306,48 +382,6 @@ export default function AdminAddMember() {
             </select>
           </div>
 
-          {/* KGID */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              KGID Number
-            </label>
-            <input
-              type="text"
-              name="kgidNumber"
-              onChange={handleChange}
-              className={inputStyle}
-              placeholder="KGID Number"
-            />
-          </div>
-
-          {/* Guardian */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Guardian
-            </label>
-            <input
-              type="text"
-              name="guardian"
-              onChange={handleChange}
-              className={inputStyle}
-              placeholder="Father / Mother / Husband"
-            />
-          </div>
-
-          {/* DOB */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Date of Birth
-            </label>
-            <input
-              type="date"
-              name="dob"
-              onChange={handleChange}
-              className={inputStyle}
-            />
-          </div>
-
-          {/* Designation */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Designation
@@ -369,7 +403,6 @@ export default function AdminAddMember() {
             </select>
           </div>
 
-          {/* Working College */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Working College Name
@@ -382,7 +415,46 @@ export default function AdminAddMember() {
             />
           </div>
 
-          {/* Permanent Address */}
+          {/* Other Personal Details */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              KGID Number
+            </label>
+            <input
+              type="text"
+              name="kgidNumber"
+              onChange={handleChange}
+              className={inputStyle}
+              placeholder="KGID Number"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Guardian
+            </label>
+            <input
+              type="text"
+              name="guardian"
+              onChange={handleChange}
+              className={inputStyle}
+              placeholder="Father / Mother / Husband"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              name="dob"
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
+
+          {/* Address */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">
               Permanent Address
@@ -395,7 +467,6 @@ export default function AdminAddMember() {
             />
           </div>
 
-          {/* Current Address */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">
               Current Address

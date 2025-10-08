@@ -26,31 +26,49 @@ export default function AdminLoanList() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15; // ✅ 15 records per page
 
-  // ✅ Fetch Loans with member data
+  // ✅ Fetch Loans with member data and compute pending amounts/installments
   const fetchLoans = async () => {
     try {
       setLoading(true);
       const token = await getToken();
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const loansWithMember = await Promise.all(
         res.data.map(async (loan) => {
-          if (!loan.memberId?._id) return loan;
-          try {
-            const memberRes = await axios.get(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/members/${loan.memberId._id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            return { ...loan, memberId: memberRes.data };
-          } catch (err) {
-            console.error("Error fetching member info:", err);
-            return loan;
+          let memberData = loan.memberId;
+          if (loan.memberId?._id) {
+            try {
+              const memberRes = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/members/${loan.memberId._id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              memberData = memberRes.data;
+            } catch (err) {
+              console.error("Error fetching member info:", err);
+            }
           }
+
+          // Compute pending amount & installments if schedule exists
+          let pendingAmount = 0;
+          let pendingInstallments = 0;
+          if (loan.repayments && loan.repayments.length) {
+            pendingInstallments = loan.repayments.filter(
+              (r) => r.status === "Pending"
+            ).length;
+            pendingAmount = loan.repayments
+              .filter((r) => r.status === "Pending")
+              .reduce((sum, r) => sum + r.totalEMI, 0);
+          }
+
+          return {
+            ...loan,
+            memberId: memberData,
+            pendingAmount,
+            pendingInstallments,
+          };
         })
       );
 
@@ -176,7 +194,7 @@ export default function AdminLoanList() {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-orange-50 to-orange-100 p-6">
-      <div className="p-4 max-w-7xl mx-auto ">
+      <div className="p-4 max-w-8xl mx-auto ">
         <LoadOverlay show={loading} message={loadingMessage} />
 
         <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">
@@ -204,6 +222,8 @@ export default function AdminLoanList() {
                 <th className="py-3 px-4 text-right">Amount</th>
                 <th className="py-3 px-4 text-right">Interest %</th>
                 <th className="py-3 px-4 text-right">Tenure</th>
+                <th className="py-3 px-4 text-right">Pending Amount</th>
+                <th className="py-3 px-4 text-right">Pending Installments</th>
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-center">Actions</th>
                 <th className="py-3 px-4 text-center">Repayment Schedule</th>
@@ -305,6 +325,16 @@ export default function AdminLoanList() {
                       <td className="py-3 px-4 text-right">
                         {loan.tenure || "-"}
                       </td>
+                      <td className="py-3 px-4 text-right">
+                        ₹
+                        {loan.pendingAmount?.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }) || "-"}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {loan.pendingInstallments || 0}
+                      </td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-1 rounded-full text-sm font-medium ${
@@ -318,6 +348,7 @@ export default function AdminLoanList() {
                           {loan.status}
                         </span>
                       </td>
+
                       <td className="py-3 px-4 flex justify-center gap-2">
                         <button
                           onClick={() => startEditing(loan)}
