@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://kptsociety.vercel.app
+
+# Sitemaps
+Sitemap: https://kptsociety.vercel.app/sitemap.xml
+
+
