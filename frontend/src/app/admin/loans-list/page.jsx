@@ -8,6 +8,8 @@ import Swal from "sweetalert2";
 import LoanRepaymentModal from "../../../components/AdminPageComponents/LoanRepaymentModal";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function AdminLoanList() {
   const { getToken } = useAuth();
@@ -192,6 +194,52 @@ export default function AdminLoanList() {
       <p className="p-6 text-center text-gray-500 italic">No loans found.</p>
     );
 
+  // ✅ Download Excel
+  const handleDownloadExcel = () => {
+    const dataToExport = filteredLoans.length > 0 ? filteredLoans : loans;
+
+    if (!dataToExport.length) {
+      toast.info("No loan data available to export!");
+      return;
+    }
+
+    // ✅ Prepare loan data for Excel
+    const exportData = dataToExport.map((loan, index) => ({
+      "Sl. No.": index + 1,
+      "Member Name": loan.memberId?.name || "Unknown",
+      "Phone Number": loan.memberId?.phone || "N/A",
+      "Loan Type": loan.loanType || "-",
+      "Loan Amount (₹)": loan.loanAmount?.toLocaleString("en-IN") || "0",
+      "Interest Rate (%)": loan.interestRate || "-",
+      "Tenure (Months)": loan.tenure || "-",
+      "Pending Amount (₹)":
+        loan.pendingAmount?.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }) || "0",
+      "Pending Installments": loan.pendingInstallments || 0,
+      Status: loan.status || "-",
+    }));
+
+    // ✅ Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Records");
+
+    // ✅ Optional: adjust column widths
+    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 22 }));
+
+    // ✅ Generate and download Excel file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+    saveAs(blob, `Loan_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-orange-50 to-orange-100 p-6">
       <div className="p-4 max-w-8xl mx-auto ">
@@ -202,7 +250,8 @@ export default function AdminLoanList() {
         </h2>
 
         {/* 🔍 Search Bar */}
-        <div className="flex justify-between items-center mb-4">
+        {/* 🔍 Search + Download */}
+        <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
           <input
             type="text"
             placeholder="🔍 Search by name or phone..."
@@ -210,6 +259,14 @@ export default function AdminLoanList() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-orange-400 outline-none"
           />
+
+          {/* ✅ Download Excel Button */}
+          <button
+            onClick={handleDownloadExcel}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+          >
+            📥 Download Excel
+          </button>
         </div>
 
         <div className="overflow-x-auto">

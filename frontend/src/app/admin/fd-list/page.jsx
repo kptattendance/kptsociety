@@ -6,6 +6,8 @@ import { Pencil, Trash2, Check, X, Lock } from "lucide-react";
 import Swal from "sweetalert2";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function AdminFDTable() {
   const { getToken } = useAuth();
@@ -148,6 +150,42 @@ export default function AdminFDTable() {
     setCurrentPage(page);
   };
 
+  const handleDownloadExcel = () => {
+    if (fds.length === 0) {
+      toast.info("No data available to export!");
+      return;
+    }
+
+    // Prepare data
+    const exportData = fds.map((fd, index) => ({
+      "SL No.": index + 1,
+      "Member Name": fd.memberId?.name || "Unknown",
+      Phone: fd.memberId?.phone || "N/A",
+      "Principal (₹)": fd.principal,
+      "Interest Rate (%)": fd.interestRate,
+      "Tenure (Months)": fd.tenureMonths,
+      "Start Date": new Date(fd.startDate).toLocaleDateString("en-GB"),
+      "Maturity Date": fd.maturityDate
+        ? new Date(fd.maturityDate).toLocaleDateString("en-GB")
+        : "-",
+      "Maturity Amount (₹)": fd.maturityAmount || "-",
+      Status: fd.status,
+    }));
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "FD Records");
+
+    // Generate Excel file and trigger download
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `FD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-50 to-blue-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
@@ -157,7 +195,6 @@ export default function AdminFDTable() {
           💼 Fixed Deposit Records
         </h2>
 
-        {/* 🔍 Search Bar */}
         <div className="flex justify-between items-center mb-4">
           <input
             type="text"
@@ -169,6 +206,14 @@ export default function AdminFDTable() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-indigo-400 outline-none"
           />
+
+          {/* ✅ Download Excel Button */}
+          <button
+            onClick={handleDownloadExcel}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+          >
+            📥 Download Excel
+          </button>
         </div>
 
         <div className="overflow-x-auto">

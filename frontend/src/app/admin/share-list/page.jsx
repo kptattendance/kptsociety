@@ -2,9 +2,21 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Pencil, Trash2, Check, X, Lock, Eye, Search } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Lock,
+  Eye,
+  Search,
+  FileDown,
+} from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
+
+import * as XLSX from "xlsx"; // ✅ Excel export library
+import { saveAs } from "file-saver";
 
 export default function AdminShareTable() {
   const { getToken } = useAuth();
@@ -23,7 +35,6 @@ export default function AdminShareTable() {
   const fetchShares = async () => {
     try {
       setLoading(true);
-      setLoadingMessage("Fetching Shares...");
       const token = await getToken();
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share`,
@@ -48,7 +59,6 @@ export default function AdminShareTable() {
     if (!confirm("Are you sure you want to delete this Share Account?")) return;
     try {
       setLoading(true);
-      setLoadingMessage("Deleting share account...");
       const token = await getToken();
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/${shareId}`,
@@ -78,7 +88,6 @@ export default function AdminShareTable() {
   const handleSave = async (shareId) => {
     try {
       setLoading(true);
-      setLoadingMessage("Updating share account...");
       const token = await getToken();
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/${shareId}`,
@@ -101,7 +110,6 @@ export default function AdminShareTable() {
     if (!confirm("Close this Share Account?")) return;
     try {
       setLoading(true);
-      setLoadingMessage("Closing share account...");
       const token = await getToken();
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/close/${shareId}`,
@@ -119,7 +127,39 @@ export default function AdminShareTable() {
     }
   };
 
-  // Filter shares based on search
+  // ✅ Excel Export
+  const handleDownloadExcel = () => {
+    if (!shares.length) return toast.warn("No share data to export");
+
+    const data = shares.map((s, i) => ({
+      "Sl No": i + 1,
+      "Member Name": s.memberId?.name || "Unknown",
+      Phone: s.memberId?.phone || "-",
+      "Total Shares Purchased": s.totalSharesPurchased || 0,
+      "Share Price (₹)": s.sharePrice || 0,
+      "Total Amount (₹)": s.totalAmount || 0,
+      Status: s.status || "Active",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Shares");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const fileData = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(
+      fileData,
+      `Share_Accounts_${new Date().toISOString().slice(0, 10)}.xlsx`
+    );
+    toast.success("✅ Excel file downloaded");
+  };
+
+  // Filter and pagination
   const filteredShares = shares.filter((share) => {
     const search = searchTerm.toLowerCase();
     return (
@@ -129,28 +169,25 @@ export default function AdminShareTable() {
     );
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredShares.length / rowsPerPage);
   const paginatedShares = filteredShares.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
 
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(1);
-  }, [filteredShares, totalPages]);
-
   return (
     <div className="min-h-screen bg-gradient-to-r from-yellow-50 to-teal-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
 
-      <div className="bg-white shadow-xl rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-indigo-700 mb-6 text-center">
-          🪙 Share Accounts
-        </h2>
+      <div className="bg-white shadow-xl justify-between items-center rounded-2xl p-6">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-indigo-700">
+            🪙 Share Accounts
+          </h2>
+        </div>
 
         {/* Search bar */}
-        <div className="flex items-center justify-end mb-4">
+        <div className="flex items-center gap-4 justify-end mb-4">
           <div className="relative w-full md:w-1/3">
             <Search
               size={18}
@@ -167,8 +204,13 @@ export default function AdminShareTable() {
               className="border border-gray-300 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
+          <button
+            onClick={handleDownloadExcel}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
+          >
+            <FileDown size={18} /> Download Excel
+          </button>
         </div>
-
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-300 text-sm">
             <thead className="bg-indigo-100 text-gray-700">

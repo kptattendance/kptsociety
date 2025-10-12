@@ -6,6 +6,8 @@ import { useAuth } from "@clerk/nextjs";
 import { Pencil, Trash2, Save, X } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function MembersList() {
   const [members, setMembers] = useState([]);
@@ -91,6 +93,57 @@ export default function MembersList() {
     fetchMembers();
   }, []);
 
+  const handleDownloadExcel = () => {
+    if (members.length === 0) {
+      toast.info("No member data available to export!");
+      return;
+    }
+
+    // ✅ Use filtered members if search applied
+    const exportData = filteredMembers.map((m, i) => ({
+      "Sl. No.": i + 1,
+      Name: m.name || "-",
+      Email: m.email || "-",
+      Phone: m.phone || "-",
+      Department: m.department || "-",
+      "KGID No.": m.kgidNumber || "-",
+      Guardian: m.guardian || "-",
+      "Date of Birth": m.dob
+        ? new Date(m.dob).toLocaleDateString("en-GB")
+        : "-",
+      Designation: m.designation || "-",
+      "Working College": m.workingCollegeName || "-",
+      "Permanent Address": m.permanentAddress || "-",
+      "Current Address": m.currentAddress || "-",
+      "Member Type": m.memberType || "-",
+      "Joining Date": m.joiningDate
+        ? new Date(m.joiningDate).toLocaleDateString("en-GB")
+        : "-",
+      "Resign Date": m.resignDate
+        ? new Date(m.resignDate).toLocaleDateString("en-GB")
+        : "-",
+      "Society No.": m.societyNumber || "-",
+      Status: m.status || "Active",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
+
+    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, `Members_List_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success("✅ Excel file downloaded!");
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
     try {
@@ -164,7 +217,7 @@ export default function MembersList() {
           👥 Members List
         </h2>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
           <input
             type="text"
             placeholder="Search by name, phone, dept, status..."
@@ -175,6 +228,13 @@ export default function MembersList() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3 shadow-sm focus:ring-2 focus:ring-indigo-400 outline-none"
           />
+
+          <button
+            onClick={handleDownloadExcel}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow transition"
+          >
+            📥 Download Excel
+          </button>
         </div>
 
         <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">

@@ -6,6 +6,8 @@ import { Trash2, Lock, Search } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import CDScheduleModal from "./CDScheduleModal";
 import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function AdminCDList() {
   const { getToken } = useAuth();
@@ -109,6 +111,42 @@ export default function AdminCDList() {
     if (updated) fetchCDs();
   };
 
+  const handleDownloadExcel = () => {
+    if (cds.length === 0) {
+      toast.info("No data available to export!");
+      return;
+    }
+
+    // ✅ Prepare CD data for Excel
+    const exportData = cds.map((cd, index) => ({
+      "SL No.": index + 1,
+      "Account Number": cd.accountNumber || "-",
+      "Member Name": cd.memberId?.name || "Unknown",
+      "Phone Number": cd.memberId?.phone || "N/A",
+      "Monthly Deposit (₹)": cd.monthlyDeposit?.toLocaleString() || "0",
+      "Total Deposited (₹)": cd.totalDeposited?.toLocaleString() || "0",
+      "Total Withdrawn (₹)": cd.totalWithdrawn?.toLocaleString() || "0",
+      "Balance (₹)": cd.balance?.toLocaleString() || "0",
+      Status: cd.status || "-",
+    }));
+
+    // ✅ Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "CD Records");
+
+    // ✅ Optional: format column widths
+    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
+
+    // ✅ Generate Excel file and trigger download
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `CD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-red-50 to-pink-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
@@ -119,8 +157,9 @@ export default function AdminCDList() {
         </h2>
 
         {/* 🔍 Search Bar */}
-        <div className="flex items-center justify-end mb-4">
-          <div className="relative w-full max-w-sm">
+        {/* 🔍 Search + Download */}
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <div className="relative w-full sm:w-80">
             <Search
               className="absolute left-3 top-2.5 text-gray-400"
               size={18}
@@ -136,6 +175,14 @@ export default function AdminCDList() {
               className="w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
+
+          {/* ✅ Download Excel Button */}
+          <button
+            onClick={handleDownloadExcel}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+          >
+            📥 Download Excel
+          </button>
         </div>
 
         {/* ✅ Table */}

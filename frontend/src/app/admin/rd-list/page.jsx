@@ -7,6 +7,8 @@ import RDScheduleModal from "../../../components/AdminPageComponents/RDScheduleM
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
 
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 export default function AdminRDTable() {
   const { getToken } = useAuth();
   const [rds, setRDs] = useState([]);
@@ -115,6 +117,52 @@ export default function AdminRDTable() {
     }
   };
 
+  const handleDownloadExcel = () => {
+    if (rds.length === 0) {
+      toast.info("No data available to export!");
+      return;
+    }
+
+    // Prepare RD data for export
+    const exportData = rds.map((rd, index) => ({
+      "Sl. No.": index + 1,
+      "Member Name": rd.memberId?.name || "Unknown",
+      "Phone Number": rd.memberId?.phone || "N/A",
+      "Deposit Amount (₹)": rd.depositAmount || 0,
+      "Interest Rate (%)": rd.interestRate || 0,
+      "Tenure (Months)": rd.tenureMonths || 0,
+      "Start Date": rd.startDate
+        ? new Date(rd.startDate).toLocaleDateString("en-GB")
+        : "-",
+      "Maturity Date": rd.maturityDate
+        ? new Date(rd.maturityDate).toLocaleDateString("en-GB")
+        : "-",
+      "Maturity Amount (₹)": rd.maturityAmount || "-",
+      "Due Day of Month": rd.dueDayOfMonth || "-",
+      "Grace Period (Days)": rd.gracePeriodDays || "-",
+      "Late Fee / Installment (₹)": rd.lateFeePerInstallment || "-",
+      Status: rd.status || "-",
+      Notes: rd.notes || "-",
+    }));
+
+    // Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "RD Records");
+
+    // Format column widths (optional but improves readability)
+    const colWidths = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
+    worksheet["!cols"] = colWidths;
+
+    // Generate Excel and trigger download
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `RD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   // Filtered RDs
   const filteredRDs = rds.filter((rd) => {
     const name = rd.memberId?.name?.toLowerCase() || "";
@@ -154,6 +202,13 @@ export default function AdminRDTable() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-teal-400 outline-none"
           />
+
+          <button
+            onClick={handleDownloadExcel}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+          >
+            📥 Download Excel
+          </button>
         </div>
 
         {message && (
