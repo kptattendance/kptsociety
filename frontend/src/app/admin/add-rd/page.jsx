@@ -143,9 +143,19 @@ export default function AdminRDForm() {
               className="mt-1 block w-full border border-gray-300 rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
             >
               <option value="">-- Select Rate --</option>
+              <option value="6.0">4.0%</option>
+              <option value="6.0">4.5%</option>
+              <option value="6.0">5.0%</option>
+              <option value="6.0">5.5%</option>
               <option value="6.0">6.0%</option>
               <option value="6.5">6.5%</option>
               <option value="7.0">7.0%</option>
+              <option value="7.0">7.5%</option>
+              <option value="7.0">8.0%</option>
+              <option value="7.0">8.5%</option>
+              <option value="7.0">9.0%</option>
+              <option value="6.0">9.5%</option>
+              <option value="6.0">10.0%</option>
             </select>
           </div>
 

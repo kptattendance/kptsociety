@@ -132,8 +132,8 @@ export default function AdminLoanApplicationForm() {
             <option value="Education">Education</option>
             <option value="Home">Home</option>
             <option value="Vehicle">Vehicle</option>
-            <option value="RD-based">RD-based</option>
-            <option value="FD-based">FD-based</option>
+            <option value="RD-based">Long Term</option>
+            <option value="FD-based">Short Term</option>
           </select>
         </div>
         {/* Loan Amount */}
