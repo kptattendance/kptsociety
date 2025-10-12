@@ -89,17 +89,31 @@ export const getMemberShares = async (req, res) => {
   try {
     const { memberId } = req.params;
     const isMongoId = mongoose.Types.ObjectId.isValid(memberId);
+
+    // Build query dynamically
     const query = isMongoId ? { memberId } : { clerkId: memberId };
+
 
     const shareAccount = await ShareAccount.findOne(query).populate(
       "memberId",
       "name email phone photo"
     );
-    if (!shareAccount)
-      return res.status(404).json({ error: "Share account not found" });
 
-    res.json(shareAccount);
+    if (!shareAccount) {
+      // ✅ Return success 200 with an empty payload
+      return res.json({
+        hasShare: false,
+        message: "No share account found for this member",
+        shareAccount: null,
+      });
+    }
+
+    res.json({
+      hasShare: true,
+      shareAccount,
+    });
   } catch (err) {
+    console.error("⚠️ Error in getMemberShares:", err);
     res.status(500).json({ error: err.message });
   }
 };

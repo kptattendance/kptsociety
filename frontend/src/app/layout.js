@@ -129,7 +129,7 @@ export default function RootLayout({ children }) {
             {children}
             <ToastContainer position="top-right" autoClose={3000} />
           </main>
-          <Footer />
+          {/* <Footer /> */}
         </body>
       </html>
     </ClerkProvider>

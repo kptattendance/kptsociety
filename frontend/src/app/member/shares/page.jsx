@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { X } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 
 export default function MemberSharePage() {
@@ -16,7 +15,7 @@ export default function MemberSharePage() {
   );
 
   const fetchShare = async () => {
-    if (!user || !user.id) return; // prevent undefined
+    if (!user || !user.id) return;
     try {
       setLoading(true);
       const token = await getToken();
@@ -24,9 +23,17 @@ export default function MemberSharePage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setShare(res.data);
+
+      // ✅ If backend says no shares
+      if (!res.data.hasShare) {
+        setShare(null);
+        return;
+      }
+
+      setShare(res.data.shareAccount);
     } catch (error) {
       console.error("Error fetching share account:", error);
+      setShare(null);
       toast.error("Failed to fetch your share account");
     } finally {
       setLoading(false);
@@ -119,21 +126,27 @@ export default function MemberSharePage() {
           Purchase History
         </h3>
 
-        {share.purchaseHistory?.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border text-sm">
-              <thead className="bg-indigo-50">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border text-sm">
+            <thead className="bg-indigo-50">
+              <tr>
+                <th className="border px-3 py-2 text-left">Date</th>
+                <th className="border px-3 py-2 text-left">Shares</th>
+                <th className="border px-3 py-2 text-left">Amount (₹)</th>
+                <th className="border px-3 py-2 text-left">Mode</th>
+                <th className="border px-3 py-2 text-left">Reference</th>
+                <th className="border px-3 py-2 text-left">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th className="border px-3 py-2 text-left">Date</th>
-                  <th className="border px-3 py-2 text-left">Shares</th>
-                  <th className="border px-3 py-2 text-left">Amount (₹)</th>
-                  <th className="border px-3 py-2 text-left">Mode</th>
-                  <th className="border px-3 py-2 text-left">Reference</th>
-                  <th className="border px-3 py-2 text-left">Notes</th>
+                  <td colSpan="6" className="text-center py-3 text-gray-500">
+                    Loading...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {share.purchaseHistory.map((p, i) => (
+              ) : share.purchaseHistory?.length > 0 ? (
+                share.purchaseHistory.map((p, i) => (
                   <tr key={i} className="hover:bg-gray-50">
                     <td className="border px-3 py-2">
                       {p.date
@@ -148,15 +161,17 @@ export default function MemberSharePage() {
                     <td className="border px-3 py-2">{p.reference || "-"}</td>
                     <td className="border px-3 py-2">{p.notes || "-"}</td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-center text-gray-500 italic mt-3">
-            No purchase records found.
-          </p>
-        )}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center py-3 text-gray-500 italic">
+                    No records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

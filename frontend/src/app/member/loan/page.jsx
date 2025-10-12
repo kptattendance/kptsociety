@@ -17,12 +17,9 @@ const MemberLoan = () => {
     try {
       if (!user) return;
       const token = await getToken();
-
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const loansArray = Array.isArray(res.data) ? res.data : [res.data];
@@ -44,11 +41,17 @@ const MemberLoan = () => {
 
   if (loading)
     return (
-      <p className="p-6 text-center text-gray-500">Loading loan schedule...</p>
+      <p className="p-6 text-center text-gray-500 text-sm sm:text-base">
+        Loading loan schedule...
+      </p>
     );
 
   if (!loans.length)
-    return <p className="p-6 text-center text-gray-500">No loans found.</p>;
+    return (
+      <p className="p-6 text-center text-gray-500 text-sm sm:text-base">
+        No loans found.
+      </p>
+    );
 
   const paginate = (loanId, direction) => {
     setCurrentPage((prev) => ({
@@ -58,8 +61,8 @@ const MemberLoan = () => {
   };
 
   return (
-    <div className="p-2 sm:p-4 max-w-7xl mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800 text-center">
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto">
+      <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-gray-800">
         💰 My Loans & Repayment Schedule
       </h2>
 
@@ -82,82 +85,63 @@ const MemberLoan = () => {
         const member = loan.memberId || {};
 
         return (
-          <div key={loan._id} className="mb-8 sm:mb-12">
-            {/* Loan Details */}
+          <div
+            key={loan._id}
+            className="mb-8 sm:mb-12 bg-white/60 backdrop-blur-md p-4 rounded-xl shadow-md"
+          >
             {/* Loan Details */}
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white shadow-lg rounded-lg overflow-hidden mb-4 text-sm sm:text-base">
+              <table className="min-w-full border text-xs sm:text-sm md:text-base rounded-lg overflow-hidden shadow">
                 <thead className="bg-indigo-600 text-white">
                   <tr>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-left">
-                      Member
-                    </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-left">
-                      Loan Type
-                    </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-right">
-                      Amount
-                    </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-right">
-                      Interest %
-                    </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-right">
-                      Tenure
-                    </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-left">
-                      Status
-                    </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-left">
+                    <th className="px-3 py-2 text-left">Member</th>
+                    <th className="px-3 py-2 text-left">Loan Type</th>
+                    <th className="px-3 py-2 text-right">Amount</th>
+                    <th className="px-3 py-2 text-right">Interest %</th>
+                    <th className="px-3 py-2 text-right">Tenure</th>
+                    <th className="px-3 py-2 text-left">Status</th>
+                    <th className="px-3 py-2 text-left hidden md:table-cell">
                       Purpose
                     </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-left hidden sm:table-cell">
+                    <th className="px-3 py-2 text-left hidden lg:table-cell">
                       Collateral
                     </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-left">
-                      Pending Installments
-                    </th>
-                    <th className="py-2 px-2 sm:py-3 sm:px-4 text-right">
-                      Pending Principal
-                    </th>
+                    <th className="px-3 py-2 text-center">Pending Inst.</th>
+                    <th className="px-3 py-2 text-right">Pending ₹</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b even:bg-gray-50 hover:bg-gray-100 transition-colors">
-                    {/* ✅ Member Column */}
-                    <td className="py-2 px-2 sm:py-3 sm:px-4">
+                  <tr className="border-b bg-white even:bg-gray-50 hover:bg-gray-100 transition">
+                    {/* ✅ Member */}
+                    <td className="px-3 py-2">
                       <div className="flex items-center gap-3">
                         <img
-                          src={member.photo}
+                          src={member.photo || "/default-avatar.png"}
                           alt="Member"
-                          className="w-10 h-10 rounded-full object-cover border-2 border-green-400"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-400 object-cover"
                         />
                         <div>
                           <p className="font-semibold text-green-700">
-                            {member.name}
+                            {member.name || "N/A"}
                           </p>
                           <p className="text-xs text-gray-600">
-                            {member.phone}
+                            {member.phone || ""}
                           </p>
                         </div>
                       </div>
                     </td>
 
-                    {/* Existing Columns */}
-                    <td className="py-2 px-2 sm:py-3 sm:px-4">
-                      {loan.loanType}
-                    </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4 text-right">
+                    <td className="px-3 py-2">{loan.loanType}</td>
+                    <td className="px-3 py-2 text-right">
                       ₹{loan.loanAmount.toLocaleString()}
                     </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4 text-right">
+                    <td className="px-3 py-2 text-right">
                       {loan.interestRate}
                     </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4 text-right">
-                      {loan.tenure}
-                    </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4">
+                    <td className="px-3 py-2 text-right">{loan.tenure}</td>
+                    <td className="px-3 py-2">
                       <span
-                        className={`px-2 py-1 rounded-full text-sm font-medium ${
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
                           loan.status === "Approved"
                             ? "bg-green-100 text-green-700"
                             : loan.status === "Rejected"
@@ -168,16 +152,18 @@ const MemberLoan = () => {
                         {loan.status}
                       </span>
                     </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4">
+                    <td className="px-3 py-2 hidden md:table-cell">
                       {loan.loanPurpose}
                     </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4 hidden sm:table-cell">
-                      {loan.collateralType}: {loan.collateralDetails}
+                    <td className="px-3 py-2 hidden lg:table-cell">
+                      {loan.collateralType
+                        ? `${loan.collateralType}: ${loan.collateralDetails}`
+                        : "-"}
                     </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4">
+                    <td className="px-3 py-2 text-center">
                       {pendingInstallments}
                     </td>
-                    <td className="py-2 px-2 sm:py-3 sm:px-4 text-right">
+                    <td className="px-3 py-2 text-right">
                       ₹{pendingPrincipal.toLocaleString()}
                     </td>
                   </tr>
@@ -185,57 +171,42 @@ const MemberLoan = () => {
               </table>
             </div>
 
-            {/* Lumpsum Payment History */}
-            {loan.lumpSumPayments && loan.lumpSumPayments.length > 0 && (
+            {/* Lumpsum Payments */}
+            {loan.lumpSumPayments?.length > 0 && (
               <>
-                <h3 className="text-lg sm:text-xl font-semibold mt-4 mb-2 text-indigo-700">
+                <h3 className="text-base sm:text-lg font-semibold mt-4 mb-2 text-indigo-700">
                   Lumpsum Payment History
                 </h3>
-                <div className="overflow-x-auto mb-2">
-                  <table
-                    className="min-w-full text-sm sm:text-base rounded-lg overflow-hidden shadow-lg"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.2)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(255, 255, 255, 0.3)",
-                    }}
-                  >
-                    <thead
-                      className="text-white"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, rgba(99,102,241,0.8) 0%, rgba(139,92,246,0.8) 100%)",
-                      }}
-                    >
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-xs sm:text-sm md:text-base border rounded-lg overflow-hidden">
+                    <thead className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white">
                       <tr>
-                        <th className="py-2 px-3">#</th>
-                        <th className="py-2 px-3">Payment Date</th>
-                        <th className="py-2 px-3 text-right">Amount Paid</th>
-                        <th className="py-2 px-3 text-right">Mode</th>
-                        <th className="py-2 px-3 text-right">
-                          Installment Number
-                        </th>
+                        <th className="px-2 py-2">#</th>
+                        <th className="px-2 py-2">Date</th>
+                        <th className="px-2 py-2 text-right">Amount</th>
+                        <th className="px-2 py-2 text-right">Mode</th>
+                        <th className="px-2 py-2 text-right">Installment</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {loan.lumpSumPayments.map((lump, index) => (
+                      {loan.lumpSumPayments.map((lump, i) => (
                         <tr
-                          key={index}
-                          className="transition-colors hover:bg-white/20"
+                          key={i}
+                          className="even:bg-gray-50 hover:bg-gray-100"
                         >
-                          <td className="py-1 px-2">{index + 1}</td>
-                          <td className="py-1 px-2">
+                          <td className="px-2 py-1">{i + 1}</td>
+                          <td className="px-2 py-1">
                             {new Date(lump.paidAt).toLocaleDateString("en-GB", {
                               day: "2-digit",
                               month: "short",
                               year: "2-digit",
                             })}
                           </td>
-                          <td className="py-1 px-2 text-right">
+                          <td className="px-2 py-1 text-right">
                             ₹{lump.amount.toLocaleString()}
                           </td>
-                          <td className="py-1 px-2 text-right">{lump.mode}</td>
-                          <td className="py-1 px-2 text-right">
+                          <td className="px-2 py-1 text-right">{lump.mode}</td>
+                          <td className="px-2 py-1 text-right">
                             {lump.installment}
                           </td>
                         </tr>
@@ -247,93 +218,91 @@ const MemberLoan = () => {
             )}
 
             {/* Repayment Schedule */}
-            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-indigo-700">
+            <h3 className="text-base sm:text-lg font-semibold mt-4 mb-2 text-green-700">
               Repayment Schedule
             </h3>
-            <div className="overflow-x-auto mb-2">
-              <table
-                className="min-w-full text-sm sm:text-base rounded-lg overflow-hidden shadow-lg"
-                style={{
-                  background: "rgba(255, 255, 255, 0.15)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                }}
-              >
-                <thead
-                  className="text-white"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, rgba(16,185,129,0.8) 0%, rgba(34,197,94,0.8) 100%)",
-                  }}
-                >
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs sm:text-sm md:text-base border rounded-lg overflow-hidden">
+                <thead className="bg-gradient-to-r from-emerald-500 to-green-500 text-white">
                   <tr>
-                    <th className="py-2 px-3">#</th>
-                    <th className="py-2 px-3">Due Date</th>
-                    <th className="py-2 px-3 text-right">EMI (Principal)</th>
-                    <th className="py-2 px-3 text-right">EMI (Interest)</th>
-                    <th className="py-2 px-3 text-right">Total EMI</th>
-                    <th className="py-2 px-3 text-right">Outstanding</th>
-                    <th className="py-2 px-3">Status</th>
+                    <th className="px-2 py-2">#</th>
+                    <th className="px-2 py-2">Due Date</th>
+                    <th className="px-2 py-2 text-right">Principal</th>
+                    <th className="px-2 py-2 text-right">Interest</th>
+                    <th className="px-2 py-2 text-right">Total</th>
+                    <th className="px-2 py-2 text-right">Outstanding</th>
+                    <th className="px-2 py-2 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedRepayments.map((repay, index) => (
-                    <tr
-                      key={index}
-                      className="transition-colors hover:bg-white/20 border-b"
-                    >
-                      <td className="py-1 px-2">{startIndex + index + 1}</td>
-                      <td className="py-1 px-2">
-                        {new Date(repay.dueDate).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "2-digit",
-                        })}
-                      </td>
-                      <td className="py-1 px-2 text-right">
-                        ₹{repay.principal.toFixed(2).toLocaleString()}
-                      </td>
-                      <td className="py-1 px-2 text-right">
-                        ₹{repay.interest.toFixed(2).toLocaleString()}
-                      </td>
-                      <td className="py-1 px-2 text-right">
-                        ₹{repay.totalEMI.toFixed(2).toLocaleString()}
-                      </td>
-                      <td className="py-1 px-2 text-right font-semibold text-blue-700">
-                        ₹{repay.scheduleOS.toFixed(2).toLocaleString()}
-                      </td>
-                      <td className="py-1 px-2">
-                        <span
-                          className={`px-2 py-1 rounded-2xl text-xs sm:text-sm font-medium ${
-                            repay.status === "Paid"
-                              ? "bg-green-200 text-green-700"
-                              : "bg-orange-200 text-orange-700"
-                          }`}
-                        >
-                          {repay.status}
-                        </span>
+                  {paginatedRepayments.length ? (
+                    paginatedRepayments.map((repay, index) => (
+                      <tr
+                        key={index}
+                        className="even:bg-gray-50 hover:bg-gray-100"
+                      >
+                        <td className="px-2 py-1">{startIndex + index + 1}</td>
+                        <td className="px-2 py-1">
+                          {new Date(repay.dueDate).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "2-digit",
+                          })}
+                        </td>
+                        <td className="px-2 py-1 text-right">
+                          ₹{repay.principal.toFixed(2).toLocaleString()}
+                        </td>
+                        <td className="px-2 py-1 text-right">
+                          ₹{repay.interest.toFixed(2).toLocaleString()}
+                        </td>
+                        <td className="px-2 py-1 text-right">
+                          ₹{repay.totalEMI.toFixed(2).toLocaleString()}
+                        </td>
+                        <td className="px-2 py-1 text-right text-blue-700 font-medium">
+                          ₹{repay.scheduleOS.toFixed(2).toLocaleString()}
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              repay.status === "Paid"
+                                ? "bg-green-200 text-green-700"
+                                : "bg-orange-200 text-orange-700"
+                            }`}
+                          >
+                            {repay.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="7"
+                        className="text-center py-3 text-gray-500 italic"
+                      >
+                        No repayment records found.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 sm:space-x-4 mt-2 text-sm sm:text-base">
+              <div className="flex justify-center items-center gap-3 mt-3 text-sm sm:text-base">
                 <button
-                  className="px-2 sm:px-3 py-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+                  className="px-3 py-1 bg-indigo-500 text-white rounded-full disabled:opacity-50"
                   disabled={page === 1}
                   onClick={() => paginate(loan._id, -1)}
                 >
                   Prev
                 </button>
                 <span>
-                  Page {page} of {totalPages}
+                  Page {page} / {totalPages}
                 </span>
                 <button
-                  className="px-2 sm:px-3 py-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+                  className="px-3 py-1 bg-indigo-500 text-white rounded-full disabled:opacity-50"
                   disabled={page === totalPages}
                   onClick={() => paginate(loan._id, 1)}
                 >
