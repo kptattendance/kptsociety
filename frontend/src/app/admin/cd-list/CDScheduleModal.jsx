@@ -25,6 +25,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log(res.data);
       setCD(res.data);
     } catch (err) {
       toast.error("Failed to fetch CD data");

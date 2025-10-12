@@ -70,7 +70,7 @@ export default function AdminShareBulkUpload() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-indigo-100 to-teal-100 p-8">
+    <div className="min-h bg-gradient-to-br from-pink-100 via-indigo-100 to-teal-100 p-8">
       <LoadOverlay show={loading} />
 
       <div className="bg-white/80 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-3xl mx-auto border border-white/50">

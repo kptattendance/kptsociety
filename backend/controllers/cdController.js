@@ -17,6 +17,7 @@ export const createCD = async (req, res) => {
     const cd = new CD({
       accountNumber: `CD-${Date.now()}`,
       memberId,
+      startDate,
       clerkId: member.clerkId,
       monthlyDeposit: monthlyDeposit || 500,
       balance: 0,

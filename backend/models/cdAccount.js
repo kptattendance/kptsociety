@@ -29,6 +29,7 @@ const cdAccountSchema = new mongoose.Schema(
     accountNumber: { type: String, unique: true },
     memberId: { type: mongoose.Schema.Types.ObjectId, ref: "Member" },
     clerkId: { type: String },
+    startDate: { type: Date, required: true },
     monthlyDeposit: { type: Number, default: 500 },
     totalDeposited: { type: Number, default: 0 },
     totalWithdrawn: { type: Number, default: 0 },

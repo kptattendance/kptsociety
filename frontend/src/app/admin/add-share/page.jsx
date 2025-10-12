@@ -109,8 +109,6 @@ export default function AdminShareForm() {
     <div className="min-h-screen bg-gradient-to-br from-pink-100 via-indigo-100 to-teal-100 p-8">
       <LoadOverlay show={loading} />
 
-      <AdminShareBulkUpload />
-
       <div className="bg-white/80 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-5xl mx-auto border border-white/50">
         <h1 className="text-2xl font-extrabold text-center bg-gradient-to-r from-pink-600 via-indigo-600 to-teal-600 bg-clip-text text-transparent mb-10 drop-shadow-md">
           💠 Add Member Share Purchase
@@ -227,6 +225,8 @@ export default function AdminShareForm() {
           </p>
         )}
       </div>
+
+      <AdminShareBulkUpload />
     </div>
   );
 }

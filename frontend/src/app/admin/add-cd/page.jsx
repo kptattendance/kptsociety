@@ -5,14 +5,14 @@ import { useAuth } from "@clerk/nextjs";
 import LoadOverlay from "../../../components/LoadOverlay";
 
 export default function AdminCDForm() {
-  const { getToken, userId } = useAuth();
+  const { getToken } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const [formData, setFormData] = useState({
     memberId: "",
-    month: "",
+    startDate: "",
   });
 
   // Fetch all members
@@ -49,10 +49,9 @@ export default function AdminCDForm() {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd`,
         {
-          ...formData,
-          amount: 500, // Fixed monthly deposit
-          type: "deposit",
-          date: new Date(),
+          memberId: formData.memberId,
+          monthlyDeposit: 500,
+          startDate: formData.startDate,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -60,7 +59,7 @@ export default function AdminCDForm() {
       setMessage("✅ CD Deposit successful!");
       setFormData({
         memberId: "",
-        month: "",
+        startDate: "",
       });
     } catch (error) {
       console.error("Error processing CD deposit:", error);
@@ -103,18 +102,18 @@ export default function AdminCDForm() {
             </select>
           </div>
 
-          {/* Month */}
+          {/* Start Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Month
+              Start Date
             </label>
             <input
-              type="month"
-              name="month"
-              value={formData.month}
+              type="date"
+              name="startDate"
+              value={formData.startDate}
               onChange={handleChange}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
             />
           </div>
 
