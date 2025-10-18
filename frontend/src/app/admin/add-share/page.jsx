@@ -14,6 +14,8 @@ export default function AdminShareForm() {
 
   const [formData, setFormData] = useState({
     memberId: "",
+    shareNumber: "",
+    startDate: "",
   });
 
   const [totalPayable, setTotalPayable] = useState("");
@@ -29,6 +31,7 @@ export default function AdminShareForm() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/members`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log(res.data);
         setMembers(res.data);
       } catch (err) {
         console.error("Error fetching members:", err);
@@ -37,7 +40,7 @@ export default function AdminShareForm() {
     fetchMembers();
   }, [getToken]);
 
-  // ✅ Handle generic form input
+  // ✅ Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -48,10 +51,10 @@ export default function AdminShareForm() {
     }
   };
 
-  // ✅ Calculate shares when total payable entered
+  // ✅ Auto-calculate shares based on total amount
   const handleAmountChange = (e) => {
     const enteredTotal = parseFloat(e.target.value) || 0;
-    const calculatedShares = Math.floor(enteredTotal / 101); // since ₹1 fee/share
+    const calculatedShares = Math.floor(enteredTotal / 101); // ₹100/share + ₹1 fee/share
     const calculatedFee = calculatedShares * 1;
 
     setTotalPayable(enteredTotal);
@@ -59,31 +62,55 @@ export default function AdminShareForm() {
     setFee(calculatedFee);
   };
 
-  // ✅ Submit form
+  // ✅ Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
+    if (!formData.memberId) {
+      setMessage("❌ Please select a member.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.shareNumber) {
+      setMessage("❌ Please enter the society-assigned share number.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.startDate) {
+      setMessage("❌ Please select the share start date.");
+      setLoading(false);
+      return;
+    }
+
     if (shares <= 0) {
-      setMessage("❌ Total payable must be at least ₹101.");
+      setMessage("❌ Total payable must be at least ₹101 (1 share).");
       setLoading(false);
       return;
     }
 
     try {
       const token = await getToken();
-      const finalData = {
-        ...formData,
-        sharesBought: shares,
+
+      const payload = {
+        memberId: formData.memberId,
+        shareNumber: formData.shareNumber,
+        startDate: formData.startDate,
+        totalSharesPurchased: shares,
+        sharesBought: shares, // ✅ correct key
         sharePrice: 100,
-        processingFee: fee,
+        processingFee: fee, // ✅ keep this
         totalAmount: totalPayable,
+        societyShareNumber: formData.shareNumber, // ✅ backend expects this name
+        accountStartDate: formData.startDate, // ✅ backend expects this name
       };
 
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share`,
-        finalData,
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -92,6 +119,8 @@ export default function AdminShareForm() {
       setMessage("✅ Share purchase added successfully!");
       setFormData({
         memberId: "",
+        shareNumber: "",
+        startDate: "",
       });
       setSelectedMember(null);
       setTotalPayable("");
@@ -118,7 +147,7 @@ export default function AdminShareForm() {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 sm:grid-cols-2 gap-8"
         >
-          {/* Member Dropdown */}
+          {/* Member Selection */}
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700">
               Select Member
@@ -140,7 +169,7 @@ export default function AdminShareForm() {
             </select>
           </div>
 
-          {/* Member Details Card */}
+          {/* Member Info Card */}
           {selectedMember && (
             <div className="sm:col-span-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl p-6 shadow-md">
               <h3 className="text-lg font-bold mb-2">👤 Member Details</h3>
@@ -154,12 +183,43 @@ export default function AdminShareForm() {
                 <strong>Phone:</strong> {selectedMember.phone || "N/A"}
               </p>
               <p>
-                <strong>Member ID:</strong> {selectedMember.memberId || "N/A"}
+                <strong>Member ID:</strong> {selectedMember._id || "N/A"}
               </p>
             </div>
           )}
 
-          {/* Total Payable Input */}
+          {/* Share Number */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Society Given Share Number
+            </label>
+            <input
+              type="text"
+              name="shareNumber"
+              value={formData.shareNumber}
+              onChange={handleChange}
+              placeholder="Enter society-assigned share number"
+              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              required
+            />
+          </div>
+
+          {/* Start Date */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Start Date
+            </label>
+            <input
+              type="date"
+              name="startDate"
+              value={formData.startDate}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              required
+            />
+          </div>
+
+          {/* Total Payable */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Total Payable Amount (₹)
@@ -176,7 +236,7 @@ export default function AdminShareForm() {
             </p>
           </div>
 
-          {/* Auto Calculated Fields */}
+          {/* Calculated Fields */}
           <div>
             <label className="block text-sm text-gray-600">
               Number of Shares
@@ -201,7 +261,7 @@ export default function AdminShareForm() {
             />
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="sm:col-span-2 flex justify-center">
             <button
               type="submit"
@@ -225,8 +285,6 @@ export default function AdminShareForm() {
           </p>
         )}
       </div>
-
-      <AdminShareBulkUpload />
     </div>
   );
 }

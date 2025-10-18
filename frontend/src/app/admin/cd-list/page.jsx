@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Trash2, Lock, Search } from "lucide-react";
+import { Trash2, Lock, Search, Pencil, Check, X } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import CDScheduleModal from "./CDScheduleModal";
 import { toast } from "react-toastify";
@@ -16,6 +16,8 @@ export default function AdminCDList() {
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Fetching CDs...");
   const [selectedCDId, setSelectedCDId] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [editData, setEditData] = useState({ startDate: "", monthlyDeposit: "", status: "" });
 
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 15;
@@ -55,10 +57,7 @@ export default function AdminCDList() {
   // ✅ Pagination Logic
   const totalPages = Math.ceil(filteredCDs.length / recordsPerPage);
   const startIndex = (currentPage - 1) * recordsPerPage;
-  const currentRecords = filteredCDs.slice(
-    startIndex,
-    startIndex + recordsPerPage
-  );
+  const currentRecords = filteredCDs.slice(startIndex, startIndex + recordsPerPage);
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -105,6 +104,44 @@ export default function AdminCDList() {
     }
   };
 
+  // ✅ Edit Mode Handlers
+  const handleEdit = (cd) => {
+    setEditId(cd._id);
+    setEditData({
+      startDate: cd.startDate ? cd.startDate.slice(0, 10) : "",
+      monthlyDeposit: cd.monthlyDeposit,
+      status: cd.status,
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async (cdId) => {
+    try {
+      setLoading(true);
+      setLoadingMessage("Updating CD...");
+      const token = await getToken();
+      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}`, editData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("CD updated successfully");
+      setEditId(null);
+      fetchCDs();
+    } catch (error) {
+      console.error("Update failed:", error);
+      toast.error("Failed to update CD");
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditId(null);
+    setEditData({ startDate: "", monthlyDeposit: "", status: "" });
+  };
+
   // ✅ Refresh when modal closes
   const handleModalClose = (updated = false) => {
     setSelectedCDId(null);
@@ -117,7 +154,6 @@ export default function AdminCDList() {
       return;
     }
 
-    // ✅ Prepare CD data for Excel
     const exportData = cds.map((cd, index) => ({
       "SL No.": index + 1,
       "Account Number": cd.accountNumber || "-",
@@ -130,19 +166,12 @@ export default function AdminCDList() {
       Status: cd.status || "-",
     }));
 
-    // ✅ Create worksheet and workbook
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "CD Records");
-
-    // ✅ Optional: format column widths
     worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
 
-    // ✅ Generate Excel file and trigger download
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(data, `CD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
@@ -150,20 +179,13 @@ export default function AdminCDList() {
   return (
     <div className="min-h-screen bg-gradient-to-r from-red-50 to-pink-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
-
       <div className="bg-white shadow-xl rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">
-          💰 CD Accounts
-        </h2>
+        <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">💰 CD Accounts</h2>
 
-        {/* 🔍 Search Bar */}
         {/* 🔍 Search + Download */}
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div className="relative w-full sm:w-80">
-            <Search
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={18}
-            />
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
             <input
               type="text"
               placeholder="Search by name, phone, or account #"
@@ -175,8 +197,6 @@ export default function AdminCDList() {
               className="w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
-
-          {/* ✅ Download Excel Button */}
           <button
             onClick={handleDownloadExcel}
             className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
@@ -193,6 +213,7 @@ export default function AdminCDList() {
                 <th className="px-4 py-2 text-left">SL No.</th>
                 <th className="px-4 py-2 text-left">Account #</th>
                 <th className="px-4 py-2 text-left">Member</th>
+                <th className="px-4 py-2 text-left">Start Date</th>
                 <th className="px-4 py-2 text-left">Monthly Deposit (₹)</th>
                 <th className="px-4 py-2 text-left">Total Deposited</th>
                 <th className="px-4 py-2 text-left">Total Withdrawn</th>
@@ -206,10 +227,7 @@ export default function AdminCDList() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {!loading && currentRecords.length === 0 && (
                 <tr>
-                  <td
-                    colSpan="10"
-                    className="text-center py-4 text-gray-500 italic"
-                  >
+                  <td colSpan="10" className="text-center py-4 text-gray-500 italic">
                     No CD accounts found.
                   </td>
                 </tr>
@@ -217,10 +235,7 @@ export default function AdminCDList() {
 
               {currentRecords.map((cd, index) => (
                 <tr key={cd._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-gray-600">
-                    {startIndex + index + 1}
-                  </td>
-
+                  <td className="px-4 py-2 text-gray-600">{startIndex + index + 1}</td>
                   <td className="px-4 py-2 font-medium">{cd.accountNumber}</td>
 
                   <td className="px-4 py-2 flex items-center gap-3">
@@ -230,54 +245,96 @@ export default function AdminCDList() {
                       className="w-10 h-10 rounded-full object-cover border"
                     />
                     <div>
-                      <p className="font-medium">
-                        {cd.memberId?.name || "Unknown"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {cd.memberId?.phone || "-"}
-                      </p>
+                      <p className="font-medium">{cd.memberId?.name || "Unknown"}</p>
+                      <p className="text-xs text-gray-500">{cd.memberId?.phone || "-"}</p>
                     </div>
                   </td>
 
                   <td className="px-4 py-2">
-                    ₹{cd.monthlyDeposit?.toLocaleString()}
+                    {editId === cd._id ? (
+                      <input
+                        type="date"
+                        name="startDate"
+                        value={editData.startDate}
+                        onChange={handleEditChange}
+                        className="border rounded-md px-2 py-1 w-full"
+                      />
+                    ) : cd.startDate ? (
+                      new Date(cd.startDate).toLocaleDateString()
+                    ) : (
+                      "-"
+                    )}
                   </td>
+
                   <td className="px-4 py-2">
-                    ₹{cd.totalDeposited?.toLocaleString()}
+                    {editId === cd._id ? (
+                      <input
+                        type="number"
+                        name="monthlyDeposit"
+                        value={editData.monthlyDeposit}
+                        onChange={handleEditChange}
+                        className="border rounded-md px-2 py-1 w-28"
+                      />
+                    ) : (
+                      `₹${cd.monthlyDeposit?.toLocaleString()}`
+                    )}
                   </td>
-                  <td className="px-4 py-2">
-                    ₹{cd.totalWithdrawn?.toLocaleString()}
-                  </td>
+
+                  <td className="px-4 py-2">₹{cd.totalDeposited?.toLocaleString()}</td>
+                  <td className="px-4 py-2">₹{cd.totalWithdrawn?.toLocaleString()}</td>
                   <td className="px-4 py-2">₹{cd.balance?.toLocaleString()}</td>
 
                   <td className="px-4 py-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        cd.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : cd.status === "Closed"
-                          ? "bg-gray-200 text-gray-600"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {cd.status}
-                    </span>
+                    {editId === cd._id ? (
+                      <select
+                        name="status"
+                        value={editData.status}
+                        onChange={handleEditChange}
+                        className="border rounded-md px-2 py-1"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+                    ) : (
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          cd.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : cd.status === "Closed"
+                            ? "bg-gray-200 text-gray-600"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {cd.status}
+                      </span>
+                    )}
                   </td>
 
                   <td className="px-4 py-2 text-center space-x-2">
-                    <button
-                      onClick={() => handleDelete(cd._id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                    {cd.status === "Active" && (
-                      <button
-                        onClick={() => handleClose(cd._id)}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        <Lock size={16} />
-                      </button>
+                    {editId === cd._id ? (
+                      <>
+                        <button onClick={() => handleSave(cd._id)} className="text-green-600 hover:text-green-800">
+                          <Check size={16} />
+                        </button>
+                        <button onClick={handleCancel} className="text-gray-600 hover:text-gray-800">
+                          <X size={16} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => handleEdit(cd)} className="text-blue-600 hover:text-blue-800">
+                          <Pencil size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(cd._id)} className="text-red-600 hover:text-red-800">
+                          <Trash2 size={16} />
+                        </button>
+                        {cd.status === "Active" && (
+                          <button onClick={() => handleClose(cd._id)} className="text-gray-600 hover:text-gray-800">
+                            <Lock size={16} />
+                          </button>
+                        )}
+                      </>
                     )}
                   </td>
 
@@ -294,9 +351,7 @@ export default function AdminCDList() {
             </tbody>
           </table>
 
-          {selectedCDId && (
-            <CDScheduleModal cdId={selectedCDId} onClose={handleModalClose} />
-          )}
+          {selectedCDId && <CDScheduleModal cdId={selectedCDId} onClose={handleModalClose} />}
         </div>
 
         {/* ✅ Pagination Controls */}
@@ -309,21 +364,17 @@ export default function AdminCDList() {
             >
               Prev
             </button>
-
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i}
                 onClick={() => handlePageChange(i + 1)}
                 className={`px-3 py-1 rounded-md border text-sm ${
-                  currentPage === i + 1
-                    ? "bg-teal-500 text-white"
-                    : "bg-white hover:bg-teal-50"
+                  currentPage === i + 1 ? "bg-teal-500 text-white" : "bg-white hover:bg-teal-50"
                 }`}
               >
                 {i + 1}
               </button>
             ))}
-
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}

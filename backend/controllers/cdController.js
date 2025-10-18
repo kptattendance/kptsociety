@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 // ------------------- Create CD Account -------------------
 export const createCD = async (req, res) => {
   try {
-    const { memberId, monthlyDeposit, startDate } = req.body;
+    const { memberId, monthlyDeposit, startDate, accountNumber } = req.body;
 
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ error: "Member not found" });
@@ -14,8 +14,12 @@ export const createCD = async (req, res) => {
     if (existingCD)
       return res.status(400).json({ error: "CD account already exists" });
 
+    const existingNumber = await CD.findOne({ accountNumber });
+    if (existingNumber)
+      return res.status(400).json({ error: "CD number already exists" });
+
     const cd = new CD({
-      accountNumber: `CD-${Date.now()}`,
+      accountNumber: accountNumber || `CD-${Date.now()}`,
       memberId,
       startDate,
       clerkId: member.clerkId,
@@ -23,10 +27,9 @@ export const createCD = async (req, res) => {
       balance: 0,
       totalDeposited: 0,
       totalWithdrawn: 0,
-      installments: [], // created dynamically
+      installments: [],
     });
 
-    // Generate first 12 installments
     const start = new Date(startDate || new Date());
     for (let i = 0; i < 12; i++) {
       const due = new Date(start);
@@ -92,6 +95,7 @@ export const getCDById = async (req, res) => {
 };
 
 // ------------------- Mark Installment Paid/Pending -------------------
+
 export const updateInstallment = async (req, res) => {
   try {
     const { cdId, installmentNo } = req.params;
@@ -145,25 +149,22 @@ export const updateInstallment = async (req, res) => {
 };
 
 // ------------------- Partial Withdrawal -------------------
+
 export const withdrawFromCD = async (req, res) => {
   try {
     const { cdId } = req.params;
-    const { amount, reason, clerkId } = req.body;
+    const { amount, reason, clerkId, chequeNumber, chequeDate } = req.body;
 
     const cd = await CD.findById(cdId);
     if (!cd) return res.status(404).json({ error: "CD not found" });
     if (cd.status !== "Active")
       return res.status(400).json({ error: "CD account not active" });
 
-    const oneThirdLimit = cd.totalDeposited / 3;
-    const totalAllowed = reason === "Resignation" ? cd.balance : oneThirdLimit;
-
-    if (amount > totalAllowed)
+    if (amount > cd.balance)
       return res.status(400).json({
-        error:
-          reason === "Resignation"
-            ? "Cannot withdraw more than total balance."
-            : `You can withdraw up to ₹${oneThirdLimit.toFixed(2)} only.`,
+        error: `Insufficient balance. Available balance is ₹${cd.balance.toFixed(
+          2
+        )}.`,
       });
 
     cd.totalWithdrawn += amount;
@@ -174,6 +175,9 @@ export const withdrawFromCD = async (req, res) => {
       amount,
       date: new Date(),
       reason,
+      chequeNumber,
+      chequeDate,
+      paymentMode: "Cheque",
       clerkId,
     });
 
@@ -253,6 +257,46 @@ export const deleteCD = async (req, res) => {
     if (!cd) return res.status(404).json({ error: "CD not found" });
     res.json({ message: "CD deleted successfully" });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ------------------- Update CD Account -------------------
+export const updateCDAccount = async (req, res) => {
+  try {
+    const { cdId } = req.params;
+    const { monthlyDeposit, startDate, status } = req.body;
+
+    const cd = await CD.findById(cdId);
+    if (!cd) return res.status(404).json({ error: "CD not found" });
+
+    // ✅ Update editable fields
+    if (monthlyDeposit !== undefined) cd.monthlyDeposit = monthlyDeposit;
+    if (startDate !== undefined) cd.startDate = new Date(startDate);
+    if (status) cd.status = status;
+
+    // ✅ Recalculate installment schedule if startDate changed
+    if (startDate) {
+      cd.installments = []; // clear old schedule
+
+      const start = new Date(startDate);
+      for (let i = 0; i < 12; i++) {
+        const due = new Date(start);
+        due.setMonth(start.getMonth() + i);
+
+        cd.installments.push({
+          monthNo: i + 1,
+          dueDate: due,
+          amount: cd.monthlyDeposit,
+          status: "Pending",
+        });
+      }
+    }
+
+    await cd.save();
+    res.json({ message: "CD updated successfully", cd });
+  } catch (err) {
+    console.error("Error updating CD:", err);
     res.status(500).json({ error: err.message });
   }
 };

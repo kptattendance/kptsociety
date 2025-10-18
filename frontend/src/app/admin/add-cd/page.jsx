@@ -13,6 +13,8 @@ export default function AdminCDForm() {
   const [formData, setFormData] = useState({
     memberId: "",
     startDate: "",
+    monthlyDeposit: "",
+    accountNumber: "",
   });
 
   // Fetch all members
@@ -49,17 +51,19 @@ export default function AdminCDForm() {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd`,
         {
+          accountNumber: formData.accountNumber,
           memberId: formData.memberId,
-          monthlyDeposit: 500,
+          monthlyDeposit: Number(formData.monthlyDeposit),
           startDate: formData.startDate,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setMessage("✅ CD Deposit successful!");
+      setMessage("✅ CD Deposit successfully created!");
       setFormData({
         memberId: "",
         startDate: "",
+        monthlyDeposit: "",
       });
     } catch (error) {
       console.error("Error processing CD deposit:", error);
@@ -117,16 +121,36 @@ export default function AdminCDForm() {
             />
           </div>
 
-          {/* Fixed Amount */}
+          {/* Monthly Deposit (user input) */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Fixed Monthly Deposit (₹)
+              Monthly Deposit (₹)
             </label>
             <input
               type="number"
-              value={500}
-              readOnly
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-xl shadow-sm text-gray-700"
+              name="monthlyDeposit"
+              value={formData.monthlyDeposit}
+              onChange={handleChange}
+              min="100"
+              step="100"
+              required
+              placeholder="Enter monthly deposit amount"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
+            />
+          </div>
+          {/* Society CD Number */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Society CD Number
+            </label>
+            <input
+              type="text"
+              name="accountNumber"
+              value={formData.accountNumber}
+              onChange={handleChange}
+              required
+              placeholder="Enter society CD number"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
             />
           </div>
 

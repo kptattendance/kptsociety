@@ -6,9 +6,10 @@ const installmentSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   status: { type: String, enum: ["Pending", "Paid"], default: "Pending" },
   paidAt: { type: Date },
-  clerkId: { type: String }, // who processed payment
+  clerkId: { type: String }, 
 });
-
+ 
+ 
 const transactionSchema = new mongoose.Schema({
   type: {
     type: String,
@@ -18,11 +19,14 @@ const transactionSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   date: { type: Date, default: Date.now },
   reason: { type: String },
+  chequeNumber: { type: String }, 
+  chequeDate: { type: Date }, 
   paymentMode: { type: String },
   reference: { type: String },
   notes: { type: String },
   clerkId: { type: String },
 });
+
 
 const cdAccountSchema = new mongoose.Schema(
   {

@@ -9,6 +9,7 @@ import {
   applyDividend,
   closeCD,
   deleteCD,
+  updateCDAccount,
 } from "../controllers/cdController.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -48,5 +49,6 @@ router.post("/:cdId/close", requireAuthWithRole(["admin"]), closeCD);
 
 // Delete CD
 router.delete("/:cdId", requireAuthWithRole(["admin"]), deleteCD);
+router.put("/:cdId", requireAuthWithRole(["admin"]), updateCDAccount);
 
 export default router;

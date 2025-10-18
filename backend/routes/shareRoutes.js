@@ -6,6 +6,7 @@ import {
   closeShareAccount,
   deleteShareAccount,
   updateShareAccount,
+  withdrawFromShareAccount,
 } from "../controllers/shareController.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -36,5 +37,7 @@ router.post(
 
 // ✅ Delete a share record (Admin)
 router.delete("/:shareId", requireAuthWithRole(["admin"]), deleteShareAccount);
+
+router.post("/withdraw/:shareId", withdrawFromShareAccount);
 
 export default router;

@@ -4,13 +4,16 @@ const { Schema } = mongoose;
 // ----------------------------- FD Schema -----------------------------
 const FDSchema = new Schema(
   {
+    // Society-given FD Number
+    fdNumber: { type: String, required: true, unique: true, trim: true },
+
     accountNumber: { type: String, required: true, unique: true },
     memberId: { type: Schema.Types.ObjectId, ref: "Member", required: true },
     clerkId: { type: String },
 
     // Core product fields
     principal: { type: Number, required: true },
-    tenureMonths: { type: Number, required: true },
+    tenureMonths: { type: Number, required: true }, // Input in months
     interestRate: { type: Number, required: true }, // annual % locked on opening
 
     // Dates
@@ -37,7 +40,7 @@ const FDSchema = new Schema(
     preclosurePenaltyPercent: { type: Number, default: 1.0 },
 
     // Derived values
-    maturityAmount: { type: Number, default: 0 }, // computed at opening or on interest-posting
+    maturityAmount: { type: Number, default: 0 },
     lastInterestPostedAt: { type: Date },
 
     // Status
@@ -55,8 +58,8 @@ const FDSchema = new Schema(
 // Indexes
 FDSchema.index({ memberId: 1, accountNumber: 1 });
 FDSchema.index({ startDate: -1 });
+FDSchema.index({ fdNumber: 1 }, { unique: true });
 
-// ----------------------------- Exports -----------------------------
-// Export models as named exports so you can import them individually
+// ----------------------------- Export -----------------------------
 const FD = mongoose.model("FD", FDSchema);
 export default FD;

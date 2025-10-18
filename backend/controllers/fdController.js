@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 export const createFD = async (req, res) => {
   try {
     const {
+      fdNumber,
       memberId,
       principal,
       interestRate,
@@ -21,23 +22,29 @@ export const createFD = async (req, res) => {
       notes,
     } = req.body;
 
-    // ✅ Validate member exists
+    // ✅ Validate member
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ error: "Member not found" });
+
+    // ✅ Check FD Number uniqueness
+    const existingFD = await FD.findOne({ fdNumber });
+    if (existingFD)
+      return res.status(400).json({ error: "FD number already exists" });
 
     // ✅ Calculate maturity date
     const start = startDate ? new Date(startDate) : new Date();
     const maturityDate = new Date(start);
     maturityDate.setMonth(maturityDate.getMonth() + Number(tenureMonths));
 
-    // ✅ Generate unique FD account number
+    // ✅ Generate system account number
     const accountNumber = `FD-${Date.now()}`;
 
-    // ✅ Compute maturity amount (compound interest)
+    // ✅ Compute maturity amount (simple compound interest)
     const years = tenureMonths / 12;
     const maturityAmount = principal * Math.pow(1 + interestRate / 100, years);
 
     const fd = new FD({
+      fdNumber,
       accountNumber,
       memberId: member._id,
       clerkId: member.clerkId || null,
@@ -65,7 +72,7 @@ export const createFD = async (req, res) => {
 };
 
 // -------------------------------------------------------------------
-// ✅ Get ALL FDs (Admin View)
+// ✅ Get ALL FDs
 // -------------------------------------------------------------------
 export const getAllFDs = async (req, res) => {
   try {
@@ -79,21 +86,16 @@ export const getAllFDs = async (req, res) => {
 };
 
 // -------------------------------------------------------------------
-// ✅ Get FDs by Member ID
+// ✅ Get FDs by Member ID or Clerk ID
 // -------------------------------------------------------------------
-
 export const getMemberFDs = async (req, res) => {
   try {
     const { memberId } = req.params;
-
     let member;
 
-    // Check if it's a valid Mongo ID
     if (mongoose.Types.ObjectId.isValid(memberId)) {
       member = await Member.findById(memberId);
     }
-
-    // If not found by Mongo ID, try as Clerk ID
     if (!member) {
       member = await Member.findOne({ clerkId: memberId });
     }
@@ -114,7 +116,7 @@ export const getMemberFDs = async (req, res) => {
 };
 
 // -------------------------------------------------------------------
-// ✅ Get Single FD by ID
+// ✅ Get Single FD
 // -------------------------------------------------------------------
 export const getFDById = async (req, res) => {
   try {
@@ -130,7 +132,7 @@ export const getFDById = async (req, res) => {
 };
 
 // -------------------------------------------------------------------
-// ✅ Update FD (Admin Edit)
+// ✅ Update FD
 // -------------------------------------------------------------------
 export const updateFD = async (req, res) => {
   try {
@@ -146,7 +148,7 @@ export const updateFD = async (req, res) => {
 };
 
 // -------------------------------------------------------------------
-// ✅ Pre-close FD (with penalty)
+// ✅ Pre-close FD
 // -------------------------------------------------------------------
 export const preCloseFD = async (req, res) => {
   try {
@@ -160,7 +162,6 @@ export const preCloseFD = async (req, res) => {
     fd.status = "PreClosed";
     fd.closedAt = now;
 
-    // Penalty: reduce interest by preclosurePenaltyPercent
     const durationYears = (now - fd.startDate) / (1000 * 60 * 60 * 24 * 365);
     const effectiveRate =
       fd.interestRate - (fd.interestRate * fd.preclosurePenaltyPercent) / 100;
@@ -178,7 +179,7 @@ export const preCloseFD = async (req, res) => {
 };
 
 // -------------------------------------------------------------------
-// ✅ Close FD (on maturity or manually)
+// ✅ Close FD
 // -------------------------------------------------------------------
 export const closeFD = async (req, res) => {
   try {
@@ -187,8 +188,8 @@ export const closeFD = async (req, res) => {
 
     fd.status = "Closed";
     fd.closedAt = new Date();
-
     await fd.save();
+
     res.json({ message: "FD closed successfully", fd });
   } catch (error) {
     res.status(400).json({ message: "Error closing FD", error });
@@ -196,7 +197,7 @@ export const closeFD = async (req, res) => {
 };
 
 // -------------------------------------------------------------------
-// ✅ Delete FD (Admin)
+// ✅ Delete FD
 // -------------------------------------------------------------------
 export const deleteFD = async (req, res) => {
   try {

@@ -2,24 +2,24 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import LoadOverlay from "../../../components/LoadOverlay"; // ✅ Import overlay
+import LoadOverlay from "../../../components/LoadOverlay";
 
 export default function AdminFDForm() {
   const { getToken } = useAuth();
   const [members, setMembers] = useState([]);
+
   const [formData, setFormData] = useState({
+    fdNumber: "", // ✅ added
     memberId: "",
     principal: "",
     interestRate: "",
-    tenureYears: "",
+    tenureMonths: "",
     startDate: "",
-    compoundingFrequency: "monthly",
-    payoutFrequency: "maturity",
     autoRenew: false,
     preclosureAllowed: true,
-    preclosurePenaltyPercent: "1.0",
     notes: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -40,7 +40,7 @@ export default function AdminFDForm() {
     fetchMembers();
   }, [getToken]);
 
-  // ✅ Handle change
+  // ✅ Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -52,21 +52,17 @@ export default function AdminFDForm() {
   // ✅ Submit FD
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // show overlay
+    setLoading(true);
     setMessage("");
 
     try {
       const token = await getToken();
 
-      // Convert tenureYears → tenureMonths
-      const tenureMonths = Number(formData.tenureYears) * 12;
-
       const payload = {
         ...formData,
-        tenureMonths,
+        tenureMonths: Number(formData.tenureMonths),
         principal: Number(formData.principal),
         interestRate: Number(formData.interestRate),
-        preclosurePenaltyPercent: Number(formData.preclosurePenaltyPercent),
       };
 
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/fd`, payload, {
@@ -74,33 +70,33 @@ export default function AdminFDForm() {
       });
 
       setMessage("✅ FD created successfully!");
+
       setFormData({
+        fdNumber: "",
         memberId: "",
         principal: "",
         interestRate: "",
-        tenureYears: "",
+        tenureMonths: "",
         startDate: "",
-        compoundingFrequency: "monthly",
-        payoutFrequency: "maturity",
         autoRenew: false,
         preclosureAllowed: true,
-        preclosurePenaltyPercent: "1.0",
         notes: "",
       });
     } catch (error) {
       console.error("FD creation error:", error);
-      setMessage("❌ Error creating FD");
+      setMessage(
+        error.response?.data?.error || "❌ Error creating FD. Please try again."
+      );
     } finally {
-      setLoading(false); // hide overlay
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-100 via-purple-100 to-indigo-200 p-6">
-      {/* ✅ Loader overlay */}
       <LoadOverlay show={loading} />
 
-      <div className="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl p-8 w-full max-w-6xl mx-auto">
+      <div className="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl p-8 w-full max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold text-center text-indigo-700 mb-8">
           🏦 Create New Fixed Deposit
         </h1>
@@ -109,7 +105,23 @@ export default function AdminFDForm() {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 sm:grid-cols-2 gap-6"
         >
-          {/* ✅ Member Dropdown */}
+          {/* ✅ Society FD Number */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Society FD Number
+            </label>
+            <input
+              type="text"
+              name="fdNumber"
+              value={formData.fdNumber}
+              onChange={handleChange}
+              required
+              placeholder="e.g., KPT-FD-001"
+              className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          {/* Member Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Select Member
@@ -130,7 +142,7 @@ export default function AdminFDForm() {
             </select>
           </div>
 
-          {/* Principal */}
+          {/* Deposit Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Deposit Amount (₹)
@@ -141,6 +153,7 @@ export default function AdminFDForm() {
               value={formData.principal}
               onChange={handleChange}
               required
+              placeholder="Enter amount"
               className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
@@ -150,49 +163,32 @@ export default function AdminFDForm() {
             <label className="block text-sm font-medium text-gray-700">
               Interest Rate (%)
             </label>
-            <select
+            <input
+              type="number"
+              step="0.1"
               name="interestRate"
               value={formData.interestRate}
               onChange={handleChange}
               required
+              placeholder="e.g., 7.5"
               className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value="">-- Select Rate --</option>
-              <option value="4.0">4.0%</option>
-              <option value="4.5">4.5%</option>
-              <option value="5.0">5.0%</option>
-              <option value="5.5">5.5%</option>
-              <option value="6.0">6.0%</option>
-              <option value="6.5">6.5%</option>
-              <option value="7.0">7.0%</option>
-              <option value="7.5">7.5%</option>
-              <option value="8.0">8.0%</option>
-              <option value="8.5">8.5%</option>
-              <option value="9.0">9.0%</option>
-              <option value="9.5">9.5%</option>
-              <option value="10.0">10.0%</option>
-            </select>
+            />
           </div>
 
-          {/* Tenure */}
+          {/* ✅ Tenure in Months */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Tenure (Years)
+              Tenure (Months)
             </label>
-            <select
-              name="tenureYears"
-              value={formData.tenureYears}
+            <input
+              type="number"
+              name="tenureMonths"
+              value={formData.tenureMonths}
               onChange={handleChange}
               required
+              placeholder="e.g., 12 for 1 year"
               className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value="">-- Select Tenure --</option>
-              {[1, 2, 3, 4, 5].map((yr) => (
-                <option key={yr} value={yr}>
-                  {yr} Year{yr > 1 && "s"}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Start Date */}
@@ -210,42 +206,8 @@ export default function AdminFDForm() {
             />
           </div>
 
-          {/* Compounding Frequency */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Compounding Frequency
-            </label>
-            <select
-              name="compoundingFrequency"
-              value={formData.compoundingFrequency}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="annually">Annually</option>
-            </select>
-          </div>
-
-          {/* Payout Frequency */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Payout Frequency
-            </label>
-            <select
-              name="payoutFrequency"
-              value={formData.payoutFrequency}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="maturity">On Maturity</option>
-            </select>
-          </div>
-
           {/* Auto Renew & Preclosure */}
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-4 items-center sm:col-span-2">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -267,23 +229,8 @@ export default function AdminFDForm() {
             </label>
           </div>
 
-          {/* Preclosure Penalty */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Preclosure Penalty (%)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              name="preclosurePenaltyPercent"
-              value={formData.preclosurePenaltyPercent}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-
           {/* Notes */}
-          <div>
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700">
               Notes
             </label>
@@ -301,7 +248,7 @@ export default function AdminFDForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-xl hover:bg-indigo-700 transition-all shadow-md disabled:opacity-50"
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-xl hover:bg-indigo-700 transition-all shadow-md disabled:opacity-50 sm:col-span-2"
           >
             {loading ? "Saving..." : "Create FD"}
           </button>
