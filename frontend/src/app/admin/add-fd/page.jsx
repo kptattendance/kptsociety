@@ -97,7 +97,7 @@ export default function AdminFDForm() {
       <LoadOverlay show={loading} />
 
       <div className="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl p-8 w-full max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-indigo-700 mb-8">
+        <h1 className="text-2xl font-bold text-center text-indigo-700 mb-8">
           🏦 Create New Fixed Deposit
         </h1>
 

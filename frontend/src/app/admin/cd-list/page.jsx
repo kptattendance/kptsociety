@@ -17,10 +17,15 @@ export default function AdminCDList() {
   const [loadingMessage, setLoadingMessage] = useState("Fetching CDs...");
   const [selectedCDId, setSelectedCDId] = useState(null);
   const [editId, setEditId] = useState(null);
-  const [editData, setEditData] = useState({ startDate: "", monthlyDeposit: "", status: "" });
+  const [editData, setEditData] = useState({
+    accountNumber: "",
+    startDate: "",
+    monthlyDeposit: "",
+    status: "",
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 15;
+  const recordsPerPage = 7;
 
   // ✅ Fetch all CDs
   const fetchCDs = async () => {
@@ -57,7 +62,10 @@ export default function AdminCDList() {
   // ✅ Pagination Logic
   const totalPages = Math.ceil(filteredCDs.length / recordsPerPage);
   const startIndex = (currentPage - 1) * recordsPerPage;
-  const currentRecords = filteredCDs.slice(startIndex, startIndex + recordsPerPage);
+  const currentRecords = filteredCDs.slice(
+    startIndex,
+    startIndex + recordsPerPage
+  );
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -108,6 +116,7 @@ export default function AdminCDList() {
   const handleEdit = (cd) => {
     setEditId(cd._id);
     setEditData({
+      accountNumber: cd.accountNumber || "",
       startDate: cd.startDate ? cd.startDate.slice(0, 10) : "",
       monthlyDeposit: cd.monthlyDeposit,
       status: cd.status,
@@ -124,9 +133,13 @@ export default function AdminCDList() {
       setLoading(true);
       setLoadingMessage("Updating CD...");
       const token = await getToken();
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}`, editData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}`,
+        editData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       toast.success("CD updated successfully");
       setEditId(null);
       fetchCDs();
@@ -139,7 +152,12 @@ export default function AdminCDList() {
 
   const handleCancel = () => {
     setEditId(null);
-    setEditData({ startDate: "", monthlyDeposit: "", status: "" });
+    setEditData({
+      accountNumber: "",
+      startDate: "",
+      monthlyDeposit: "",
+      status: "",
+    });
   };
 
   // ✅ Refresh when modal closes
@@ -171,7 +189,10 @@ export default function AdminCDList() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "CD Records");
     worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(data, `CD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
@@ -180,12 +201,17 @@ export default function AdminCDList() {
     <div className="min-h-screen bg-gradient-to-r from-red-50 to-pink-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
       <div className="bg-white shadow-xl rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">💰 CD Accounts</h2>
+        <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">
+          💰 CD Accounts
+        </h2>
 
         {/* 🔍 Search + Download */}
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <Search
+              className="absolute left-3 top-2.5 text-gray-400"
+              size={18}
+            />
             <input
               type="text"
               placeholder="Search by name, phone, or account #"
@@ -227,7 +253,10 @@ export default function AdminCDList() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {!loading && currentRecords.length === 0 && (
                 <tr>
-                  <td colSpan="10" className="text-center py-4 text-gray-500 italic">
+                  <td
+                    colSpan="10"
+                    className="text-center py-4 text-gray-500 italic"
+                  >
                     No CD accounts found.
                   </td>
                 </tr>
@@ -235,8 +264,22 @@ export default function AdminCDList() {
 
               {currentRecords.map((cd, index) => (
                 <tr key={cd._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-gray-600">{startIndex + index + 1}</td>
-                  <td className="px-4 py-2 font-medium">{cd.accountNumber}</td>
+                  <td className="px-4 py-2 text-gray-600">
+                    {startIndex + index + 1}
+                  </td>
+                  <td className="px-4 py-2 font-medium">
+                    {editId === cd._id ? (
+                      <input
+                        type="text"
+                        name="accountNumber"
+                        value={editData.accountNumber}
+                        onChange={handleEditChange}
+                        className="border rounded-md px-2 py-1 w-32"
+                      />
+                    ) : (
+                      cd.accountNumber
+                    )}
+                  </td>
 
                   <td className="px-4 py-2 flex items-center gap-3">
                     <img
@@ -245,8 +288,12 @@ export default function AdminCDList() {
                       className="w-10 h-10 rounded-full object-cover border"
                     />
                     <div>
-                      <p className="font-medium">{cd.memberId?.name || "Unknown"}</p>
-                      <p className="text-xs text-gray-500">{cd.memberId?.phone || "-"}</p>
+                      <p className="font-medium">
+                        {cd.memberId?.name || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {cd.memberId?.phone || "-"}
+                      </p>
                     </div>
                   </td>
 
@@ -280,8 +327,12 @@ export default function AdminCDList() {
                     )}
                   </td>
 
-                  <td className="px-4 py-2">₹{cd.totalDeposited?.toLocaleString()}</td>
-                  <td className="px-4 py-2">₹{cd.totalWithdrawn?.toLocaleString()}</td>
+                  <td className="px-4 py-2">
+                    ₹{cd.totalDeposited?.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2">
+                    ₹{cd.totalWithdrawn?.toLocaleString()}
+                  </td>
                   <td className="px-4 py-2">₹{cd.balance?.toLocaleString()}</td>
 
                   <td className="px-4 py-2">
@@ -314,23 +365,38 @@ export default function AdminCDList() {
                   <td className="px-4 py-2 text-center space-x-2">
                     {editId === cd._id ? (
                       <>
-                        <button onClick={() => handleSave(cd._id)} className="text-green-600 hover:text-green-800">
+                        <button
+                          onClick={() => handleSave(cd._id)}
+                          className="text-green-600 hover:text-green-800"
+                        >
                           <Check size={16} />
                         </button>
-                        <button onClick={handleCancel} className="text-gray-600 hover:text-gray-800">
+                        <button
+                          onClick={handleCancel}
+                          className="text-gray-600 hover:text-gray-800"
+                        >
                           <X size={16} />
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleEdit(cd)} className="text-blue-600 hover:text-blue-800">
+                        <button
+                          onClick={() => handleEdit(cd)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
                           <Pencil size={16} />
                         </button>
-                        <button onClick={() => handleDelete(cd._id)} className="text-red-600 hover:text-red-800">
+                        <button
+                          onClick={() => handleDelete(cd._id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
                           <Trash2 size={16} />
                         </button>
                         {cd.status === "Active" && (
-                          <button onClick={() => handleClose(cd._id)} className="text-gray-600 hover:text-gray-800">
+                          <button
+                            onClick={() => handleClose(cd._id)}
+                            className="text-gray-600 hover:text-gray-800"
+                          >
                             <Lock size={16} />
                           </button>
                         )}
@@ -351,7 +417,9 @@ export default function AdminCDList() {
             </tbody>
           </table>
 
-          {selectedCDId && <CDScheduleModal cdId={selectedCDId} onClose={handleModalClose} />}
+          {selectedCDId && (
+            <CDScheduleModal cdId={selectedCDId} onClose={handleModalClose} />
+          )}
         </div>
 
         {/* ✅ Pagination Controls */}
@@ -369,7 +437,9 @@ export default function AdminCDList() {
                 key={i}
                 onClick={() => handlePageChange(i + 1)}
                 className={`px-3 py-1 rounded-md border text-sm ${
-                  currentPage === i + 1 ? "bg-teal-500 text-white" : "bg-white hover:bg-teal-50"
+                  currentPage === i + 1
+                    ? "bg-teal-500 text-white"
+                    : "bg-white hover:bg-teal-50"
                 }`}
               >
                 {i + 1}

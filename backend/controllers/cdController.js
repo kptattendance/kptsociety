@@ -265,12 +265,13 @@ export const deleteCD = async (req, res) => {
 export const updateCDAccount = async (req, res) => {
   try {
     const { cdId } = req.params;
-    const { monthlyDeposit, startDate, status } = req.body;
+    const { monthlyDeposit, accountNumber, startDate, status } = req.body;
 
     const cd = await CD.findById(cdId);
     if (!cd) return res.status(404).json({ error: "CD not found" });
 
     // ✅ Update editable fields
+    if (accountNumber !== undefined) cd.accountNumber = accountNumber;
     if (monthlyDeposit !== undefined) cd.monthlyDeposit = monthlyDeposit;
     if (startDate !== undefined) cd.startDate = new Date(startDate);
     if (status) cd.status = status;

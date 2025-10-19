@@ -208,3 +208,69 @@ export const deleteFD = async (req, res) => {
     res.status(500).json({ message: "Error deleting FD", error });
   }
 };
+// -------------------------------------------------------------------
+// ✅ Add Withdrawal to FD
+// -------------------------------------------------------------------
+export const addFDWithdrawal = async (req, res) => {
+  try {
+    const { fdId } = req.params;
+    const { amount, reason, chequeNumber, chequeDate, paymentMode } = req.body;
+
+    const fd = await FD.findById(fdId);
+    if (!fd) return res.status(404).json({ error: "FD not found" });
+    if (fd.status !== "Active")
+      return res.status(400).json({ error: "FD is not active" });
+
+    if (amount <= 0)
+      return res.status(400).json({ error: "Invalid withdrawal amount" });
+
+    const remainingPrincipal = fd.principal - amount;
+    if (remainingPrincipal < 0)
+      return res
+        .status(400)
+        .json({ error: "Withdrawal amount exceeds remaining principal" });
+
+    // ✅ Update principal
+    fd.principal = remainingPrincipal;
+
+    // ✅ Recalculate maturity amount
+    const years = fd.tenureMonths / 12;
+    fd.maturityAmount = (
+      remainingPrincipal * Math.pow(1 + fd.interestRate / 100, years)
+    ).toFixed(2);
+
+    // ✅ Push withdrawal record
+    fd.withdrawals.push({
+      amount,
+      reason,
+      chequeNumber,
+      chequeDate,
+      paymentMode,
+      clerkId: req.userId || null,
+      date: new Date(),
+    });
+
+    await fd.save();
+
+    res.json({ message: "Withdrawal added successfully", fd });
+  } catch (error) {
+    console.error("Withdrawal error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// -------------------------------------------------------------------
+// ✅ Get all withdrawals of a FD
+// -------------------------------------------------------------------
+export const getFDWithdrawals = async (req, res) => {
+  try {
+    const { fdId } = req.params;
+    const fd = await FD.findById(fdId).populate("memberId", "name email phone");
+    if (!fd) return res.status(404).json({ error: "FD not found" });
+
+    res.json(fd.withdrawals);
+  } catch (error) {
+    console.error("Get withdrawals error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

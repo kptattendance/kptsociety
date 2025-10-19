@@ -11,13 +11,11 @@ export default function AdminRDForm() {
   const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     memberId: "",
+    accountNumber: "", // ✅ added new field
     depositAmount: "",
     tenureMonths: "",
     interestRate: "",
     startDate: "",
-    dueDayOfMonth: 1,
-    gracePeriodDays: 7,
-    lateFeePerInstallment: 0,
     notes: "",
   });
 
@@ -59,13 +57,11 @@ export default function AdminRDForm() {
       setMessage("✅ RD account created successfully!");
       setFormData({
         memberId: "",
+        accountNumber: "",
         depositAmount: "",
         tenureMonths: "",
         interestRate: "",
         startDate: "",
-        dueDayOfMonth: 1,
-        gracePeriodDays: 7,
-        lateFeePerInstallment: 0,
         notes: "",
       });
     } catch (error) {
@@ -78,15 +74,10 @@ export default function AdminRDForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-pink-100 to-purple-200 p-8">
-      {/* ✅ Loader overlay */}
       <LoadOverlay show={loading} />
 
-      <div className="bg-white/70 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-6xl mx-auto border border-white/40">
-        <h1
-          className="text-2xl font-extrabold text-center 
-        
-        bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-10 drop-shadow-md"
-        >
+      <div className="bg-white/70 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-4xl mx-auto border border-white/40">
+        <h1 className="text-2xl font-bold text-green-700 mb-6 text-center">
           🏦 Create New Recurring Deposit
         </h1>
 
@@ -115,6 +106,22 @@ export default function AdminRDForm() {
             </select>
           </div>
 
+          {/* Society Given RD Number */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Society Given RD Number
+            </label>
+            <input
+              type="text"
+              name="accountNumber"
+              value={formData.accountNumber}
+              onChange={handleChange}
+              required
+              placeholder="e.g., RD/2025/001"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-green-400 shadow-sm"
+            />
+          </div>
+
           {/* Deposit Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -135,28 +142,16 @@ export default function AdminRDForm() {
             <label className="block text-sm font-medium text-gray-700">
               Interest Rate (%)
             </label>
-            <select
+            <input
+              type="number"
               name="interestRate"
+              step="0.1"
               value={formData.interestRate}
               onChange={handleChange}
               required
-              className="mt-1 block w-full border border-gray-300 rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
-            >
-              <option value="">-- Select Rate --</option>
-              <option value="4.0">4.0%</option>
-              <option value="4.5">4.5%</option>
-              <option value="5.0">5.0%</option>
-              <option value="5.5">5.5%</option>
-              <option value="6.0">6.0%</option>
-              <option value="6.5">6.5%</option>
-              <option value="7.0">7.0%</option>
-              <option value="7.5">7.5%</option>
-              <option value="8.0">8.0%</option>
-              <option value="8.5">8.5%</option>
-              <option value="9.0">9.0%</option>
-              <option value="9.5">9.5%</option>
-              <option value="10.0">10.0%</option>
-            </select>
+              placeholder="e.g., 7.5"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm"
+            />
           </div>
 
           {/* Tenure */}
@@ -164,20 +159,15 @@ export default function AdminRDForm() {
             <label className="block text-sm font-medium text-gray-700">
               Tenure (Months)
             </label>
-            <select
+            <input
+              type="number"
               name="tenureMonths"
               value={formData.tenureMonths}
               onChange={handleChange}
               required
-              className="mt-1 block w-full border border-gray-300 rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
-            >
-              <option value="">-- Select Tenure --</option>
-              {[12, 24, 36, 48, 60].map((m) => (
-                <option key={m} value={m}>
-                  {m} Months
-                </option>
-              ))}
-            </select>
+              placeholder="e.g., 24"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm"
+            />
           </div>
 
           {/* Start Date */}
@@ -192,51 +182,6 @@ export default function AdminRDForm() {
               onChange={handleChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
-            />
-          </div>
-
-          {/* Due Day */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Due Day of Month
-            </label>
-            <input
-              type="number"
-              name="dueDayOfMonth"
-              min="1"
-              max="28"
-              value={formData.dueDayOfMonth}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
-            />
-          </div>
-
-          {/* Grace Period */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Grace Period (Days)
-            </label>
-            <input
-              type="number"
-              name="gracePeriodDays"
-              value={formData.gracePeriodDays}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm"
-            />
-          </div>
-
-          {/* Late Fee */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Late Fee per Installment (₹)
-            </label>
-            <input
-              type="number"
-              name="lateFeePerInstallment"
-              value={formData.lateFeePerInstallment}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm"
             />
           </div>
 

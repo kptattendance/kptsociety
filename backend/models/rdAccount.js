@@ -20,41 +20,53 @@ const RDInstallmentSchema = new Schema(
 );
 
 // ----------------------------- RD Schema -----------------------------
-const RDSchema = new Schema(
+// ---------------------- RD Withdrawal (per withdrawal) ----------------------
+const RDWithdrawalSchema = new mongoose.Schema(
+  {
+    amount: { type: Number, required: true },
+    chequeNumber: { type: String },
+    chequeDate: { type: Date },
+    withdrawnAt: { type: Date, default: Date.now },
+    notes: { type: String },
+  },
+  { _id: false }
+);
+
+// ----------------------------- RD Schema -----------------------------
+const RDSchema = new mongoose.Schema(
   {
     accountNumber: { type: String, required: true, unique: true },
-    memberId: { type: Schema.Types.ObjectId, ref: "Member", required: true },
+    memberId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Member",
+      required: true,
+    },
     clerkId: { type: String },
 
-    // Core product fields
-    depositAmount: { type: Number, required: true }, // monthly installment
+    depositAmount: { type: Number, required: true },
     tenureMonths: { type: Number, required: true },
-    interestRate: { type: Number, required: true }, // annual % locked on opening
+    interestRate: { type: Number, required: true },
 
-    // Dates
     startDate: { type: Date, required: true },
     maturityDate: { type: Date, required: true },
 
-    // Derived / bookkeeping
     totalDeposited: { type: Number, default: 0 },
-    maturityAmount: { type: Number, default: 0 }, // can be precomputed or computed on the fly
+    maturityAmount: { type: Number, default: 0 },
 
-    // Payment schedule
     installments: { type: [RDInstallmentSchema], default: [] },
 
-    // Policies
-    dueDayOfMonth: { type: Number }, // e.g., 1..28 (helps schedule generation)
+    withdrawals: { type: [RDWithdrawalSchema], default: [] }, // <-- NEW FIELD
+
+    dueDayOfMonth: { type: Number },
     gracePeriodDays: { type: Number, default: 7 },
     lateFeePerInstallment: { type: Number, default: 0 },
 
-    // Status
     status: {
       type: String,
       enum: ["Active", "Matured", "Closed", "PreClosed", "Defaulted"],
       default: "Active",
     },
 
-    // Misc
     notes: { type: String },
   },
   { timestamps: true }

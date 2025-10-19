@@ -122,8 +122,9 @@ export const getRDById = async (req, res) => {
 export const makeRDDeposit = async (req, res) => {
   try {
     const { rdId } = req.params;
-    const { amount, paymentMode, reference, notes } = req.body;
+    const { paymentMode, reference, notes } = req.body;
 
+    // Fetch RD
     const rd = await RD.findById(rdId);
     if (!rd) return res.status(404).json({ error: "RD not found" });
     if (rd.status !== "Active")
@@ -134,36 +135,97 @@ export const makeRDDeposit = async (req, res) => {
     if (!nextInstallment)
       return res.status(400).json({ error: "All installments paid" });
 
+    // Mark installment as paid
     nextInstallment.status = "Paid";
     nextInstallment.paidAt = new Date();
     nextInstallment.paymentMode = paymentMode;
     nextInstallment.reference = reference;
     nextInstallment.notes = notes;
 
-    // Update totalDeposited
-    rd.totalDeposited += amount;
+    // Recalculate totalDeposited based on all paid installments
+    rd.totalDeposited = rd.installments
+      .filter((i) => i.status === "Paid")
+      .reduce((sum, i) => sum + i.amount, 0);
 
     await rd.save();
     res.json(rd);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// ------------------- Update RD -------------------
+// Utility: calculate maturity date and amount
+const calculateMaturity = (
+  depositAmount,
+  tenureMonths,
+  interestRate,
+  startDate
+) => {
+  const start = new Date(startDate);
+  const maturityDate = new Date(start);
+  maturityDate.setMonth(maturityDate.getMonth() + Number(tenureMonths));
+
+  // Simple interest formula: A = P * (1 + r*n)
+  const monthlyRate = Number(interestRate) / 100 / 12;
+  const n = Number(tenureMonths);
+  const maturityAmount = Number(depositAmount) * ((1 + monthlyRate * n) * n);
+
+  return { maturityDate, maturityAmount };
+};
+
 export const updateRD = async (req, res) => {
   try {
     const { rdId } = req.params;
     const updates = req.body;
 
-    const rd = await RD.findByIdAndUpdate(rdId, updates, {
-      new: true,
-      runValidators: true,
-    });
+    // Fetch existing RD
+    const rd = await RD.findById(rdId);
     if (!rd) return res.status(404).json({ error: "RD not found" });
+
+    // Validate accountNumber uniqueness if changed
+    if (updates.accountNumber && updates.accountNumber !== rd.accountNumber) {
+      const exists = await RD.findOne({ accountNumber: updates.accountNumber });
+      if (exists)
+        return res.status(400).json({ error: "Account number already exists" });
+    }
+
+    // Update allowed fields
+    const allowedFields = [
+      "accountNumber",
+      "depositAmount",
+      "interestRate",
+      "tenureMonths",
+      "startDate",
+      "notes",
+      "status",
+    ];
+    allowedFields.forEach((field) => {
+      if (updates[field] !== undefined) rd[field] = updates[field];
+    });
+
+    // Recalculate maturity if relevant fields changed
+    if (
+      updates.depositAmount ||
+      updates.interestRate ||
+      updates.tenureMonths ||
+      updates.startDate
+    ) {
+      const { maturityDate, maturityAmount } = calculateMaturity(
+        rd.depositAmount,
+        rd.tenureMonths,
+        rd.interestRate,
+        rd.startDate
+      );
+      rd.maturityDate = maturityDate;
+      rd.maturityAmount = maturityAmount;
+    }
+
+    await rd.save();
 
     res.json(rd);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -237,14 +299,95 @@ export const updateRDInstallmentStatus = async (req, res) => {
     if (status === "Paid") {
       inst.status = "Paid";
       inst.paidAt = new Date();
-    } else {
+    } else if (status === "Pending") {
       inst.status = "Pending";
       inst.paidAt = null;
+    } else {
+      return res.status(400).json({ error: "Invalid status" });
     }
+
+    // Recalculate totalDeposited from all paid installments
+    rd.totalDeposited = rd.installments
+      .filter((i) => i.status === "Paid")
+      .reduce((sum, i) => sum + i.amount, 0);
 
     await rd.save();
     res.json(rd);
   } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ------------------- Utility: Find RD by Mongo ID or Clerk ID -------------------
+const findRD = async (idOrClerk) => {
+  let rd = null;
+  // Check if it's a valid Mongo ObjectId
+  if (mongoose.Types.ObjectId.isValid(idOrClerk)) {
+    // Try as RD _id
+    rd = await RD.findById(idOrClerk);
+    if (rd) return rd;
+
+    // Try as memberId
+    rd = await RD.findOne({ memberId: idOrClerk });
+    if (rd) return rd;
+  }
+
+  // Otherwise treat as clerkId
+  rd = await RD.findOne({ clerkId: idOrClerk });
+  return rd;
+};
+
+// ------------------- Record a Withdrawal -------------------
+export const makeRDWithdrawal = async (req, res) => {
+  try {
+    const { rdId } = req.params; // can be RD _id or Clerk ID
+    const { amount, chequeNumber, chequeDate, notes } = req.body;
+
+    const rd = await findRD(rdId);
+    if (!rd) return res.status(404).json({ error: "RD not found" });
+    if (rd.status !== "Active")
+      return res.status(400).json({ error: "RD not active" });
+
+    // Ensure withdrawals array exists
+    if (!rd.withdrawals) rd.withdrawals = [];
+
+    const totalWithdrawn = rd.withdrawals.reduce((sum, w) => sum + w.amount, 0);
+    const availableBalance = rd.totalDeposited - totalWithdrawn;
+    if (amount > availableBalance)
+      return res
+        .status(400)
+        .json({ error: "Withdrawal exceeds available balance" });
+
+    rd.withdrawals.push({
+      amount,
+      chequeNumber,
+      chequeDate: chequeDate ? new Date(chequeDate) : null,
+      withdrawnAt: new Date(),
+      notes,
+    });
+
+    await rd.save();
+    res.json(rd);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ------------------- Get RD Details (Flexible) -------------------
+export const getRDByIdOrClerk = async (req, res) => {
+  try {
+    const { rdId } = req.params; // can be RD _id or Clerk ID
+    const rd = await findRD(rdId);
+    if (!rd) return res.status(404).json({ error: "RD not found" });
+
+    // Populate member if available
+    await rd.populate("memberId", "name email phone photo");
+
+    res.json(rd);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };

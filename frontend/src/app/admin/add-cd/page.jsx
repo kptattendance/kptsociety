@@ -77,7 +77,7 @@ export default function AdminCDForm() {
     <div className="min-h-screen bg-gradient-to-br from-teal-100 via-purple-100 to-pink-100 p-8">
       <LoadOverlay show={loading} />
       <div className="bg-white/70 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-5xl mx-auto border border-white/40">
-        <h1 className="text-2xl font-extrabold text-center bg-gradient-to-r from-teal-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-10 drop-shadow-md">
+        <h1 className="text-2xl font-bold text-red-700 mb-6 text-center">
           💰 Compulsory Deposit (CD) Entry
         </h1>
 

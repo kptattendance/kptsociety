@@ -8,6 +8,8 @@ import {
   preCloseFD,
   closeFD,
   deleteFD,
+  getFDWithdrawals,
+  addFDWithdrawal,
 } from "../controllers/fdController.js";
 
 import { requireAuthWithRole } from "../middlewares/auth.js";
@@ -50,4 +52,6 @@ router.get(
 // ✅ Get a single FD by ID
 router.get("/:fdId", requireAuthWithRole(["admin", "member"]), getFDById);
 
+router.post("/:fdId/withdraw", addFDWithdrawal);
+router.get("/:fdId/withdrawals", getFDWithdrawals);
 export default router;

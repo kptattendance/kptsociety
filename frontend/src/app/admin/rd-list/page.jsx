@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { Pencil, Trash2, Check, X, Lock } from "lucide-react";
-import RDScheduleModal from "../../../components/AdminPageComponents/RDScheduleModal";
+import RDScheduleModal from "./RDScheduleModal";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
-
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+
 export default function AdminRDTable() {
   const { getToken } = useAuth();
   const [rds, setRDs] = useState([]);
@@ -16,14 +16,14 @@ export default function AdminRDTable() {
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Fetching RDs...");
-  const [message, setMessage] = useState("");
   const [selectedRDId, setSelectedRDId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 15;
+  const rowsPerPage = 7;
 
+  // Fetch RDs
   const fetchRDs = async () => {
     try {
       setLoading(true);
@@ -45,6 +45,7 @@ export default function AdminRDTable() {
     fetchRDs();
   }, []);
 
+  // Delete RD
   const handleDelete = async (rdId) => {
     if (!confirm("Are you sure you want to delete this RD?")) return;
     try {
@@ -63,21 +64,35 @@ export default function AdminRDTable() {
     }
   };
 
+  // Edit RD
   const handleEditClick = (rd) => {
     setEditingId(rd._id);
     setEditForm({
-      depositAmount: rd.depositAmount,
-      interestRate: rd.interestRate,
-      tenureMonths: rd.tenureMonths,
-      dueDayOfMonth: rd.dueDayOfMonth,
-      gracePeriodDays: rd.gracePeriodDays,
-      lateFeePerInstallment: rd.lateFeePerInstallment,
+      accountNumber: rd.accountNumber || "",
+      depositAmount: rd.depositAmount || "",
+      interestRate: rd.interestRate || "",
+      tenureMonths: rd.tenureMonths || "",
+      startDate: rd.startDate ? rd.startDate.slice(0, 10) : "",
+      dueDayOfMonth: rd.dueDayOfMonth || "",
+      gracePeriodDays: rd.gracePeriodDays || "",
+      lateFeePerInstallment: rd.lateFeePerInstallment || "",
       notes: rd.notes || "",
       status: rd.status,
     });
   };
 
   const handleSave = async (rdId) => {
+    // Basic validation
+    if (
+      !editForm.accountNumber ||
+      !editForm.depositAmount ||
+      !editForm.interestRate
+    ) {
+      toast.error(
+        "Account Number, Deposit Amount, and Interest Rate are required!"
+      );
+      return;
+    }
     try {
       setLoading(true);
       setLoadingMessage("Updating RD...");
@@ -85,7 +100,9 @@ export default function AdminRDTable() {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/rd/${rdId}`,
         editForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setEditingId(null);
       toast.success("RD updated successfully");
@@ -97,6 +114,7 @@ export default function AdminRDTable() {
     }
   };
 
+  // Close RD
   const handleClose = async (rdId) => {
     if (!confirm("Close this RD?")) return;
     try {
@@ -106,7 +124,9 @@ export default function AdminRDTable() {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/rd/close/${rdId}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       toast.success("RD closed successfully");
       fetchRDs();
@@ -117,13 +137,12 @@ export default function AdminRDTable() {
     }
   };
 
+  // Download Excel
   const handleDownloadExcel = () => {
-    if (rds.length === 0) {
+    if (!rds.length) {
       toast.info("No data available to export!");
       return;
     }
-
-    // Prepare RD data for export
     const exportData = rds.map((rd, index) => ({
       "Sl. No.": index + 1,
       "Member Name": rd.memberId?.name || "Unknown",
@@ -144,17 +163,10 @@ export default function AdminRDTable() {
       Status: rd.status || "-",
       Notes: rd.notes || "-",
     }));
-
-    // Create worksheet and workbook
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "RD Records");
-
-    // Format column widths (optional but improves readability)
-    const colWidths = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
-    worksheet["!cols"] = colWidths;
-
-    // Generate Excel and trigger download
+    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
@@ -163,15 +175,13 @@ export default function AdminRDTable() {
     saveAs(data, `RD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  // Filtered RDs
+  // Filtered and paginated RDs
   const filteredRDs = rds.filter((rd) => {
     const name = rd.memberId?.name?.toLowerCase() || "";
     const phone = rd.memberId?.phone?.toLowerCase() || "";
     const search = searchTerm.toLowerCase();
     return name.includes(search) || phone.includes(search);
   });
-
-  // Pagination logic
   const totalPages = Math.ceil(filteredRDs.length / rowsPerPage);
   const paginatedRDs = filteredRDs.slice(
     (currentPage - 1) * rowsPerPage,
@@ -185,7 +195,6 @@ export default function AdminRDTable() {
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-50 to-teal-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
-
       <div className="bg-white shadow-xl rounded-2xl p-6">
         <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">
           💰 Recurring Deposit Records
@@ -202,7 +211,6 @@ export default function AdminRDTable() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-teal-400 outline-none"
           />
-
           <button
             onClick={handleDownloadExcel}
             className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
@@ -211,25 +219,17 @@ export default function AdminRDTable() {
           </button>
         </div>
 
-        {message && (
-          <div
-            className={`mb-4 text-center font-medium ${
-              message.includes("✅") || message.includes("🗑️")
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-300 text-sm">
             <thead className="bg-teal-100 text-gray-700">
               <tr>
                 <th className="px-4 py-2 text-left">Sl. No</th>
+                <th className="px-4 py-2 text-left">Account No.</th>
                 <th className="px-4 py-2 text-left">Member</th>
                 <th className="px-4 py-2 text-left">Deposit (₹)</th>
+                <th className="px-4 py-2 text-left">Total Deposited (₹)</th>
+                <th className="px-4 py-2 text-left">Total Withdrawn (₹)</th>
+                <th className="px-4 py-2 text-left">Available Balance (₹)</th>
                 <th className="px-4 py-2 text-left">Interest (%)</th>
                 <th className="px-4 py-2 text-left">Tenure (Months)</th>
                 <th className="px-4 py-2 text-left">Start Date</th>
@@ -240,12 +240,11 @@ export default function AdminRDTable() {
                 <th className="px-4 py-2 text-center">View</th>
               </tr>
             </thead>
-
             <tbody className="divide-y divide-gray-200 bg-white">
               {!loading && filteredRDs.length === 0 && (
                 <tr>
                   <td
-                    colSpan="11"
+                    colSpan="15"
                     className="text-center py-4 text-gray-500 italic"
                   >
                     No RDs found.
@@ -253,156 +252,237 @@ export default function AdminRDTable() {
                 </tr>
               )}
 
-              {paginatedRDs.map((rd, index) => (
-                <tr key={rd._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-gray-700 font-medium">
-                    {(currentPage - 1) * rowsPerPage + index + 1}
-                  </td>
-                  <td className="px-4 py-2 flex items-center gap-3">
-                    <img
-                      src={rd.memberId?.photo || "/default-avatar.png"}
-                      alt={rd.memberId?.name || "Member"}
-                      className="w-10 h-10 rounded-full object-cover border"
-                    />
-                    <div>
-                      <p className="font-medium">
-                        {rd.memberId?.name || "Unknown"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {rd.memberId?.phone || "-"}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 font-medium text-gray-700">
-                    ₹{rd.depositAmount?.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2">
-                    {editingId === rd._id ? (
-                      <input
-                        type="number"
-                        value={editForm.interestRate}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            interestRate: e.target.value,
-                          })
-                        }
-                        className="border rounded-md px-2 py-1 w-16 text-center"
+              {paginatedRDs.map((rd, index) => {
+                const totalWithdrawn =
+                  rd.withdrawals?.reduce(
+                    (sum, w) => sum + (w.amount || 0),
+                    0
+                  ) || 0;
+                const availableBalance =
+                  (rd.totalDeposited || 0) - totalWithdrawn;
+
+                return (
+                  <tr
+                    key={rd._id}
+                    className={`hover:bg-gray-50 ${
+                      editingId === rd._id ? "bg-green-50" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-2 font-medium">
+                      {(currentPage - 1) * rowsPerPage + index + 1}
+                    </td>
+
+                    <td className="px-4 py-2 font-medium">
+                      {editingId === rd._id ? (
+                        <input
+                          type="text"
+                          value={editForm.accountNumber}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              accountNumber: e.target.value,
+                            })
+                          }
+                          className="border rounded-md px-2 py-1 w-28 text-center"
+                        />
+                      ) : (
+                        rd.accountNumber || "-"
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2 flex items-center gap-3">
+                      <img
+                        src={rd.memberId?.photo || "/default-avatar.png"}
+                        alt={rd.memberId?.name || "Member"}
+                        className="w-10 h-10 rounded-full object-cover border"
                       />
-                    ) : (
-                      `${rd.interestRate}%`
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    {editingId === rd._id ? (
-                      <input
-                        type="number"
-                        value={editForm.tenureMonths}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            tenureMonths: e.target.value,
-                          })
-                        }
-                        className="border rounded-md px-2 py-1 w-20 text-center"
-                      />
-                    ) : (
-                      rd.tenureMonths
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-gray-600">
-                    {new Date(rd.startDate).toLocaleDateString("en-GB")}
-                  </td>
-                  <td className="px-4 py-2 text-gray-600">
-                    {new Date(rd.maturityDate).toLocaleDateString("en-GB")}
-                  </td>
-                  <td className="px-4 py-2 font-medium text-gray-700">
-                    ₹{rd.maturityAmount?.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2">
-                    {editingId === rd._id ? (
-                      <select
-                        value={editForm.status}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, status: e.target.value })
-                        }
-                        className="border rounded-md px-2 py-1"
-                      >
-                        <option>Active</option>
-                        <option>Matured</option>
-                        <option>Closed</option>
-                        <option>PreClosed</option>
-                        <option>Defaulted</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          rd.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : rd.status === "Closed" || rd.status === "Matured"
-                            ? "bg-gray-200 text-gray-600"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {rd.status}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-center space-x-2">
-                    {editingId === rd._id ? (
-                      <>
-                        <button
-                          onClick={() => handleSave(rd._id)}
-                          className="text-green-600 hover:text-green-800"
+                      <div>
+                        <p className="font-medium">
+                          {rd.memberId?.name || "Unknown"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {rd.memberId?.phone || "-"}
+                        </p>
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-2 font-medium">
+                      {editingId === rd._id ? (
+                        <input
+                          type="number"
+                          value={editForm.depositAmount}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              depositAmount: e.target.value,
+                            })
+                          }
+                          className="border rounded-md px-2 py-1 w-24 text-center"
+                        />
+                      ) : (
+                        `₹${rd.depositAmount?.toLocaleString()}`
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      ₹{rd.totalDeposited?.toLocaleString() || 0}
+                    </td>
+                    <td className="px-4 py-2">
+                      ₹{totalWithdrawn.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-2 font-medium text-gray-700">
+                      ₹{availableBalance.toLocaleString()}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {editingId === rd._id ? (
+                        <input
+                          type="number"
+                          value={editForm.interestRate}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              interestRate: e.target.value,
+                            })
+                          }
+                          className="border rounded-md px-2 py-1 w-16 text-center"
+                        />
+                      ) : (
+                        `${rd.interestRate}%`
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {editingId === rd._id ? (
+                        <input
+                          type="number"
+                          value={editForm.tenureMonths}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              tenureMonths: e.target.value,
+                            })
+                          }
+                          className="border rounded-md px-2 py-1 w-20 text-center"
+                        />
+                      ) : (
+                        rd.tenureMonths
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2 text-gray-600">
+                      {editingId === rd._id ? (
+                        <input
+                          type="date"
+                          value={editForm.startDate}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              startDate: e.target.value,
+                            })
+                          }
+                          className="border rounded-md px-2 py-1"
+                        />
+                      ) : (
+                        new Date(rd.startDate).toLocaleDateString("en-GB")
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2 text-gray-600">
+                      {new Date(rd.maturityDate).toLocaleDateString("en-GB")}
+                    </td>
+                    <td className="px-4 py-2 font-medium">
+                      ₹{rd.maturityAmount?.toLocaleString()}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {editingId === rd._id ? (
+                        <select
+                          value={editForm.status}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, status: e.target.value })
+                          }
+                          className="border rounded-md px-2 py-1"
                         >
-                          <Check size={16} />
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="text-red-500 hover:text-red-700"
+                          <option>Active</option>
+                          <option>Matured</option>
+                          <option>Closed</option>
+                          <option>PreClosed</option>
+                          <option>Defaulted</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            rd.status === "Active"
+                              ? "bg-green-100 text-green-700"
+                              : rd.status === "Closed" ||
+                                rd.status === "Matured"
+                              ? "bg-gray-200 text-gray-600"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
                         >
-                          <X size={16} />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleEditClick(rd)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(rd._id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        {rd.status === "Active" && (
+                          {rd.status}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2 text-center space-x-2">
+                      {editingId === rd._id ? (
+                        <>
                           <button
-                            onClick={() => handleClose(rd._id)}
-                            className="text-gray-600 hover:text-gray-800"
+                            onClick={() => handleSave(rd._id)}
+                            className="text-green-600 hover:text-green-800"
                           >
-                            <Lock size={16} />
+                            <Check size={16} />
                           </button>
-                        )}
-                      </>
-                    )}
-                  </td>
-                  <td className="text-center">
-                    <button
-                      onClick={() => setSelectedRDId(rd._id)}
-                      className="text-teal-500 cursor-pointer hover:text-green-800"
-                    >
-                      Schedule
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleEditClick(rd)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(rd._id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          {rd.status === "Active" && (
+                            <button
+                              onClick={() => handleClose(rd._id)}
+                              className="text-gray-600 hover:text-gray-800"
+                            >
+                              <Lock size={16} />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </td>
+
+                    <td className="text-center">
+                      <button
+                        onClick={() => setSelectedRDId(rd._id)}
+                        className="text-teal-500 cursor-pointer hover:text-green-800"
+                      >
+                        Schedule
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           {filteredRDs.length > rowsPerPage && (
             <div className="flex justify-between items-center mt-4 text-sm">
               <p className="text-gray-600">
