@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Pencil, Trash2, Save, X } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import EditableRow from "./EditableRow";
+import ReadOnlyRow from "./ReadOnlyRow";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 export default function MembersList() {
   const [members, setMembers] = useState([]);
@@ -18,8 +20,8 @@ export default function MembersList() {
   const [preview, setPreview] = useState(null);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 15;
-
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const rowsPerPage = 6;
   const { getToken } = useAuth();
 
   const departments = [
@@ -47,17 +49,55 @@ export default function MembersList() {
 
   const statuses = ["active", "closed"];
 
-  const filteredMembers = members.filter((member) => {
+  // ---------- Sorting ----------
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      let direction = "asc";
+      if (prev.key === key && prev.direction === "asc") direction = "desc";
+      return { key, direction };
+    });
+  };
+
+  const getValue = (m, key) => (m[key] ? m[key].toString().toLowerCase() : "");
+
+  const sortedMembers = [...members].sort((a, b) => {
+    const { key, direction } = sortConfig;
+    if (!key) return 0;
+    const aVal = getValue(a, key);
+    const bVal = getValue(b, key);
+    if (!isNaN(aVal) && !isNaN(bVal))
+      return direction === "asc" ? aVal - bVal : bVal - aVal;
+    if (aVal < bVal) return direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const renderSortIcon = (key) => {
+    if (sortConfig.key !== key)
+      return <ChevronDown size={14} className="inline-block ml-1 opacity-40" />;
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp size={16} className="inline-block ml-1 text-yellow-300" />
+    ) : (
+      <ChevronDown size={16} className="inline-block ml-1 text-yellow-300" />
+    );
+  };
+
+  // ---------- Search & Pagination ----------
+  const filteredMembers = sortedMembers.filter((m) => {
     const term = search.toLowerCase();
     return (
-      member.name?.toLowerCase().includes(term) ||
-      member.phone?.toLowerCase().includes(term) ||
-      member.department?.toLowerCase().includes(term) ||
-      member.kgidNumber?.toLowerCase().includes(term) ||
-      member.designation?.toLowerCase().includes(term) ||
-      member.workingCollegeName?.toLowerCase().includes(term) ||
-      member.role?.toLowerCase().includes(term) ||
-      member.status?.toLowerCase().includes(term)
+      (m.name || "").toLowerCase().includes(term) ||
+      (m.phone || "").toLowerCase().includes(term) ||
+      (m.department || "").toLowerCase().includes(term) ||
+      (m.kgidNumber || "").toLowerCase().includes(term) ||
+      (m.designation || "").toLowerCase().includes(term) ||
+      (m.workingCollegeName || "").toLowerCase().includes(term) ||
+      (m.role || "").toLowerCase().includes(term) ||
+      (m.status || "").toLowerCase().includes(term) ||
+      (m.email || "").toLowerCase().includes(term) ||
+      (m.societyNumber || "").toLowerCase().includes(term) ||
+      (m.memberType || "").toLowerCase().includes(term) ||
+      (m.guardian || "").toLowerCase().includes(term)
     );
   });
 
@@ -71,16 +111,17 @@ export default function MembersList() {
     if (currentPage > totalPages) setCurrentPage(1);
   }, [filteredMembers, totalPages]);
 
+  // ---------- Fetch Members ----------
   const fetchMembers = async () => {
     try {
       setLoading(true);
       setLoadingMessage("Fetching members...");
       const token = await getToken();
-      const response = await axios.get(
+      const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/members`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMembers(response.data);
+      setMembers(res.data);
     } catch (err) {
       console.error("Error fetching members:", err);
       toast.error("Failed to fetch members");
@@ -91,15 +132,16 @@ export default function MembersList() {
 
   useEffect(() => {
     fetchMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ---------- Excel Export ----------
   const handleDownloadExcel = () => {
-    if (members.length === 0) {
+    if (filteredMembers.length === 0) {
       toast.info("No member data available to export!");
       return;
     }
 
-    // ✅ Use filtered members if search applied
     const exportData = filteredMembers.map((m, i) => ({
       "Sl. No.": i + 1,
       Name: m.name || "-",
@@ -124,12 +166,12 @@ export default function MembersList() {
         : "-",
       "Society No.": m.societyNumber || "-",
       Status: m.status || "Active",
+      Role: m.role || "-",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
-
     worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
 
     const excelBuffer = XLSX.write(workbook, {
@@ -139,11 +181,11 @@ export default function MembersList() {
     const blob = new Blob([excelBuffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-
     saveAs(blob, `Members_List_${new Date().toISOString().slice(0, 10)}.xlsx`);
     toast.success("✅ Excel file downloaded!");
   };
 
+  // ---------- Delete ----------
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this member?")) return;
     try {
@@ -154,7 +196,7 @@ export default function MembersList() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/members/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMembers(members.filter((m) => m._id !== id));
+      setMembers((prev) => prev.filter((m) => m._id !== id));
       toast.success("Member deleted successfully");
     } catch (err) {
       console.error("Error deleting member:", err);
@@ -164,14 +206,17 @@ export default function MembersList() {
     }
   };
 
+  // ---------- Edit ----------
   const handleEditChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "photo") {
-      const file = files[0];
-      setEditData({ ...editData, photo: file });
-      setPreview(URL.createObjectURL(file));
+      const file = files && files[0];
+      if (file) {
+        setEditData((prev) => ({ ...prev, photo: file }));
+        setPreview(URL.createObjectURL(file));
+      }
     } else {
-      setEditData({ ...editData, [name]: value });
+      setEditData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -181,8 +226,8 @@ export default function MembersList() {
       setLoadingMessage("Updating member...");
       const token = await getToken();
       const formData = new FormData();
-      Object.entries(editData).forEach(([key, value]) => {
-        if (value) formData.append(key, value);
+      Object.entries(editData).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) formData.append(k, v);
       });
 
       await axios.put(
@@ -199,6 +244,7 @@ export default function MembersList() {
       toast.success("Member updated successfully");
       setEditingMemberId(null);
       setPreview(null);
+      setEditData({});
       fetchMembers();
     } catch (err) {
       console.error("Error updating member:", err);
@@ -208,6 +254,7 @@ export default function MembersList() {
     }
   };
 
+  // ---------- Render ----------
   return (
     <div className="min-h-screen bg-gradient-to-r from-violet-50 to-violet-100 p-6">
       <div className="p-4 sm:p-6 max-w-8xl mx-auto bg-gradient-to-br from-gray-50 via-white to-gray-100 rounded-xl shadow-inner">
@@ -220,7 +267,7 @@ export default function MembersList() {
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
           <input
             type="text"
-            placeholder="Search by name, phone, dept, status..."
+            placeholder="Search by name, phone, dept, status, email..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -239,43 +286,47 @@ export default function MembersList() {
 
         <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">
           <table className="min-w-full text-sm sm:text-base text-gray-700">
-            <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+            <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white select-none">
               <tr>
+                <th className="px-3 py-3 text-left font-medium">Sl. No.</th>
+                <th className="px-3 py-3 text-left font-medium">Photo</th>
+
                 {[
-                  "Sl. No.",
-                  "Photo",
-                  "Name",
-                  "Email",
-                  "Phone",
-                  "Department",
-                  "KGID",
-                  "Guardian",
-                  "DOB",
-                  "Designation",
-                  "Working College",
-                  "Permanent Address",
-                  "Current Address",
-                  "Member Type",
-                  "Joining Date",
-                  "Resign Date",
-                  "Society Number",
-                  "Status",
-                  "Actions",
-                ].map((head) => (
+                  ["name", "Name"],
+                  ["email", "Email"],
+                  ["phone", "Phone"],
+                  ["department", "Department"],
+                  ["kgidNumber", "KGID"],
+                  ["guardian", "Guardian"],
+                  ["dob", "DOB"],
+                  ["designation", "Designation"],
+                  ["workingCollegeName", "Working College"],
+                  ["permanentAddress", "Permanent Address"],
+                  ["currentAddress", "Current Address"],
+                  ["memberType", "Member Type"],
+                  ["joiningDate", "Joining Date"],
+                  ["resignDate", "Resign Date"],
+                  ["societyNumber", "Society Number"],
+                  ["role", "Role"],
+                  ["status", "Status"],
+                ].map(([key, label]) => (
                   <th
-                    key={head}
-                    className="px-3 py-3 text-left font-medium whitespace-nowrap"
+                    key={key}
+                    onClick={() => handleSort(key)}
+                    className="px-3 py-3 text-left font-medium cursor-pointer hover:text-yellow-300 transition whitespace-nowrap"
                   >
-                    {head}
+                    {label} {renderSortIcon(key)}
                   </th>
                 ))}
+
+                <th className="px-3 py-3 text-left font-medium">Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="16" className="text-center py-6 text-gray-500">
+                  <td colSpan="20" className="text-center py-6 text-gray-500">
                     No members found.
                   </td>
                 </tr>
@@ -287,33 +338,6 @@ export default function MembersList() {
                   >
                     <td className="px-4 py-2 text-gray-600">
                       {(currentPage - 1) * rowsPerPage + index + 1}
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      {editingMemberId === member._id ? (
-                        <div>
-                          <input
-                            type="file"
-                            name="photo"
-                            accept="image/*"
-                            onChange={handleEditChange}
-                          />
-                          {(preview || member.photo) && (
-                            <img
-                              src={preview || member.photo}
-                              alt={member.name}
-                              className="w-12 h-12 rounded-full object-cover mt-1 mx-auto"
-                            />
-                          )}
-                        </div>
-                      ) : member.photo ? (
-                        <img
-                          src={member.photo}
-                          alt={member.name}
-                          className="w-12 h-12 rounded-full object-cover mx-auto"
-                        />
-                      ) : (
-                        <span className="text-gray-400 italic">No Photo</span>
-                      )}
                     </td>
 
                     {editingMemberId === member._id ? (
@@ -327,6 +351,7 @@ export default function MembersList() {
                         departments={departments}
                         designations={designations}
                         statuses={statuses}
+                        preview={preview}
                       />
                     ) : (
                       <ReadOnlyRow
@@ -342,6 +367,8 @@ export default function MembersList() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
         <div className="flex justify-center items-center mt-4 gap-2">
           <button
             disabled={currentPage === 1}
@@ -366,7 +393,7 @@ export default function MembersList() {
           ))}
 
           <button
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || totalPages === 0}
             onClick={() => setCurrentPage((prev) => prev + 1)}
             className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           >
@@ -375,288 +402,5 @@ export default function MembersList() {
         </div>
       </div>
     </div>
-  );
-}
-
-// ✅ Read-only Row
-function ReadOnlyRow({
-  member,
-  setEditingMemberId,
-  setEditData,
-  handleDelete,
-}) {
-  return (
-    <>
-      <td className="px-3 py-2">{member.name}</td>
-      <td className="px-3 py-2">{member.email}</td>
-      <td className="px-3 py-2">{member.phone}</td>
-      <td className="px-3 py-2">{member.department}</td>
-      <td className="px-3 py-2">{member.kgidNumber}</td>
-      <td className="px-3 py-2">{member.guardian}</td>
-      <td className="px-3 py-2">
-        {member.dob ? new Date(member.dob).toISOString().split("T")[0] : ""}
-      </td>
-      <td className="px-3 py-2">{member.designation}</td>
-      <td className="px-3 py-2">{member.workingCollegeName}</td>
-      <td className="px-3 py-2">{member.permanentAddress}</td>
-      <td className="px-3 py-2">{member.currentAddress}</td>
-      <td className="px-3 py-2">{member.memberType}</td>
-      <td className="px-3 py-2">
-        {member.joiningDate
-          ? new Date(member.joiningDate).toLocaleDateString("en-GB")
-          : ""}
-      </td>
-      <td className="px-3 py-2">
-        {member.resignDate
-          ? new Date(member.resignDate).toLocaleDateString("en-GB")
-          : ""}
-      </td>
-
-      <td className="px-3 py-2">{member.societyNumber}</td>
-      <td className="px-3 py-2">{member.status || "active"}</td>
-      <td className="px-3 py-2 flex gap-2 justify-center">
-        <button
-          onClick={() => {
-            setEditingMemberId(member._id);
-            setEditData(member);
-          }}
-          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          <Pencil className="w-4 h-4 inline-block" /> Edit
-        </button>
-        <button
-          onClick={() => handleDelete(member._id)}
-          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          <Trash2 className="w-4 h-4 inline-block" /> Delete
-        </button>
-      </td>
-    </>
-  );
-}
-
-// ✅ Editable Row
-function EditableRow({
-  member,
-  editData,
-  handleEditChange,
-  handleUpdate,
-  setEditingMemberId,
-  setPreview,
-  departments,
-  designations,
-  statuses,
-}) {
-  const memberTypes = ["A", "B", "C"];
-
-  return (
-    <>
-      <td className="px-3 py-2">
-        <input
-          type="text"
-          name="name"
-          value={editData.name || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      <td className="px-3 py-2 text-gray-500 italic">{member.email}</td>
-
-      <td className="px-3 py-2">
-        <input
-          type="text"
-          name="phone"
-          value={editData.phone || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      <td className="px-3 py-2">
-        <select
-          name="department"
-          value={editData.department || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        >
-          {departments.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
-            </option>
-          ))}
-        </select>
-      </td>
-
-      <td className="px-3 py-2">
-        <input
-          type="text"
-          name="kgidNumber"
-          value={editData.kgidNumber || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      <td className="px-3 py-2">
-        <input
-          type="text"
-          name="guardian"
-          value={editData.guardian || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      <td className="px-3 py-2">
-        <input
-          type="date"
-          name="dob"
-          value={
-            editData.dob ||
-            (member.dob ? new Date(member.dob).toISOString().split("T")[0] : "")
-          }
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      <td className="px-3 py-2">
-        <select
-          name="designation"
-          value={editData.designation || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        >
-          {designations.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
-      </td>
-
-      <td className="px-3 py-2">
-        <input
-          type="text"
-          name="workingCollegeName"
-          value={editData.workingCollegeName || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      <td className="px-3 py-2">
-        <textarea
-          name="permanentAddress"
-          value={editData.permanentAddress || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      <td className="px-3 py-2">
-        <textarea
-          name="currentAddress"
-          value={editData.currentAddress || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      {/* Member Type */}
-      <td className="px-3 py-2">
-        <select
-          name="memberType"
-          value={editData.memberType || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        >
-          <option value="">Select</option>
-          {memberTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-      </td>
-
-      {/* Joining Date */}
-      <td className="px-3 py-2">
-        <input
-          type="date"
-          name="joiningDate"
-          value={
-            editData.joiningDate ||
-            (member.joiningDate
-              ? new Date(member.joiningDate).toISOString().split("T")[0]
-              : "")
-          }
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      {/* Resign Date */}
-      <td className="px-3 py-2">
-        <input
-          type="date"
-          name="resignDate"
-          value={
-            editData.resignDate ||
-            (member.resignDate
-              ? new Date(member.resignDate).toISOString().split("T")[0]
-              : "")
-          }
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      {/* Society Number */}
-      <td className="px-3 py-2">
-        <input
-          type="text"
-          name="societyNumber"
-          value={editData.societyNumber || ""}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        />
-      </td>
-
-      {/* Status */}
-      <td className="px-3 py-2">
-        <select
-          name="status"
-          value={editData.status || "active"}
-          onChange={handleEditChange}
-          className="border rounded px-2 py-1 w-full"
-        >
-          {statuses.map((s) => (
-            <option key={s} value={s}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </option>
-          ))}
-        </select>
-      </td>
-
-      <td className="px-3 py-2 flex gap-2 justify-center">
-        <button
-          onClick={() => handleUpdate(member._id)}
-          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          <Save className="w-4 h-4 inline-block" /> Save
-        </button>
-        <button
-          onClick={() => {
-            setEditingMemberId(null);
-            setPreview(null);
-          }}
-          className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
-        >
-          <X className="w-4 h-4 inline-block" /> Cancel
-        </button>
-      </td>
-    </>
   );
 }

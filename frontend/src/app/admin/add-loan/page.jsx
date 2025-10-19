@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
+import LoadOverlay from "../../../components/LoadOverlay";
+import { toast } from "react-toastify";
 
 export default function AdminLoanApplicationForm() {
   const { getToken } = useAuth();
   const [members, setMembers] = useState([]);
   const [form, setForm] = useState({
     email: "",
+    loanAccountNumber: "",
     loanType: "",
     loanAmount: "",
     interestRate: "",
@@ -16,7 +19,7 @@ export default function AdminLoanApplicationForm() {
     loanPurpose: "",
     grossSalary: "",
     basicSalary: "",
-    collateralType: "",
+    collateralType: "Suirity",
     collateralDetails: "",
     appliedAt: "",
   });
@@ -57,42 +60,49 @@ export default function AdminLoanApplicationForm() {
         form,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMessage("Loan application submitted successfully!");
+      setMessage("✅ Loan application submitted successfully!");
+      toast.success(" Loan application submitted successfully!");
       setForm({
         email: "",
+        loanAccountNumber: "",
         loanType: "",
         loanAmount: "",
         interestRate: "",
         tenure: "",
         loanPurpose: "",
-        collateralType: "",
-        collateralDetails: "",
         grossSalary: "",
         basicSalary: "",
+        collateralType: "Suirity",
+        collateralDetails: "",
         appliedAt: "",
       });
     } catch (err) {
       console.error(err);
-      setMessage(err.response?.data?.message || "Error submitting loan");
+      setMessage(err.response?.data?.message || "❌ Error submitting loan");
+      toast.error(err.response?.data?.message || "❌ Error submitting loan");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
-        📝 Admin Loan Application
+    <div className="max-w-5xl mx-auto p-6 bg-gradient-to-b from-indigo-50 to-white rounded-xl shadow-lg border border-indigo-100">
+      <LoadOverlay show={loading} />
+
+      <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">
+        🏦 Admin Loan Application Form
       </h2>
+
       {message && (
         <p
-          className={`text-center mb-4 ${
+          className={`text-center mb-4 font-medium ${
             message.includes("success") ? "text-green-600" : "text-red-600"
           }`}
         >
           {message}
         </p>
       )}
+
       <form
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
         onSubmit={handleSubmit}
@@ -117,6 +127,23 @@ export default function AdminLoanApplicationForm() {
             ))}
           </select>
         </div>
+
+        {/* Loan Account Number */}
+        <div className="flex flex-col">
+          <label className="mb-1 font-medium text-gray-700">
+            Loan Account Number
+          </label>
+          <input
+            type="text"
+            name="loanAccountNumber"
+            value={form.loanAccountNumber}
+            onChange={handleChange}
+            placeholder="Enter society loan number"
+            className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            required
+          />
+        </div>
+
         {/* Loan Type */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">Loan Type</label>
@@ -128,14 +155,11 @@ export default function AdminLoanApplicationForm() {
             required
           >
             <option value="">-- Select Loan Type --</option>
-            <option value="Personal">Personal</option>
-            <option value="Education">Education</option>
-            <option value="Home">Home</option>
-            <option value="Vehicle">Vehicle</option>
             <option value="Long Term">Long Term</option>
             <option value="Short Term">Short Term</option>
           </select>
         </div>
+
         {/* Loan Amount */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">Loan Amount</label>
@@ -149,6 +173,7 @@ export default function AdminLoanApplicationForm() {
             required
           />
         </div>
+
         {/* Interest Rate */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">
@@ -164,33 +189,24 @@ export default function AdminLoanApplicationForm() {
             required
           />
         </div>
-        {/* Tenure */}
+
+        {/* Tenure (Manual Entry) */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">
-            Tenure (months)
+            Tenure (in months)
           </label>
-          <select
+          <input
+            type="number"
             name="tenure"
             value={form.tenure}
             onChange={handleChange}
+            placeholder="Enter tenure manually"
             className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
-          >
-            <option value="">-- Select Tenure --</option>
-            <option value="6">6 Months</option>
-            <option value="12">12 Months</option>
-            <option value="18">18 Months</option>
-            <option value="24">24 Months</option>
-            <option value="36">36 Months</option>
-            <option value="48">48 Months</option>
-            <option value="60">60 Months</option>
-            <option value="72">72 Months</option>
-            <option value="84">84 Months</option>
-            <option value="96">96 Months</option>
-            <option value="108">108 Months</option>
-            <option value="120">120 Months</option>
-          </select>
+          />
         </div>
+
+        {/* Applied Date */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">Applied Date</label>
           <input
@@ -201,6 +217,7 @@ export default function AdminLoanApplicationForm() {
             className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
+
         {/* Loan Purpose */}
         <div className="flex flex-col md:col-span-2">
           <label className="mb-1 font-medium text-gray-700">Loan Purpose</label>
@@ -214,29 +231,25 @@ export default function AdminLoanApplicationForm() {
             required
           />
         </div>
-        {/* Collateral Type */}
+
+        {/* Collateral Type (Fixed to Suirity) */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">
             Collateral Type
           </label>
-          <select
+          <input
+            type="text"
             name="collateralType"
-            value={form.collateralType}
-            onChange={handleChange}
-            className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          >
-            <option value="">-- Select Collateral --</option>
-            <option value="Suirity">Suirity</option>
-            <option value="FD">FD</option>
-            <option value="Property">Property</option>
-            <option value="Gold">Gold</option>
-            <option value="None">None</option>
-          </select>
+            value="Suirity"
+            readOnly
+            className="border rounded px-3 py-2 bg-gray-100 text-gray-700"
+          />
         </div>
+
         {/* Collateral Details */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">
-            Collateral Details
+            Suirity Person Name
           </label>
           <input
             type="text"
@@ -245,8 +258,11 @@ export default function AdminLoanApplicationForm() {
             onChange={handleChange}
             placeholder="Enter Suirity Person Name"
             className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            required
           />
         </div>
+
+        {/* Basic & Gross Salary */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">Basic Salary</label>
           <input
@@ -254,11 +270,12 @@ export default function AdminLoanApplicationForm() {
             name="basicSalary"
             value={form.basicSalary}
             onChange={handleChange}
-            placeholder="Enter basic salary amount"
+            placeholder="Enter basic salary"
             className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
           />
         </div>
+
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">Gross Salary</label>
           <input
@@ -266,16 +283,17 @@ export default function AdminLoanApplicationForm() {
             name="grossSalary"
             value={form.grossSalary}
             onChange={handleChange}
-            placeholder="Enter gross salary amount"
+            placeholder="Enter gross salary"
             className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
           />
         </div>
+
         {/* Submit Button */}
         <div className="md:col-span-2 flex justify-center mt-2">
           <button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-colors"
+            className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white font-semibold px-8 py-2 rounded-lg shadow-md transition-all"
             disabled={loading}
           >
             {loading ? "Submitting..." : "Submit Loan"}

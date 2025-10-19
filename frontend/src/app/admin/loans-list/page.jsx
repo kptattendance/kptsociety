@@ -26,7 +26,7 @@ export default function AdminLoanList() {
   const [selectedLoanId, setSelectedLoanId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15; // ✅ 15 records per page
+  const itemsPerPage = 7; // ✅ 15 records per page
 
   // ✅ Fetch Loans with member data and compute pending amounts/installments
   const fetchLoans = async () => {
