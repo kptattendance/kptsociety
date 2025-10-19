@@ -2,7 +2,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Trash2, Lock, Search, Pencil, Check, X } from "lucide-react";
+import {
+  Trash2,
+  Lock,
+  Search,
+  Pencil,
+  Check,
+  X,
+  ArrowUpDown,
+} from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import CDScheduleModal from "./CDScheduleModal";
 import { toast } from "react-toastify";
@@ -17,6 +25,7 @@ export default function AdminCDList() {
   const [loadingMessage, setLoadingMessage] = useState("Fetching CDs...");
   const [selectedCDId, setSelectedCDId] = useState(null);
   const [editId, setEditId] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [editData, setEditData] = useState({
     accountNumber: "",
     startDate: "",
@@ -49,8 +58,36 @@ export default function AdminCDList() {
     fetchCDs();
   }, []);
 
+  // ✅ Sorting function
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedCDs = [...cds].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+
+    let aVal = "";
+    let bVal = "";
+
+    if (sortConfig.key === "accountNumber") {
+      aVal = a.accountNumber?.toLowerCase() || "";
+      bVal = b.accountNumber?.toLowerCase() || "";
+    } else if (sortConfig.key === "memberName") {
+      aVal = a.memberId?.name?.toLowerCase() || "";
+      bVal = b.memberId?.name?.toLowerCase() || "";
+    }
+
+    if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
   // ✅ Filter CDs
-  const filteredCDs = cds.filter((cd) => {
+  const filteredCDs = sortedCDs.filter((cd) => {
     const lowerSearch = searchTerm.toLowerCase();
     return (
       cd.memberId?.name?.toLowerCase().includes(lowerSearch) ||
@@ -112,7 +149,7 @@ export default function AdminCDList() {
     }
   };
 
-  // ✅ Edit Mode Handlers
+  // ✅ Edit Handlers
   const handleEdit = (cd) => {
     setEditId(cd._id);
     setEditData({
@@ -136,9 +173,7 @@ export default function AdminCDList() {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}`,
         editData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("CD updated successfully");
       setEditId(null);
@@ -160,7 +195,6 @@ export default function AdminCDList() {
     });
   };
 
-  // ✅ Refresh when modal closes
   const handleModalClose = (updated = false) => {
     setSelectedCDId(null);
     if (updated) fetchCDs();
@@ -214,7 +248,7 @@ export default function AdminCDList() {
             />
             <input
               type="text"
-              placeholder="Search by name, phone, or account #"
+              placeholder="Search by name, phone, or Society CD No#"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -237,8 +271,31 @@ export default function AdminCDList() {
             <thead className="bg-teal-100 text-gray-700">
               <tr>
                 <th className="px-4 py-2 text-left">SL No.</th>
-                <th className="px-4 py-2 text-left">Account #</th>
-                <th className="px-4 py-2 text-left">Member</th>
+
+                {/* Sortable Society CD No */}
+                <th
+                  className="px-4 py-2 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("accountNumber")}
+                >
+                  Society CD No.
+                  <ArrowUpDown
+                    size={14}
+                    className="inline-block ml-1 text-gray-500"
+                  />
+                </th>
+
+                {/* Sortable Member */}
+                <th
+                  className="px-4 py-2 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("memberName")}
+                >
+                  Member
+                  <ArrowUpDown
+                    size={14}
+                    className="inline-block ml-1 text-gray-500"
+                  />
+                </th>
+
                 <th className="px-4 py-2 text-left">Start Date</th>
                 <th className="px-4 py-2 text-left">Monthly Deposit (₹)</th>
                 <th className="px-4 py-2 text-left">Total Deposited</th>
@@ -254,7 +311,7 @@ export default function AdminCDList() {
               {!loading && currentRecords.length === 0 && (
                 <tr>
                   <td
-                    colSpan="10"
+                    colSpan="11"
                     className="text-center py-4 text-gray-500 italic"
                   >
                     No CD accounts found.
@@ -267,6 +324,8 @@ export default function AdminCDList() {
                   <td className="px-4 py-2 text-gray-600">
                     {startIndex + index + 1}
                   </td>
+
+                  {/* Account Number */}
                   <td className="px-4 py-2 font-medium">
                     {editId === cd._id ? (
                       <input
@@ -281,6 +340,7 @@ export default function AdminCDList() {
                     )}
                   </td>
 
+                  {/* Member with photo */}
                   <td className="px-4 py-2 flex items-center gap-3">
                     <img
                       src={cd.memberId?.photo || "/default-avatar.png"}

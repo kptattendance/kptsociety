@@ -11,6 +11,8 @@ import {
   Eye,
   Search,
   FileDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
@@ -28,19 +30,25 @@ export default function AdminShareTable() {
   const [selectedShare, setSelectedShare] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // sorting
+  const [sortField, setSortField] = useState(null); // "name" or "societyShareNumber"
+  const [sortOrder, setSortOrder] = useState("asc"); // "asc" | "desc"
+
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 15;
 
-  // ✅ Fetch shares
+  // Fetch shares
   const fetchShares = async () => {
     try {
       setLoading(true);
       const token = await getToken();
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-      setShares(res.data);
+      setShares(res.data || []);
     } catch (error) {
       console.error("Error fetching shares:", error);
       toast.error("Failed to load share records");
@@ -51,9 +59,10 @@ export default function AdminShareTable() {
 
   useEffect(() => {
     fetchShares();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ Edit handlers
+  // Edit handlers
   const handleEditClick = (share) => {
     setEditingId(share._id);
     setEditForm({
@@ -95,7 +104,9 @@ export default function AdminShareTable() {
       const token = await getToken();
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/api/share/${shareId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       toast.success("Share account deleted successfully");
       fetchShares();
@@ -125,7 +136,7 @@ export default function AdminShareTable() {
     }
   };
 
-  // ✅ Excel Export
+  // Excel Export
   const handleDownloadExcel = () => {
     if (!shares.length) return toast.warn("No share data to export");
 
@@ -162,21 +173,74 @@ export default function AdminShareTable() {
     toast.success("✅ Excel file downloaded");
   };
 
-  // ✅ Filter & Pagination
-  const filteredShares = shares.filter((share) => {
-    const search = searchTerm.toLowerCase();
+  // Filtering
+  const filtered = shares.filter((share) => {
+    const s = searchTerm.trim().toLowerCase();
+    if (!s) return true;
     return (
-      share.memberId?.name?.toLowerCase().includes(search) ||
-      share.memberId?.phone?.toLowerCase().includes(search) ||
-      share.status?.toLowerCase().includes(search)
+      share.memberId?.name?.toLowerCase().includes(s) ||
+      share.memberId?.phone?.toLowerCase().includes(s) ||
+      share.societyShareNumber?.toLowerCase().includes(s) ||
+      share.status?.toLowerCase().includes(s)
     );
   });
 
-  const totalPages = Math.ceil(filteredShares.length / rowsPerPage);
-  const paginatedShares = filteredShares.slice(
+  // Sorting (applied AFTER filtering so pagination shows sorted results)
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (!sortField) return 0; // preserve server order if no sort requested
+
+    const getVal = (item) => {
+      if (sortField === "name")
+        return (item.memberId?.name || "").toString().toLowerCase();
+      if (sortField === "societyShareNumber")
+        return (item.societyShareNumber || "").toString().toLowerCase();
+      return "";
+    };
+
+    const va = getVal(a);
+    const vb = getVal(b);
+
+    if (va < vb) return sortOrder === "asc" ? -1 : 1;
+    if (va > vb) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  // Pagination (on sortedFiltered)
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedFiltered.length / rowsPerPage)
+  );
+  const paginatedShares = sortedFiltered.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  // When search or shares change, ensure currentPage is valid
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortedFiltered.length, totalPages]);
+
+  // Sorting toggle handler
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field)
+      return <ArrowUp className="text-black" size={14} />;
+    return sortOrder === "asc" ? (
+      <ArrowUp className="text-indigo-600" size={14} />
+    ) : (
+      <ArrowDown className="text-indigo-600" size={14} />
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-yellow-50 to-teal-100 p-6">
@@ -197,7 +261,7 @@ export default function AdminShareTable() {
             />
             <input
               type="text"
-              placeholder="Search by name, phone, or status..."
+              placeholder="Search by name, phone, society no or status..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -220,8 +284,29 @@ export default function AdminShareTable() {
             <thead className="bg-indigo-100 text-gray-700">
               <tr>
                 <th className="px-4 py-2 text-left">Sl No</th>
-                <th className="px-4 py-2 text-left">Member</th>
-                <th className="px-4 py-2 text-left">Society Share No</th>
+                <th
+                  className="px-4 py-2 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("societyShareNumber")}
+                >
+                  <div className="flex items-center gap-1">
+                    Society Share No <SortIcon field="societyShareNumber" />
+                  </div>
+                </th>
+                {/* Member (sortable) */}
+                <th
+                  className="px-4 py-2 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("name")}
+                >
+                  <div className="flex items-center gap-1">
+                    Member <SortIcon field="name" />
+                  </div>
+                </th>
+
+                {/* Photo (new, but keeps original order) */}
+                <th className="px-4 py-2 text-left">Photo</th>
+
+                {/* Society Share No (sortable) */}
+
                 <th className="px-4 py-2 text-left">Start Date</th>
                 <th className="px-4 py-2 text-left">Total Shares</th>
                 <th className="px-4 py-2 text-left">Share Price (₹)</th>
@@ -231,21 +316,12 @@ export default function AdminShareTable() {
                 <th className="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-200 bg-white">
               {paginatedShares.map((share, index) => (
                 <tr key={share._id} className="hover:bg-gray-50">
                   <td className="px-4 py-2 font-medium text-gray-600">
                     {(currentPage - 1) * rowsPerPage + index + 1}
-                  </td>
-
-                  {/* Member */}
-                  <td className="px-4 py-2">
-                    <p className="font-medium">
-                      {share.memberId?.name || "Unknown"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {share.memberId?.phone || "-"}
-                    </p>
                   </td>
 
                   {/* Editable Society Number */}
@@ -260,11 +336,39 @@ export default function AdminShareTable() {
                             societyShareNumber: e.target.value,
                           })
                         }
-                        className="border rounded-md px-2 py-1 w-24"
+                        className="border rounded-md px-2 py-1 w-28"
                       />
                     ) : (
                       share.societyShareNumber || "-"
                     )}
+                  </td>
+
+                  {/* Member */}
+                  <td className="px-4 py-2">
+                    <p className="font-medium">
+                      {share.memberId?.name || "Unknown"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {share.memberId?.phone || "-"}
+                    </p>
+                  </td>
+
+                  {/* Photo (kept narrow, centered) */}
+                  <td className="px-4 py-2">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border flex items-center justify-center">
+                      {share.memberId?.photo ? (
+                        // iframe per your earlier preference; uses full size and no border cropping
+                        <img
+                          src={share.memberId.photo}
+                          alt={share.memberId.name}
+                          className="w-14 h-14 object-cover rounded-full border border-gray-300 shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-600">
+                          N/A
+                        </div>
+                      )}
+                    </div>
                   </td>
 
                   {/* Editable Start Date */}
@@ -349,10 +453,10 @@ export default function AdminShareTable() {
 
                   {/* Amount */}
                   <td className="px-4 py-2 font-medium text-gray-700">
-                    ₹{share.totalAmount?.toLocaleString()}
+                    ₹{share.totalAmount?.toLocaleString() || 0}
                   </td>
 
-                  {/* Editable Status */}
+                  {/* Status */}
                   <td className="px-4 py-2">
                     {editingId === share._id ? (
                       <select
@@ -441,7 +545,7 @@ export default function AdminShareTable() {
           )}
 
           {/* Pagination */}
-          {filteredShares.length > rowsPerPage && (
+          {sortedFiltered.length > rowsPerPage && (
             <div className="flex justify-between items-center mt-4 text-sm">
               <p className="text-gray-600">
                 Page {currentPage} of {totalPages}

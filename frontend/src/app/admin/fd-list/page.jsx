@@ -2,7 +2,16 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Pencil, Trash2, Check, X, Lock, Wallet } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Lock,
+  Wallet,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import Swal from "sweetalert2";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
@@ -21,6 +30,7 @@ export default function AdminFDTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [withdrawModal, setWithdrawModal] = useState(false);
   const [selectedFD, setSelectedFD] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const recordsPerPage = 6;
 
   const fetchFDs = async () => {
@@ -158,9 +168,29 @@ export default function AdminFDTable() {
     return name.includes(search) || phone.includes(search);
   });
 
-  const totalPages = Math.ceil(filteredFDs.length / recordsPerPage);
+  const sortedFDs = (() => {
+    if (!sortConfig.key) return filteredFDs;
+    const sorted = [...filteredFDs];
+    sorted.sort((a, b) => {
+      let aVal, bVal;
+      if (sortConfig.key === "fdNumber") {
+        aVal = a.fdNumber || "";
+        bVal = b.fdNumber || "";
+      } else if (sortConfig.key === "memberName") {
+        aVal = a.memberId?.name || "";
+        bVal = b.memberId?.name || "";
+      } else return 0;
+
+      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  })();
+
+  const totalPages = Math.ceil(sortedFDs.length / recordsPerPage);
   const startIndex = (currentPage - 1) * recordsPerPage;
-  const currentRecords = filteredFDs.slice(
+  const currentRecords = sortedFDs.slice(
     startIndex,
     startIndex + recordsPerPage
   );
@@ -170,15 +200,21 @@ export default function AdminFDTable() {
     setCurrentPage(page);
   };
 
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
   const handleDownloadExcel = () => {
     if (fds.length === 0) {
       toast.info("No data available to export!");
       return;
     }
 
-    // ✅ Include FD Number + Total Withdrawn
     const exportData = fds.map((fd) => {
-      // If backend already includes withdrawals array or totalWithdrawn
       const totalWithdrawn =
         fd.totalWithdrawn ??
         (Array.isArray(fd.withdrawals)
@@ -248,8 +284,66 @@ export default function AdminFDTable() {
           <table className="min-w-full divide-y divide-gray-300 text-sm">
             <thead className="bg-indigo-100 text-gray-700">
               <tr>
-                <th className="px-4 py-2 text-left">FD No.</th>
-                <th className="px-4 py-2 text-left">Member</th>
+                <th className="px-4 py-2 text-left">Sl No</th>
+
+                <th
+                  className="px-4 py-2 text-left cursor-pointer"
+                  onClick={() => handleSort("fdNumber")}
+                >
+                  <div className="flex items-center">
+                    <span>FD No.</span>
+                    <span className="ml-1 flex flex-row justify-center">
+                      <ArrowUp
+                        size={12}
+                        className={`${
+                          sortConfig.key === "fdNumber" &&
+                          sortConfig.direction === "asc"
+                            ? "text-black"
+                            : "text-gray-400"
+                        }`}
+                      />
+                      <ArrowDown
+                        size={12}
+                        className={`${
+                          sortConfig.key === "fdNumber" &&
+                          sortConfig.direction === "desc"
+                            ? "text-black"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </span>
+                  </div>
+                </th>
+
+                <th
+                  className="px-4 py-2 text-left cursor-pointer"
+                  onClick={() => handleSort("memberName")}
+                >
+                  <div className="flex items-center">
+                    <span>Member</span>
+                    <span className="ml-1 flex flex-row justify-center">
+                      <ArrowUp
+                        size={12}
+                        className={`${
+                          sortConfig.key === "memberName" &&
+                          sortConfig.direction === "asc"
+                            ? "text-black"
+                            : "text-gray-400"
+                        }`}
+                      />
+                      <ArrowDown
+                        size={12}
+                        className={`${
+                          sortConfig.key === "memberName" &&
+                          sortConfig.direction === "desc"
+                            ? "text-black"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </span>
+                  </div>
+                </th>
+
                 <th className="px-4 py-2 text-left">Principal (₹)</th>
                 <th className="px-4 py-2 text-left">Withdrawn (₹)</th>
 
@@ -276,8 +370,11 @@ export default function AdminFDTable() {
                   </td>
                 </tr>
               ) : (
-                currentRecords.map((fd) => (
+                currentRecords.map((fd, index) => (
                   <tr key={fd._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 font-medium text-green-700">
+                      {startIndex + index + 1 || "-"}
+                    </td>
                     {editingId === fd._id ? (
                       // ✅ Entire edit mode row
                       <>
@@ -328,7 +425,6 @@ export default function AdminFDTable() {
                           />
                         </td>
                         <td className="px-4 py-2 text-center text-gray-400">
-                          {/* <td className="px-4 py-2 font-medium text-amber-700"> */}
                           ₹
                           {Array.isArray(fd.withdrawals) &&
                           fd.withdrawals.length > 0

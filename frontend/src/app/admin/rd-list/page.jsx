@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Pencil, Trash2, Check, X, Lock } from "lucide-react";
+import { Pencil, Trash2, Check, X, Lock, ArrowUpDown } from "lucide-react";
 import RDScheduleModal from "./RDScheduleModal";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
@@ -22,6 +22,21 @@ export default function AdminRDTable() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 7;
+
+  // Sorting
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        // Toggle direction
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      } else {
+        // Default ascending on new column
+        return { key, direction: "asc" };
+      }
+    });
+  };
 
   // Fetch RDs
   const fetchRDs = async () => {
@@ -82,7 +97,6 @@ export default function AdminRDTable() {
   };
 
   const handleSave = async (rdId) => {
-    // Basic validation
     if (
       !editForm.accountNumber ||
       !editForm.depositAmount ||
@@ -175,22 +189,41 @@ export default function AdminRDTable() {
     saveAs(data, `RD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  // Filtered and paginated RDs
+  // Filtered and sorted RDs
   const filteredRDs = rds.filter((rd) => {
     const name = rd.memberId?.name?.toLowerCase() || "";
     const phone = rd.memberId?.phone?.toLowerCase() || "";
     const search = searchTerm.toLowerCase();
     return name.includes(search) || phone.includes(search);
   });
-  const totalPages = Math.ceil(filteredRDs.length / rowsPerPage);
-  const paginatedRDs = filteredRDs.slice(
+
+  const sortedRDs = [...filteredRDs].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    let aValue = "";
+    let bValue = "";
+
+    if (sortConfig.key === "accountNumber") {
+      aValue = a.accountNumber || "";
+      bValue = b.accountNumber || "";
+    } else if (sortConfig.key === "memberName") {
+      aValue = a.memberId?.name?.toLowerCase() || "";
+      bValue = b.memberId?.name?.toLowerCase() || "";
+    }
+
+    if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedRDs.length / rowsPerPage);
+  const paginatedRDs = sortedRDs.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(1);
-  }, [filteredRDs, totalPages]);
+  }, [sortedRDs, totalPages]);
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-50 to-teal-100 p-6">
@@ -224,8 +257,26 @@ export default function AdminRDTable() {
             <thead className="bg-teal-100 text-gray-700">
               <tr>
                 <th className="px-4 py-2 text-left">Sl. No</th>
-                <th className="px-4 py-2 text-left">Account No.</th>
-                <th className="px-4 py-2 text-left">Member</th>
+                <th
+                  className="px-4 py-2 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("accountNumber")}
+                >
+                  Account No.{" "}
+                  <ArrowUpDown
+                    className="inline ml-1 text-gray-500"
+                    size={14}
+                  />
+                </th>
+                <th
+                  className="px-4 py-2 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("memberName")}
+                >
+                  Member{" "}
+                  <ArrowUpDown
+                    className="inline ml-1 text-gray-500"
+                    size={14}
+                  />
+                </th>
                 <th className="px-4 py-2 text-left">Deposit (₹)</th>
                 <th className="px-4 py-2 text-left">Total Deposited (₹)</th>
                 <th className="px-4 py-2 text-left">Total Withdrawn (₹)</th>

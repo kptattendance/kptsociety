@@ -200,7 +200,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
               value={withdrawalForm.paymentMode}
               onChange={handleWithdrawalChange}
               className="border rounded-md px-2 py-1"
-              placeholder="Payment Mode / Cheque No."
+              placeholder="Payment Mode / Cash/ Online/ Cheque"
             />
             <input
               type="text"
@@ -208,7 +208,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
               value={withdrawalForm.reference}
               onChange={handleWithdrawalChange}
               className="border rounded-md px-2 py-1"
-              placeholder="Reference / Cheque No."
+              placeholder="Cheque No."
             />
             <input
               type="text"
