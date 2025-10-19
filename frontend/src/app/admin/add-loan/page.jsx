@@ -37,7 +37,12 @@ export default function AdminLoanApplicationForm() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setMembers(res.data);
+
+        const sortedMembers = res.data.sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
+
+        setMembers(sortedMembers);
       } catch (err) {
         console.error("Error fetching members:", err);
       }
@@ -208,7 +213,7 @@ export default function AdminLoanApplicationForm() {
 
         {/* Applied Date */}
         <div className="flex flex-col">
-          <label className="mb-1 font-medium text-gray-700">Applied Date</label>
+          <label className="mb-1 font-medium text-gray-700">Start Date</label>
           <input
             type="date"
             name="appliedAt"

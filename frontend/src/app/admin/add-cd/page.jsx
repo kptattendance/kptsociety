@@ -26,7 +26,11 @@ export default function AdminCDForm() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/members`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setMembers(res.data);
+        const sortedMembers = res.data.sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
+
+        setMembers(sortedMembers);
       } catch (err) {
         console.error("Error fetching members:", err);
       }
