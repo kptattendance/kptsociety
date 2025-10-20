@@ -39,10 +39,11 @@ export const generateRepaymentSchedule = (
   return schedule;
 };
 
-// -------------------- CREATE LOAN (manual appliedAt) --------------------
+// -------------------- CREATE LOAN --------------------
 export const createLoan = async (req, res) => {
   try {
     const {
+      loanAccountNumber,
       email,
       loanType,
       loanAmount,
@@ -54,22 +55,29 @@ export const createLoan = async (req, res) => {
       grossSalary,
       basicSalary,
       startDate,
-      appliedAt, // manual loan creation date
+      appliedAt,
+      chequeNumber,
+      chequeDate,
+      chequeAmount,
     } = req.body;
 
     if (!email) return res.status(400).json({ message: "Email is required" });
+    if (!startDate)
+      return res.status(400).json({ message: "Loan start date is required" });
 
     const member = await Member.findOne({ email });
     if (!member) return res.status(404).json({ message: "Member not found" });
 
+    // ✅ Generate schedule using user-provided startDate
     const schedule = generateRepaymentSchedule(
       loanAmount,
       interestRate,
       tenure,
-      appliedAt || new Date()
+      new Date(startDate)
     );
 
     const loan = new Loan({
+      accountNumber: loanAccountNumber,
       memberId: member._id,
       clerkId: member.clerkId,
       loanType,
@@ -81,8 +89,12 @@ export const createLoan = async (req, res) => {
       collateralDetails,
       grossSalary,
       basicSalary,
+      startDate: new Date(startDate),
       appliedAt: appliedAt ? new Date(appliedAt) : new Date(),
       repayments: schedule,
+      chequeDetails: chequeNumber
+        ? { chequeNumber, chequeDate, chequeAmount }
+        : undefined, // optional if some loans are non-cheque based
     });
 
     await loan.save();

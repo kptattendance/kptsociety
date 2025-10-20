@@ -35,7 +35,7 @@ export default function AdminShareTable() {
   const [sortOrder, setSortOrder] = useState("asc"); // "asc" | "desc"
 
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 15;
+  const rowsPerPage = 6;
 
   // Fetch shares
   const fetchShares = async () => {
@@ -246,7 +246,7 @@ export default function AdminShareTable() {
     <div className="min-h-screen bg-gradient-to-r from-yellow-50 to-teal-100 p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
       <div className="bg-white shadow-xl rounded-2xl p-6">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-center items-center mb-6">
           <h2 className="text-2xl font-bold text-indigo-700">
             🪙 Share Accounts
           </h2>

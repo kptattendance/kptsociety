@@ -20,6 +20,8 @@ import {
   Menu,
   X,
   Settings,
+  Briefcase,
+  Shapes,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -50,9 +52,9 @@ export default function Navbar() {
     { href: "/member/profile", label: "Profile", icon: User },
     { href: "/member/loan", label: "Loan Accounts", icon: Wallet },
     { href: "/member/rd-list", label: "RD Accounts", icon: PiggyBank },
-    { href: "/member/fd-list", label: "FD Accounts", icon: CreditCard },
+    { href: "/member/fd-list", label: "FD Accounts", icon: Briefcase },
     { href: "/member/cd-list", label: "CD Accounts", icon: CreditCard },
-    { href: "/member/shares", label: "Shares", icon: CreditCard },
+    { href: "/member/shares", label: "Shares", icon: Shapes },
     { href: "/member/settings", label: "Settings", icon: Settings },
   ];
 

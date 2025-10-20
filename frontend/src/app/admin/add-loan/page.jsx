@@ -9,6 +9,9 @@ import { toast } from "react-toastify";
 export default function AdminLoanApplicationForm() {
   const { getToken } = useAuth();
   const [members, setMembers] = useState([]);
+
+  const today = new Date().toISOString().split("T")[0]; // today's date in YYYY-MM-DD
+
   const [form, setForm] = useState({
     email: "",
     loanAccountNumber: "",
@@ -21,8 +24,13 @@ export default function AdminLoanApplicationForm() {
     basicSalary: "",
     collateralType: "Suirity",
     collateralDetails: "",
-    appliedAt: "",
+    appliedAt: today, // default to today's date
+    startDate: "", // new field: start date input manually
+    chequeNumber: "",
+    chequeDate: "",
+    chequeAmount: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -60,13 +68,24 @@ export default function AdminLoanApplicationForm() {
     setMessage("");
     try {
       const token = await getToken();
+
+      if (form.loanAmount <= 0 || form.interestRate <= 0 || form.tenure <= 0) {
+        toast.error(
+          "Please enter valid positive numbers for amount, interest, and tenure."
+        );
+        setLoading(false);
+        return;
+      }
+
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/create`,
         form,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setMessage("✅ Loan application submitted successfully!");
       toast.success(" Loan application submitted successfully!");
+
       setForm({
         email: "",
         loanAccountNumber: "",
@@ -79,7 +98,11 @@ export default function AdminLoanApplicationForm() {
         basicSalary: "",
         collateralType: "Suirity",
         collateralDetails: "",
-        appliedAt: "",
+        appliedAt: today,
+        startDate: "",
+        chequeNumber: "",
+        chequeDate: "",
+        chequeAmount: "",
       });
     } catch (err) {
       console.error(err);
@@ -195,7 +218,7 @@ export default function AdminLoanApplicationForm() {
           />
         </div>
 
-        {/* Tenure (Manual Entry) */}
+        {/* Tenure */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">
             Tenure (in months)
@@ -211,15 +234,32 @@ export default function AdminLoanApplicationForm() {
           />
         </div>
 
-        {/* Applied Date */}
+        {/* Applied Date (auto default to today) */}
         <div className="flex flex-col">
-          <label className="mb-1 font-medium text-gray-700">Start Date</label>
+          <label className="mb-1 font-medium text-gray-700">
+            Applied Date (auto)
+          </label>
           <input
             type="date"
             name="appliedAt"
-            value={form.appliedAt || ""}
+            value={form.appliedAt}
+            readOnly
+            className="border rounded px-3 py-2 bg-gray-100 text-gray-700"
+          />
+        </div>
+
+        {/* Start Date (manual input) */}
+        <div className="flex flex-col">
+          <label className="mb-1 font-medium text-gray-700">
+            Loan Start Date
+          </label>
+          <input
+            type="date"
+            name="startDate"
+            value={form.startDate}
             onChange={handleChange}
             className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            required
           />
         </div>
 
@@ -237,7 +277,7 @@ export default function AdminLoanApplicationForm() {
           />
         </div>
 
-        {/* Collateral Type (Fixed to Suirity) */}
+        {/* Collateral Type */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">
             Collateral Type
@@ -294,8 +334,61 @@ export default function AdminLoanApplicationForm() {
           />
         </div>
 
+        {/* Cheque Details Section */}
+        <div className="md:col-span-2 mt-4 border-t border-gray-300 pt-4">
+          <h3 className="text-lg font-semibold mb-2 text-indigo-700">
+            🧾 Cheque Details
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-gray-700">
+                Cheque Number
+              </label>
+              <input
+                type="text"
+                name="chequeNumber"
+                value={form.chequeNumber}
+                onChange={handleChange}
+                placeholder="Enter cheque number"
+                className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-gray-700">
+                Cheque Date
+              </label>
+              <input
+                type="date"
+                name="chequeDate"
+                value={form.chequeDate}
+                onChange={handleChange}
+                className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-gray-700">
+                Cheque Amount
+              </label>
+              <input
+                type="text"
+                name="chequeAmount"
+                value={form.chequeAmount}
+                onChange={handleChange}
+                placeholder="Enter cheque Amount"
+                className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Submit Button */}
-        <div className="md:col-span-2 flex justify-center mt-2">
+        <div className="md:col-span-2 flex justify-center mt-4">
           <button
             type="submit"
             className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white font-semibold px-8 py-2 rounded-lg shadow-md transition-all"

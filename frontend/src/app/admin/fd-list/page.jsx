@@ -376,9 +376,7 @@ export default function AdminFDTable() {
                       {startIndex + index + 1 || "-"}
                     </td>
                     {editingId === fd._id ? (
-                      // ✅ Entire edit mode row
                       <>
-                        {/* FD No. editable */}
                         <td className="px-4 py-2">
                           <input
                             type="text"

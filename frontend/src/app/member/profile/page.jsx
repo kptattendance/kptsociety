@@ -8,8 +8,13 @@ import { Mail, Phone, Calendar, Home, Briefcase, User } from "lucide-react";
 export default function UserProfile() {
   const { getToken } = useAuth();
   const { user } = useUser();
+
   const [profile, setProfile] = useState(null);
   const [loans, setLoans] = useState([]);
+  const [rds, setRds] = useState([]);
+  const [fds, setFds] = useState([]);
+  const [cds, setCds] = useState([]);
+  const [shares, setShares] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -17,20 +22,48 @@ export default function UserProfile() {
     try {
       const token = await getToken();
 
+      // Member profile
       const profileRes = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/members/${user.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProfile(profileRes.data);
 
+      // Loan details
       const loanRes = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const loansArray = Array.isArray(loanRes.data)
-        ? loanRes.data
-        : [loanRes.data];
-      setLoans(loansArray);
+      setLoans(Array.isArray(loanRes.data) ? loanRes.data : [loanRes.data]);
+
+      // RD details
+      const rdRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setRds(Array.isArray(rdRes.data) ? rdRes.data : [rdRes.data]);
+
+      // FD details
+      const fdRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/fd/member/${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setFds(Array.isArray(fdRes.data) ? fdRes.data : [fdRes.data]);
+
+      // CD details
+      const cdRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/cd/member/${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log(cdRes);
+      setCds(Array.isArray(cdRes.data) ? cdRes.data : [cdRes.data]);
+
+      // Share details
+      const shareRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setShares(Array.isArray(shareRes.data) ? shareRes.data : [shareRes.data]);
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
@@ -49,18 +82,35 @@ export default function UserProfile() {
   if (!profile)
     return <p className="p-4 text-center text-red-500">Profile not found.</p>;
 
-  const totalLoanAmount = loans.reduce((acc, loan) => acc + loan.loanAmount, 0);
+  // ✅ Computations
+  const totalLoanAmount = loans.reduce(
+    (acc, loan) => acc + (loan.loanAmount || 0),
+    0
+  );
   const pendingPrincipal = loans.reduce(
     (acc, loan) =>
       acc +
-      loan.repayments
-        .filter((r) => r.status === "Pending")
-        .reduce((a, r) => a + r.principal, 0),
+      (loan.repayments
+        ? loan.repayments
+            .filter((r) => r.status !== "Paid")
+            .reduce((a, r) => a + (r.principal || 0), 0)
+        : 0),
     0
   );
   const pendingInstallments = loans.reduce(
     (acc, loan) =>
-      acc + loan.repayments.filter((r) => r.status === "Pending").length,
+      acc +
+      (loan.repayments
+        ? loan.repayments.filter((r) => r.status !== "Paid").length
+        : 0),
+    0
+  );
+
+  const totalRD = rds.reduce((acc, rd) => acc + (rd.balance || 0), 0);
+  const totalFD = fds.reduce((acc, fd) => acc + (fd.amount || 0), 0);
+  const totalCD = cds.reduce((acc, cd) => acc + (cd.balance || 0), 0);
+  const totalShares = shares.reduce(
+    (acc, s) => acc + (s.totalAmount || s.amount || 0),
     0
   );
 
@@ -73,29 +123,20 @@ export default function UserProfile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Profile Card */}
         <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 shadow-md rounded-xl border border-indigo-200/50 overflow-hidden">
-          {/* Header */}
-          <div className="bg-indigo-900 text-white text-center px-3 sm:px-4 py-4 sm:py-6">
-            <h3 className="text-base sm:text-lg font-semibold">
-              {profile.name}
-            </h3>
-            <p className="text-indigo-200 text-xs sm:text-sm">
-              {profile.designation}
-            </p>
+          <div className="bg-indigo-900 text-white text-center px-4 py-6">
+            <h3 className="text-lg font-semibold">{profile.name}</h3>
+            <p className="text-indigo-200 text-sm">{profile.designation}</p>
           </div>
 
-          {/* Body */}
-          <div className="px-3 sm:px-4 pb-4 flex flex-col items-center space-y-3 mt-4">
-            {/* Avatar */}
+          <div className="px-4 pb-4 flex flex-col items-center space-y-3 mt-4">
             <img
               src={
                 profile.photo ||
                 `https://ui-avatars.com/api/?name=${profile.name}`
               }
               alt={profile.name}
-              className="w-20 h-20 md:w-24 md:h-24 rounded-full shadow-lg border-4 border-white object-cover -mt-8"
+              className="w-24 h-24 rounded-full shadow-lg border-4 border-white object-cover -mt-8"
             />
-
-            {/* Badges */}
             <div className="w-full flex flex-col sm:flex-row sm:flex-wrap gap-2">
               <Badge label="Role" value={profile.role} color="indigo" />
               <Badge
@@ -105,7 +146,6 @@ export default function UserProfile() {
               />
             </div>
 
-            {/* Contact Info */}
             <div className="w-full space-y-2 pt-3 border-t border-indigo-100">
               <InfoItem
                 icon={Mail}
@@ -123,8 +163,8 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* Other Info & Loan Summary */}
-        <div className="md:col-span-2 grid gap-3 sm:gap-4">
+        {/* Other Info */}
+        <div className="md:col-span-2 grid gap-4">
           <InfoCard title="Addresses" color="pink">
             <InfoItem
               icon={Home}
@@ -140,7 +180,7 @@ export default function UserProfile() {
             />
           </InfoCard>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InfoCard title="Professional Info" color="purple">
               <InfoItem
                 icon={Briefcase}
@@ -172,6 +212,7 @@ export default function UserProfile() {
               />
             </InfoCard>
 
+            {/* 🟢 Loan Summary */}
             {loans.length > 0 && (
               <InfoCard title="Loan Summary" color="teal">
                 <InfoItem
@@ -193,6 +234,69 @@ export default function UserProfile() {
                   label="Number of Loans"
                   value={loans.length}
                   iconColor="text-teal-600"
+                />
+              </InfoCard>
+            )}
+          </div>
+
+          {/* 🟡 RD, FD, CD, Share Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {rds.length > 0 && (
+              <InfoCard title="Recurring Deposit Summary" color="indigo">
+                <InfoItem
+                  label="Number of RD Accounts"
+                  value={rds.length}
+                  iconColor="text-indigo-600"
+                />
+                <InfoItem
+                  label="Total RD Balance"
+                  value={`₹${totalRD.toLocaleString()}`}
+                  iconColor="text-indigo-600"
+                />
+              </InfoCard>
+            )}
+
+            {fds.length > 0 && (
+              <InfoCard title="Fixed Deposit Summary" color="blue">
+                <InfoItem
+                  label="Number of FD Accounts"
+                  value={fds.length}
+                  iconColor="text-blue-600"
+                />
+                <InfoItem
+                  label="Total FD Amount"
+                  value={`₹${totalFD.toLocaleString()}`}
+                  iconColor="text-blue-600"
+                />
+              </InfoCard>
+            )}
+
+            {cds.length > 0 && (
+              <InfoCard title="Compulsory Deposit Summary" color="emerald">
+                <InfoItem
+                  label="Number of CD Accounts"
+                  value={cds.length}
+                  iconColor="text-emerald-600"
+                />
+                <InfoItem
+                  label="Total CD Balance"
+                  value={`₹${totalCD.toLocaleString()}`}
+                  iconColor="text-emerald-600"
+                />
+              </InfoCard>
+            )}
+
+            {shares.length > 0 && (
+              <InfoCard title="Shares Summary" color="amber">
+                <InfoItem
+                  label="Number of Share Accounts"
+                  value={shares.length}
+                  iconColor="text-amber-600"
+                />
+                <InfoItem
+                  label="Total Share Value"
+                  value={`₹${totalShares.toLocaleString()}`}
+                  iconColor="text-amber-600"
                 />
               </InfoCard>
             )}
@@ -223,24 +327,29 @@ const InfoItem = ({
   </div>
 );
 
-// Card Component
+// Info Card
 const InfoCard = ({ title, children, color }) => {
-  // Map colors to gradient + darker header bg
   const colorClasses = {
-    pink: {
-      bg: "from-pink-50 to-pink-100",
-      header: "bg-pink-900 text-white",
-    },
+    pink: { bg: "from-pink-50 to-pink-100", header: "bg-pink-900 text-white" },
     purple: {
       bg: "from-purple-50 to-purple-100",
       header: "bg-purple-900 text-white",
     },
-    teal: {
-      bg: "from-teal-50 to-teal-100",
-      header: "bg-teal-900 text-white",
+    teal: { bg: "from-teal-50 to-teal-100", header: "bg-teal-900 text-white" },
+    blue: { bg: "from-blue-50 to-blue-100", header: "bg-blue-900 text-white" },
+    indigo: {
+      bg: "from-indigo-50 to-indigo-100",
+      header: "bg-indigo-900 text-white",
+    },
+    emerald: {
+      bg: "from-emerald-50 to-emerald-100",
+      header: "bg-emerald-900 text-white",
+    },
+    amber: {
+      bg: "from-amber-50 to-amber-100",
+      header: "bg-amber-900 text-white",
     },
   };
-
   const { bg, header } = colorClasses[color] || {
     bg: "from-gray-50 to-gray-100",
     header: "bg-gray-900 text-white",
@@ -260,7 +369,7 @@ const InfoCard = ({ title, children, color }) => {
   );
 };
 
-// Badge Component
+// Badge
 const Badge = ({ label, value, color }) => (
   <div
     className={`flex justify-between px-2 py-1 rounded-md bg-${color}-100 text-${color}-700 text-sm font-medium`}

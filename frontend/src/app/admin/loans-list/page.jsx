@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import { Trash2, Edit, Check, X } from "lucide-react";
+import { Trash2, Edit, Check, X, ChevronUp, ChevronDown } from "lucide-react";
 import Swal from "sweetalert2";
 import LoanRepaymentModal from "../../../components/AdminPageComponents/LoanRepaymentModal";
 import { toast } from "react-toastify";
@@ -17,18 +17,14 @@ export default function AdminLoanList() {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingLoanId, setEditingLoanId] = useState(null);
-  const [editForm, setEditForm] = useState({
-    loanAmount: "",
-    interestRate: "",
-    tenure: "",
-    status: "",
-  });
+  const [editForm, setEditForm] = useState({});
   const [selectedLoanId, setSelectedLoanId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7; // ✅ 15 records per page
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const itemsPerPage = 6;
 
-  // ✅ Fetch Loans with member data and compute pending amounts/installments
+  // ✅ Fetch loans
   const fetchLoans = async () => {
     try {
       setLoading(true);
@@ -53,15 +49,14 @@ export default function AdminLoanList() {
             }
           }
 
-          // Compute pending amount & installments if schedule exists
           let pendingAmount = 0;
           let pendingInstallments = 0;
-          if (loan.repayments && loan.repayments.length) {
+          if (loan.repayments?.length) {
             pendingInstallments = loan.repayments.filter(
-              (r) => r.status === "Pending"
+              (r) => r.status !== "Paid"
             ).length;
             pendingAmount = loan.repayments
-              .filter((r) => r.status === "Pending")
+              .filter((r) => r.status !== "Paid")
               .reduce((sum, r) => sum + r.totalEMI, 0);
           }
 
@@ -73,7 +68,6 @@ export default function AdminLoanList() {
           };
         })
       );
-
       setLoans(loansWithMember);
     } catch (err) {
       console.error(err);
@@ -87,6 +81,7 @@ export default function AdminLoanList() {
     fetchLoans();
   }, []);
 
+  // ✅ Confirm dialog
   const showConfirm = async (title, text) => {
     const result = await Swal.fire({
       title,
@@ -101,11 +96,11 @@ export default function AdminLoanList() {
     return result.isConfirmed;
   };
 
-  // ✅ Delete Loan
+  // ✅ Delete loan
   const handleDelete = async (id) => {
     const confirmed = await showConfirm(
       "Delete Loan?",
-      "This action cannot be undone!"
+      "This cannot be undone!"
     );
     if (!confirmed) return;
     try {
@@ -124,10 +119,16 @@ export default function AdminLoanList() {
     }
   };
 
-  // ✅ Start Editing
+  // ✅ Editing
   const startEditing = (loan) => {
     setEditingLoanId(loan._id);
     setEditForm({
+      loanType: loan.loanType || "",
+      accountNumber: loan.accountNumber || "",
+      chequeNumber: loan.chequeDetails?.chequeNumber || "",
+      startDate: loan.startDate
+        ? new Date(loan.startDate).toISOString().split("T")[0]
+        : "",
       loanAmount: loan.loanAmount || "",
       interestRate: loan.interestRate || "",
       tenure: loan.tenure || "",
@@ -140,116 +141,119 @@ export default function AdminLoanList() {
     setEditForm({ ...editForm, [name]: value });
   };
 
-  // ✅ Submit Edit
+  // ✅ Submit edit
   const submitEdit = async (loanId) => {
     try {
       const token = await getToken();
       setLoading(true);
-      setLoans((prevLoans) =>
-        prevLoans.map((loan) =>
-          loan._id === loanId ? { ...loan, ...editForm } : loan
-        )
-      );
-
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}`,
         editForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       toast.success("✅ Loan updated successfully");
       setEditingLoanId(null);
+      fetchLoans();
     } catch (err) {
       console.error(err);
       toast.error("❌ Failed to update loan");
-      fetchLoans();
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Filter loans by name or phone
-  const filteredLoans = loans.filter((loan) => {
+  // ✅ Sorting
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc")
+      direction = "desc";
+    setSortConfig({ key, direction });
+  };
+
+  const sortedLoans = [...loans].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    let aVal = "";
+    let bVal = "";
+    if (sortConfig.key === "member") {
+      aVal = a.memberId?.name || "";
+      bVal = b.memberId?.name || "";
+    } else if (sortConfig.key === "accountNumber") {
+      aVal = a.accountNumber || "";
+      bVal = b.accountNumber || "";
+    }
+    return sortConfig.direction === "asc"
+      ? aVal.localeCompare(bVal)
+      : bVal.localeCompare(aVal);
+  });
+
+  // ✅ Filter + pagination
+  const filteredLoans = sortedLoans.filter((loan) => {
     const name = loan.memberId?.name?.toLowerCase() || "";
     const phone = loan.memberId?.phone?.toLowerCase() || "";
     const search = searchTerm.toLowerCase();
     return name.includes(search) || phone.includes(search);
   });
 
-  // ✅ Pagination logic
   const totalPages = Math.ceil(filteredLoans.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentLoans = filteredLoans.slice(indexOfFirstItem, indexOfLastItem);
+  const currentLoans = filteredLoans.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
-  if (loading) return <LoadOverlay show={true} message={loadingMessage} />;
-
-  if (!loans.length)
-    return (
-      <p className="p-6 text-center text-gray-500 italic">No loans found.</p>
-    );
-
-  // ✅ Download Excel
+  // ✅ Excel export
   const handleDownloadExcel = () => {
     const dataToExport = filteredLoans.length > 0 ? filteredLoans : loans;
-
     if (!dataToExport.length) {
       toast.info("No loan data available to export!");
       return;
     }
 
-    // ✅ Prepare loan data for Excel
     const exportData = dataToExport.map((loan, index) => ({
       "Sl. No.": index + 1,
+      "Account No": loan.accountNumber || "-",
       "Member Name": loan.memberId?.name || "Unknown",
-      "Phone Number": loan.memberId?.phone || "N/A",
+      Phone: loan.memberId?.phone || "N/A",
       "Loan Type": loan.loanType || "-",
-      "Loan Amount (₹)": loan.loanAmount?.toLocaleString("en-IN") || "0",
-      "Interest Rate (%)": loan.interestRate || "-",
-      "Tenure (Months)": loan.tenure || "-",
-      "Pending Amount (₹)":
-        loan.pendingAmount?.toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }) || "0",
-      "Pending Installments": loan.pendingInstallments || 0,
+      "Cheque No": loan.chequeDetails?.chequeNumber || "-",
+      "Start Date": loan.startDate
+        ? new Date(loan.startDate).toLocaleDateString("en-IN")
+        : "-",
+      "Amount (₹)": loan.loanAmount?.toLocaleString("en-IN") || "0",
+      "Interest (%)": loan.interestRate || "-",
+      Tenure: loan.tenure || "-",
+      "Pending Amount (₹)": loan.pendingAmount?.toLocaleString("en-IN") || "0",
+      "Pending Inst.": loan.pendingInstallments || 0,
       Status: loan.status || "-",
     }));
 
-    // ✅ Create worksheet and workbook
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Records");
-
-    // ✅ Optional: adjust column widths
     worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 22 }));
 
-    // ✅ Generate and download Excel file
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
     });
-    const blob = new Blob([excelBuffer], {
-      type: "application/octet-stream",
-    });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(blob, `Loan_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-r from-orange-50 to-orange-100 p-6">
-      <div className="p-4 max-w-8xl mx-auto ">
-        <LoadOverlay show={loading} message={loadingMessage} />
+  if (loading) return <LoadOverlay show={true} message={loadingMessage} />;
 
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">
+  return (
+    <div className="min-h-screen bg-gradient-to-r from-amber-50 to-orange-100 p-6">
+      <div className="p-4 max-w-8xl mx-auto">
+        <LoadOverlay show={loading} message={loadingMessage} />
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
           💰 Loan Applications
         </h2>
 
-        {/* 🔍 Search Bar */}
         {/* 🔍 Search + Download */}
         <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
           <input
@@ -259,8 +263,6 @@ export default function AdminLoanList() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-orange-400 outline-none"
           />
-
-          {/* ✅ Download Excel Button */}
           <button
             onClick={handleDownloadExcel}
             className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
@@ -269,221 +271,304 @@ export default function AdminLoanList() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-lg rounded-lg overflow-hidden">
-            <thead className="bg-indigo-600 text-white">
+        {/* ✅ Table */}
+        <div className="relative overflow-x-auto  rounded-lg border border-gray-200 shadow-lg">
+          <table className="min-w-full table-auto border-collapse text-sm">
+            <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white sticky top-0 z-10">
               <tr>
-                <th className="py-3 px-4 text-left">Sl. No.</th>
-                <th className="py-3 px-4 text-left">Member</th>
-                <th className="py-3 px-4 text-left">Loan Type</th>
-                <th className="py-3 px-4 text-right">Amount</th>
-                <th className="py-3 px-4 text-right">Interest %</th>
-                <th className="py-3 px-4 text-right">Tenure</th>
-                <th className="py-3 px-4 text-right">Pending Amount</th>
-                <th className="py-3 px-4 text-right">Pending Installments</th>
-                <th className="py-3 px-4 text-left">Status</th>
-                <th className="py-3 px-4 text-center">Actions</th>
-                <th className="py-3 px-4 text-center">Repayment Schedule</th>
+                <th className="py-2 px-3 text-left">Sl. No.</th>
+                {/* Account No. */}
+                <th
+                  className="py-2 px-3 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("accountNumber")}
+                >
+                  <div className="flex items-center gap-1">
+                    Account No.
+                    <div className="flex flex-col leading-none">
+                      <ChevronUp
+                        className={`w-3 h-3 ${
+                          sortConfig.key === "accountNumber" &&
+                          sortConfig.direction === "asc"
+                            ? "text-white"
+                            : "text-gray-300"
+                        }`}
+                      />
+                      <ChevronDown
+                        className={`w-3 h-3 -mt-1 ${
+                          sortConfig.key === "accountNumber" &&
+                          sortConfig.direction === "desc"
+                            ? "text-white"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </th>
+
+                {/* Member */}
+                <th
+                  className="py-2 px-3 text-left cursor-pointer select-none"
+                  onClick={() => handleSort("member")}
+                >
+                  <div className="flex items-center gap-1">
+                    Member
+                    <div className="flex flex-col leading-none">
+                      <ChevronUp
+                        className={`w-3 h-3 ${
+                          sortConfig.key === "member" &&
+                          sortConfig.direction === "asc"
+                            ? "text-white"
+                            : "text-gray-300"
+                        }`}
+                      />
+                      <ChevronDown
+                        className={`w-3 h-3 -mt-1 ${
+                          sortConfig.key === "member" &&
+                          sortConfig.direction === "desc"
+                            ? "text-white"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </th>
+
+                <th className="py-2 px-3 text-left">Loan Type</th>
+                <th className="py-2 px-3 text-left">Cheque No.</th>
+                <th className="py-2 px-3 text-left">Start Date</th>
+                <th className="py-2 px-3 text-right">Amount</th>
+                <th className="py-2 px-3 text-right">Interest %</th>
+                <th className="py-2 px-3 text-right">Tenure</th>
+                <th className="py-2 px-3 text-center">Actions</th>
+                <th className="py-2 px-3 text-right">Pending Amt</th>
+                <th className="py-2 px-3 text-right">Pending Inst.</th>
+                <th className="py-2 px-3 text-left">Status</th>
+                <th className="py-2 px-3 text-center">Repayment Schedule</th>
               </tr>
             </thead>
 
             <tbody>
-              {currentLoans.map((loan, index) => (
-                <tr
-                  key={loan._id}
-                  className="border-b even:bg-gray-50 hover:bg-gray-100 transition-colors"
-                >
-                  <td className="px-4 py-2 text-gray-600">
-                    {(currentPage - 1) * itemsPerPage + index + 1}
-                  </td>
+              {currentLoans.map((loan, index) => {
+                const isEditing = editingLoanId === loan._id;
+                return (
+                  <tr
+                    key={loan._id}
+                    className="border-b even:bg-gray-50 hover:bg-indigo-50 transition"
+                  >
+                    <td className="px-4 py-2 text-gray-600">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
+                    </td>
 
-                  <td className="py-3 px-4 flex items-center space-x-3">
-                    <img
-                      src={loan.memberId?.photo || "/default-avatar.png"}
-                      alt="member"
-                      className="w-8 h-8 rounded-full border"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-800">
-                        {loan.memberId?.name || "Unknown"}
+                    {/* Account No */}
+                    <td className="py-3 px-4">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="accountNumber"
+                          value={editForm.accountNumber}
+                          onChange={handleEditChange}
+                          className="border rounded-md px-2 py-1 w-full"
+                        />
+                      ) : (
+                        loan.accountNumber || "-"
+                      )}
+                    </td>
+
+                    {/* Member */}
+                    <td className="py-3 px-4 flex items-center space-x-3">
+                      <img
+                        src={loan.memberId?.photo || "/default-avatar.png"}
+                        alt="member"
+                        className="w-8 h-8 rounded-full border"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {loan.memberId?.name || "Unknown"}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          📞 {loan.memberId?.phone || "N/A"}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        📞 {loan.memberId?.phone || "N/A"}
-                      </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="py-3 px-4">{loan.loanType}</td>
+                    {/* Editable cells */}
+                    {[
+                      "loanType",
+                      "chequeNumber",
+                      "startDate",
+                      "loanAmount",
+                      "interestRate",
+                      "tenure",
+                      "status",
+                    ].map((field, idx) => (
+                      <td
+                        key={idx}
+                        className={`py-3 px-4 ${
+                          ["loanAmount", "interestRate", "tenure"].includes(
+                            field
+                          )
+                            ? "text-right"
+                            : "text-left"
+                        }`}
+                      >
+                        {isEditing ? (
+                          field === "status" ? (
+                            <select
+                              name="status"
+                              value={editForm.status}
+                              onChange={handleEditChange}
+                              className="border rounded-md px-2 py-1 w-full"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Approved">Approved</option>
+                              <option value="Rejected">Rejected</option>
+                            </select>
+                          ) : field === "startDate" ? (
+                            <input
+                              type="date"
+                              name="startDate"
+                              value={editForm.startDate}
+                              onChange={handleEditChange}
+                              className="border rounded-md px-2 py-1 w-full"
+                            />
+                          ) : (
+                            <input
+                              type={
+                                [
+                                  "loanAmount",
+                                  "interestRate",
+                                  "tenure",
+                                ].includes(field)
+                                  ? "number"
+                                  : "text"
+                              }
+                              name={field}
+                              value={editForm[field]}
+                              onChange={handleEditChange}
+                              className="border rounded-md px-2 py-1 w-full"
+                            />
+                          )
+                        ) : field === "status" ? (
+                          <span
+                            className={`px-2 py-1 rounded-full text-sm font-medium ${
+                              loan.status === "Approved"
+                                ? "bg-green-100 text-green-700"
+                                : loan.status === "Rejected"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {loan.status}
+                          </span>
+                        ) : field === "startDate" ? (
+                          loan.startDate ? (
+                            new Date(loan.startDate).toLocaleDateString("en-IN")
+                          ) : (
+                            "-"
+                          )
+                        ) : field === "chequeNumber" ? (
+                          loan.chequeDetails?.chequeNumber || "-"
+                        ) : field === "loanAmount" ? (
+                          `₹${loan.loanAmount?.toLocaleString() || "-"}`
+                        ) : (
+                          loan[field] || "-"
+                        )}
+                      </td>
+                    ))}
 
-                  {editingLoanId === loan._id ? (
-                    <>
-                      <td className="py-3 px-4 text-right">
-                        <input
-                          type="number"
-                          name="loanAmount"
-                          value={editForm.loanAmount}
-                          onChange={handleEditChange}
-                          className="w-full p-1 border rounded-md text-right"
+                    {/* Pending */}
+                    <td className="py-3 px-4 text-right">
+                      ₹
+                      {loan.pendingAmount?.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }) || "-"}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      {loan.pendingInstallments || 0}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3 px-4 flex justify-center gap-2">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={() => submitEdit(loan._id)}
+                            className="p-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingLoanId(null)}
+                            className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEditing(loan)}
+                            className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(loan._id)}
+                            className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </td>
+
+                    {/* Repayment Modal */}
+                    <td className="text-center">
+                      <button
+                        onClick={() =>
+                          setSelectedLoanId(
+                            selectedLoanId === loan._id ? null : loan._id
+                          )
+                        }
+                        className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm shadow"
+                      >
+                        View
+                      </button>
+                      {selectedLoanId === loan._id && (
+                        <LoanRepaymentModal
+                          loanId={loan._id}
+                          onClose={() => setSelectedLoanId(null)}
                         />
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <input
-                          type="number"
-                          name="interestRate"
-                          value={editForm.interestRate}
-                          onChange={handleEditChange}
-                          className="w-full p-1 border rounded-md text-right"
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <input
-                          type="number"
-                          name="tenure"
-                          value={editForm.tenure}
-                          onChange={handleEditChange}
-                          className="w-full p-1 border rounded-md text-right"
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <select
-                          name="status"
-                          value={editForm.status}
-                          onChange={handleEditChange}
-                          className="w-full p-1 border rounded-md"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Rejected">Rejected</option>
-                        </select>
-                      </td>
-                      <td className="py-3 px-4 flex justify-center gap-2">
-                        <button
-                          onClick={() => submitEdit(loan._id)}
-                          className="p-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingLoanId(null)}
-                          className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="py-3 px-4 text-right">
-                        ₹{loan.loanAmount?.toLocaleString() || "-"}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        {loan.interestRate || "-"}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        {loan.tenure || "-"}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        ₹
-                        {loan.pendingAmount?.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }) || "-"}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        {loan.pendingInstallments || 0}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`px-2 py-1 rounded-full text-sm font-medium ${
-                            loan.status === "Approved"
-                              ? "bg-green-100 text-green-700"
-                              : loan.status === "Rejected"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {loan.status}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4 flex justify-center gap-2">
-                        <button
-                          onClick={() => startEditing(loan)}
-                          className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(loan._id)}
-                          className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </>
-                  )}
-
-                  <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => setSelectedLoanId(loan._id)}
-                      className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
-                    >
-                      View Schedule
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* ✅ Pagination Controls */}
-        <div className="flex justify-center items-center mt-6 gap-2">
+        {/* ✅ Pagination */}
+        <div className="flex justify-between items-center mt-6 text-sm">
           <button
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-md ${
-              currentPage === 1
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-indigo-500 text-white hover:bg-indigo-600"
-            }`}
+            className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-300"
           >
-            Prev
+            ← Prev
           </button>
-
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goToPage(i + 1)}
-              className={`px-3 py-1 rounded-md ${
-                currentPage === i + 1
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-
+          <span className="text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
           <button
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-md ${
-              currentPage === totalPages
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-indigo-500 text-white hover:bg-indigo-600"
-            }`}
+            className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-300"
           >
-            Next
+            Next →
           </button>
         </div>
-
-        {selectedLoanId && (
-          <LoanRepaymentModal
-            loanId={selectedLoanId}
-            onClose={() => setSelectedLoanId(null)}
-          />
-        )}
       </div>
     </div>
   );
