@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 export const createRD = async (req, res) => {
   try {
     const {
+      accountNumber,
       memberId,
       depositAmount,
       interestRate,
@@ -44,7 +45,7 @@ export const createRD = async (req, res) => {
     }
 
     const rd = new RD({
-      accountNumber: `RD-${Date.now()}`,
+      accountNumber,
       memberId,
       clerkId: member.clerkId,
       depositAmount,

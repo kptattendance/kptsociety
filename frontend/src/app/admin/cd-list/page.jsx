@@ -211,6 +211,7 @@ export default function AdminCDList() {
       "Account Number": cd.accountNumber || "-",
       "Member Name": cd.memberId?.name || "Unknown",
       "Phone Number": cd.memberId?.phone || "N/A",
+      "Start Date": cd.memberId?.startDate || "N/A",
       "Monthly Deposit (₹)": cd.monthlyDeposit?.toLocaleString() || "0",
       "Total Deposited (₹)": cd.totalDeposited?.toLocaleString() || "0",
       "Total Withdrawn (₹)": cd.totalWithdrawn?.toLocaleString() || "0",

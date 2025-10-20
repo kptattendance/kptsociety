@@ -157,26 +157,34 @@ export default function AdminRDTable() {
       toast.info("No data available to export!");
       return;
     }
-    const exportData = rds.map((rd, index) => ({
-      "Sl. No.": index + 1,
-      "Member Name": rd.memberId?.name || "Unknown",
-      "Phone Number": rd.memberId?.phone || "N/A",
-      "Deposit Amount (₹)": rd.depositAmount || 0,
-      "Interest Rate (%)": rd.interestRate || 0,
-      "Tenure (Months)": rd.tenureMonths || 0,
-      "Start Date": rd.startDate
-        ? new Date(rd.startDate).toLocaleDateString("en-GB")
-        : "-",
-      "Maturity Date": rd.maturityDate
-        ? new Date(rd.maturityDate).toLocaleDateString("en-GB")
-        : "-",
-      "Maturity Amount (₹)": rd.maturityAmount || "-",
-      "Due Day of Month": rd.dueDayOfMonth || "-",
-      "Grace Period (Days)": rd.gracePeriodDays || "-",
-      "Late Fee / Installment (₹)": rd.lateFeePerInstallment || "-",
-      Status: rd.status || "-",
-      Notes: rd.notes || "-",
-    }));
+
+    const exportData = rds.map((rd, index) => {
+      const totalWithdrawn =
+        rd.withdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
+      const availableBalance = (rd.totalDeposited || 0) - totalWithdrawn;
+
+      return {
+        "Sl. No.": index + 1,
+        "Account Number": rd.accountNumber || "-",
+        "Member Name": rd.memberId?.name || "Unknown",
+        "Phone Number": rd.memberId?.phone || "N/A",
+        "Deposit Amount (₹)": rd.depositAmount || 0,
+        "Total Deposited (₹)": rd.totalDeposited || 0,
+        "Total Withdrawn (₹)": totalWithdrawn,
+        "Available Balance (₹)": availableBalance,
+        "Interest Rate (%)": rd.interestRate || 0,
+        "Tenure (Months)": rd.tenureMonths || 0,
+        "Start Date": rd.startDate
+          ? new Date(rd.startDate).toLocaleDateString("en-GB")
+          : "-",
+        "Maturity Date": rd.maturityDate
+          ? new Date(rd.maturityDate).toLocaleDateString("en-GB")
+          : "-",
+        "Maturity Amount (₹)": rd.maturityAmount || "-",
+        Status: rd.status || "-",
+      };
+    });
+
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "RD Records");
@@ -187,6 +195,7 @@ export default function AdminRDTable() {
     });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(data, `RD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success("✅ Excel file downloaded");
   };
 
   // Filtered and sorted RDs
