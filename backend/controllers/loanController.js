@@ -1,44 +1,6 @@
 import Loan from "../models/loanModel.js";
 import Member from "../models/memberModel.js";
 
-// -------------------- GENERATE REPAYMENT SCHEDULE --------------------
-export const generateRepaymentSchedule = (
-  loanAmount,
-  interestRate,
-  tenureMonths,
-  startDate
-) => {
-  const monthlyRate = interestRate / 12 / 100; // monthly interest rate
-  const emi =
-    (loanAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -tenureMonths));
-  let outstanding = loanAmount;
-
-  const schedule = [];
-
-  const start = new Date(startDate); // use passed startDate exactly
-
-  for (let i = 0; i < tenureMonths; i++) {
-    const interest = outstanding * monthlyRate;
-    const principal = emi - interest;
-    outstanding -= principal;
-
-    // compute due date by adding i months to the exact start date
-    const dueDate = new Date(start);
-    dueDate.setMonth(start.getMonth() + i + 1);
-
-    schedule.push({
-      dueDate,
-      principal: parseFloat(principal.toFixed(2)),
-      interest: parseFloat(interest.toFixed(2)),
-      totalEMI: parseFloat(emi.toFixed(2)),
-      scheduleOS: parseFloat(outstanding.toFixed(2)),
-      status: "Pending",
-    });
-  }
-
-  return schedule;
-};
-
 // -------------------- CREATE LOAN --------------------
 export const createLoan = async (req, res) => {
   try {
@@ -190,7 +152,9 @@ export const getLoan = async (req, res) => {
 // -------------------- MARK REPAYMENT AS PAID --------------------
 export const markRepaymentPaid = async (req, res) => {
   try {
-    const { loanId, installmentNo } = req.params; // installmentNo is 1-based index
+    const { loanId, installmentNo } = req.params;
+    const { dueDate } = req.body; // ✅ get optional dueDate
+
     const loan = await Loan.findById(loanId);
     if (!loan) return res.status(404).json({ message: "Loan not found" });
 
@@ -198,6 +162,12 @@ export const markRepaymentPaid = async (req, res) => {
     if (!loan.repayments[index])
       return res.status(400).json({ message: "Installment not found" });
 
+    // ✅ If a due date is sent, update it
+    if (dueDate) {
+      loan.repayments[index].dueDate = new Date(dueDate);
+    }
+
+    // ✅ Mark as paid
     loan.repayments[index].status = "Paid";
     await loan.save();
 
@@ -229,18 +199,62 @@ export const deleteLoan = async (req, res) => {
   }
 };
 
-/** * Helper: add months to a date */
-
-function addMonths(date, months) {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + months);
-  return d;
-}
-
 function safeNumber(val) {
   const num = Number(val);
   return isNaN(num) || !isFinite(num) ? 0 : Number(num.toFixed(2));
 }
+
+// ✅ Safe Month Addition Helper
+function addMonths(date, count) {
+  const d = new Date(date);
+  const day = d.getDate();
+  d.setMonth(d.getMonth() + count);
+
+  // Handle month overflow (e.g., Jan 31 → Feb 28)
+  if (d.getDate() < day) {
+    d.setDate(0);
+  }
+  return d;
+}
+
+// -------------------- GENERATE REPAYMENT SCHEDULE --------------------
+export const generateRepaymentSchedule = (
+  loanAmount,
+  interestRate,
+  tenureMonths,
+  startDate
+) => {
+  const monthlyRate = interestRate / 12 / 100; // Monthly interest rate
+  const emi =
+    (loanAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -tenureMonths));
+
+  let outstanding = loanAmount;
+  const schedule = [];
+  const start = new Date(startDate);
+
+  for (let i = 0; i < tenureMonths; i++) {
+    const interest = outstanding * monthlyRate;
+    const principal = emi - interest;
+    outstanding -= principal;
+
+    // Clamp for floating precision issues
+    outstanding = Math.max(0, Number(outstanding.toFixed(2)));
+
+    // Use safe date addition
+    const dueDate = addMonths(start, i + 1);
+
+    schedule.push({
+      dueDate,
+      principal: Number(principal.toFixed(2)),
+      interest: Number(interest.toFixed(2)),
+      totalEMI: Number(emi.toFixed(2)),
+      scheduleOS: Number(outstanding.toFixed(2)),
+      status: "Pending",
+    });
+  }
+
+  return schedule;
+};
 
 export function recalculateScheduleWithPrepayment(
   loan,
@@ -252,39 +266,38 @@ export function recalculateScheduleWithPrepayment(
   const monthlyRate = loan.interestRate / 12 / 100;
   const currentInstallment = Number(installment);
 
-  // Validate selected installment
   if (!repayments[currentInstallment - 1]) {
     throw new Error("Invalid installment selected for prepayment");
   }
 
-  // Outstanding principal at selected installment
-  let outstanding = repayments[currentInstallment - 1].scheduleOS;
-  outstanding -= Number(amount);
-  if (outstanding < 0) outstanding = 0;
+  // Outstanding after the selected installment
+  let outstanding =
+    repayments[currentInstallment - 1].scheduleOS - Number(amount);
+  outstanding = Math.max(0, Number(outstanding.toFixed(2)));
 
-  // --- CASE 1: Reduce Tenure (keep EMI same) ---
+  const baseDate = repayments[currentInstallment - 1].dueDate;
+
+  // --- CASE 1: Reduce Tenure (keep EMI constant) ---
   if (mode === "reduceTenure") {
-    // Calculate original EMI from loan amount, tenure, and rate
-    const emi =
-      (loan.loanAmount * monthlyRate) /
-      (1 - Math.pow(1 + monthlyRate, -loan.tenure));
-
-    let newRepayments = [];
+    // Use current EMI (not recalculated from loanAmount)
+    const emi = repayments[0].totalEMI;
+    const newRepayments = [];
     let i = currentInstallment;
-    const baseDate = repayments[currentInstallment - 1].dueDate;
 
     while (outstanding > 0) {
       const interest = outstanding * monthlyRate;
-      let principalPart = emi - interest;
-      if (principalPart > outstanding) principalPart = outstanding;
-      outstanding -= principalPart;
+      let principal = emi - interest;
+      if (principal > outstanding) principal = outstanding;
+
+      outstanding -= principal;
+      outstanding = Math.max(0, Number(outstanding.toFixed(2)));
 
       newRepayments.push({
         installmentNo: i + 1,
         dueDate: addMonths(new Date(baseDate), i - currentInstallment + 1),
-        principal: Number(principalPart.toFixed(2)),
+        principal: Number(principal.toFixed(2)),
         interest: Number(interest.toFixed(2)),
-        totalEMI: Number((principalPart + interest).toFixed(2)),
+        totalEMI: Number((principal + interest).toFixed(2)),
         scheduleOS: Number(outstanding.toFixed(2)),
         status: "Pending",
       });
@@ -300,31 +313,33 @@ export function recalculateScheduleWithPrepayment(
     };
   }
 
-  // --- CASE 2: Reduce EMI (keep tenure same) ---
+  // --- CASE 2: Reduce EMI (keep tenure constant) ---
   if (mode === "reduceEMI") {
     const remainingTenure = loan.tenure - currentInstallment;
     if (remainingTenure <= 0) return { repayments };
 
+    // Recalculate EMI for remaining tenure
     const emi =
       (outstanding * monthlyRate) /
       (1 - Math.pow(1 + monthlyRate, -remainingTenure));
 
-    let newRepayments = [];
+    const newRepayments = [];
     let i = currentInstallment;
-    const baseDate = repayments[currentInstallment - 1].dueDate;
 
     while (outstanding > 0 && i < loan.tenure) {
       const interest = outstanding * monthlyRate;
-      let principalPart = emi - interest;
-      if (principalPart > outstanding) principalPart = outstanding;
-      outstanding -= principalPart;
+      let principal = emi - interest;
+      if (principal > outstanding) principal = outstanding;
+
+      outstanding -= principal;
+      outstanding = Math.max(0, Number(outstanding.toFixed(2)));
 
       newRepayments.push({
         installmentNo: i + 1,
         dueDate: addMonths(new Date(baseDate), i - currentInstallment + 1),
-        principal: Number(principalPart.toFixed(2)),
+        principal: Number(principal.toFixed(2)),
         interest: Number(interest.toFixed(2)),
-        totalEMI: Number((principalPart + interest).toFixed(2)),
+        totalEMI: Number((principal + interest).toFixed(2)),
         scheduleOS: Number(outstanding.toFixed(2)),
         status: "Pending",
       });

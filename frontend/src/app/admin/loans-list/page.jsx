@@ -55,9 +55,10 @@ export default function AdminLoanList() {
             pendingInstallments = loan.repayments.filter(
               (r) => r.status !== "Paid"
             ).length;
+
             pendingAmount = loan.repayments
               .filter((r) => r.status !== "Paid")
-              .reduce((sum, r) => sum + r.totalEMI, 0);
+              .reduce((sum, r) => sum + r.principal, 0);
           }
 
           return {

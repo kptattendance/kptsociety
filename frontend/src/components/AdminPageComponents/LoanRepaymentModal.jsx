@@ -14,6 +14,8 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
   const [prepayMode, setPrepayMode] = useState("reduceTenure");
   const [installmentNo, setInstallmentNo] = useState(null);
   const [loading, setLoading] = useState(false); // overlay state
+  const [editingDateIndex, setEditingDateIndex] = useState(null);
+  const [editDate, setEditDate] = useState("");
 
   const fetchSchedule = async () => {
     try {
@@ -35,15 +37,48 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
     try {
       setLoading(true);
       const token = await getToken();
+
+      // find current repayment record
+      const repayment = loan.repayments[installmentNo - 1];
+      const updatedDate = repayment.tempDueDate || repayment.dueDate; // use edited one if exists
+
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/repay/${loanId}/${installmentNo}`,
-        { status },
+        {
+          status,
+          dueDate: updatedDate, // send date when marking paid
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       toast.success(`Installment #${installmentNo} marked as ${status}`);
       fetchSchedule();
     } catch (err) {
       toast.error("Failed to update status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateDueDate = async (installmentNo, newDate) => {
+    if (!newDate) {
+      setEditingDateIndex(null);
+      return;
+    }
+    try {
+      setLoading(true);
+      const token = await getToken();
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/repay/date/${loanId}/${installmentNo}`,
+        { dueDate: newDate },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Due date updated for installment #${installmentNo}`);
+      setEditingDateIndex(null);
+      setEditDate("");
+      fetchSchedule();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update due date");
     } finally {
       setLoading(false);
     }
@@ -124,13 +159,55 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                   }`}
                 >
                   <td className="p-2">{i + 1}</td>
-                  <td className="p-2">
-                    {new Date(r.dueDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "2-digit",
-                    })}
+
+                  {/* 🗓️ Editable Due Date */}
+                  <td
+                    className="p-2 cursor-pointer"
+                    onClick={() => setEditingDateIndex(i)}
+                  >
+                    {editingDateIndex === i ? (
+                      <input
+                        type="date"
+                        value={
+                          editDate ||
+                          new Date(r.tempDueDate || r.dueDate)
+                            .toISOString()
+                            .split("T")[0]
+                        }
+                        onChange={(e) => {
+                          const newVal = e.target.value;
+                          setEditDate(newVal);
+                          const updated = [...loan.repayments];
+                          updated[i].tempDueDate = newVal; // store locally only
+                          setLoan({ ...loan, repayments: updated });
+                        }}
+                        onBlur={() => setEditingDateIndex(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === "Escape") {
+                            setEditingDateIndex(null);
+                          }
+                        }}
+                        className="border px-2 py-1 rounded w-[130px] text-center"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="hover:underline text-blue-700">
+                        {new Date(
+                          r.tempDueDate || r.dueDate
+                        ).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "2-digit",
+                        })}
+                        {r.tempDueDate && (
+                          <span className="ml-1 text-xs text-orange-500">
+                            (unsaved)
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </td>
+
                   <td className="p-2">
                     ₹
                     {r.principal.toLocaleString("en-IN", {

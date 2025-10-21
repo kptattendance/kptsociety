@@ -24,7 +24,7 @@ export default function AdminLoanApplicationForm() {
     basicSalary: "",
     collateralType: "Suirity",
     collateralDetails: "",
-    appliedAt: today, // default to today's date
+    appliedAt: "", // default to today's date
     startDate: "", // new field: start date input manually
     chequeNumber: "",
     chequeDate: "",
@@ -98,7 +98,7 @@ export default function AdminLoanApplicationForm() {
         basicSalary: "",
         collateralType: "Suirity",
         collateralDetails: "",
-        appliedAt: today,
+        appliedAt: "",
         startDate: "",
         chequeNumber: "",
         chequeDate: "",
@@ -236,14 +236,13 @@ export default function AdminLoanApplicationForm() {
 
         {/* Applied Date (auto default to today) */}
         <div className="flex flex-col">
-          <label className="mb-1 font-medium text-gray-700">
-            Applied Date (auto)
-          </label>
+          <label className="mb-1 font-medium text-gray-700">Applied Date</label>
           <input
             type="date"
             name="appliedAt"
             value={form.appliedAt}
-            readOnly
+            onChange={handleChange}
+            required
             className="border rounded px-3 py-2 bg-gray-100 text-gray-700"
           />
         </div>
