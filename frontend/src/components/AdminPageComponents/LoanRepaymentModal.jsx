@@ -60,30 +60,6 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
     }
   };
 
-  const updateDueDate = async (installmentNo, newDate) => {
-    if (!newDate) {
-      setEditingDateIndex(null);
-      return;
-    }
-    try {
-      setLoading(true);
-      const token = await getToken();
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/repay/date/${loanId}/${installmentNo}`,
-        { dueDate: newDate },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`Due date updated for installment #${installmentNo}`);
-      setEditingDateIndex(null);
-      setEditDate("");
-      fetchSchedule();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update due date");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handlePrepay = async () => {
     if (!prepayAmount || !installmentNo) {
       toast.warning("Enter amount and select installment");
