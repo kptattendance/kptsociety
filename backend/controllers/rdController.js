@@ -285,7 +285,7 @@ export const deleteRD = async (req, res) => {
 export const updateRDInstallmentStatus = async (req, res) => {
   try {
     const { rdId, installmentNo } = req.params;
-    const { status } = req.body;
+    const { status, dueDate } = req.body; // <-- accept updated due date
 
     const rd = await RD.findById(rdId);
     if (!rd) return res.status(404).json({ error: "RD not found" });
@@ -297,6 +297,7 @@ export const updateRDInstallmentStatus = async (req, res) => {
 
     const inst = rd.installments[installmentIndex];
 
+    // Update status
     if (status === "Paid") {
       inst.status = "Paid";
       inst.paidAt = new Date();
@@ -305,6 +306,11 @@ export const updateRDInstallmentStatus = async (req, res) => {
       inst.paidAt = null;
     } else {
       return res.status(400).json({ error: "Invalid status" });
+    }
+
+    // Update due date if provided
+    if (dueDate) {
+      inst.dueDate = new Date(dueDate);
     }
 
     // Recalculate totalDeposited from all paid installments

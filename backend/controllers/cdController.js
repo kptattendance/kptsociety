@@ -99,7 +99,7 @@ export const getCDById = async (req, res) => {
 export const updateInstallment = async (req, res) => {
   try {
     const { cdId, installmentNo } = req.params;
-    const { status, clerkId } = req.body;
+    const { status, clerkId, dueDate } = req.body;
 
     const cd = await CD.findById(cdId);
     if (!cd) return res.status(404).json({ error: "CD not found" });
@@ -109,10 +109,21 @@ export const updateInstallment = async (req, res) => {
     );
     if (!inst) return res.status(404).json({ error: "Installment not found" });
 
-    inst.status = status;
-    inst.paidAt = status === "Paid" ? new Date() : null;
-    inst.clerkId = clerkId || inst.clerkId;
+    // ✅ Update status and paidAt
+    if (status) {
+      inst.status = status;
+      inst.paidAt = status === "Paid" ? new Date() : null;
+    }
 
+    // ✅ Update dueDate if provided
+    if (dueDate) {
+      inst.dueDate = new Date(dueDate);
+    }
+
+    // ✅ Update clerk info if available
+    if (clerkId) inst.clerkId = clerkId;
+
+    // ✅ Handle payment logic
     if (status === "Paid") {
       cd.totalDeposited += inst.amount;
       cd.balance += inst.amount;
@@ -124,6 +135,7 @@ export const updateInstallment = async (req, res) => {
       });
     }
 
+    // ✅ If last installment paid, auto-create next 12
     if (
       parseInt(installmentNo) === cd.installments.length &&
       status === "Paid"

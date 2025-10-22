@@ -1,22 +1,26 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 
 export default function RDScheduleModal({ rdId, onClose }) {
   const { getToken } = useAuth();
   const [rd, setRD] = useState(null);
-  const [withdrawForm, setWithdrawForm] = useState({
-    amount: "",
-    chequeNumber: "",
-    chequeDate: "",
-    notes: "",
-  });
+  const [loading, setLoading] = useState(false);
 
+  const [pageInstallments, setPageInstallments] = useState(1);
+  const [pageWithdrawals, setPageWithdrawals] = useState(1);
+  const itemsPerPage = 6;
+
+  const [editingDateIndex, setEditingDateIndex] = useState(null);
+  const [editDate, setEditDate] = useState("");
+
+  // Fetch RD details
   const fetchRD = async () => {
     try {
+      setLoading(true);
       const token = await getToken();
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/rd/${rdId}`,
@@ -24,7 +28,9 @@ export default function RDScheduleModal({ rdId, onClose }) {
       );
       setRD(res.data);
     } catch (err) {
-      toast.error("Failed to fetch RD");
+      toast.error("Failed to fetch RD data");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,225 +38,322 @@ export default function RDScheduleModal({ rdId, onClose }) {
     if (rdId) fetchRD();
   }, [rdId]);
 
-  const updateStatus = async (installmentNo, status) => {
+  const updateInstallmentStatus = async (installmentNo, status) => {
     try {
       const token = await getToken();
+      const installment = rd.installments[installmentNo - 1];
+      const updatedDate = installment?.tempDueDate || installment?.dueDate;
+
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/rd/installment/${rdId}/${installmentNo}`,
-        { status },
+        { status, dueDate: updatedDate },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Installment #${installmentNo} marked as ${status}`);
+      toast.success(`Installment #${installmentNo} updated successfully`);
       fetchRD();
     } catch (err) {
       toast.error("Failed to update installment");
     }
   };
 
-  const handleWithdraw = async (e) => {
-    e.preventDefault();
-    try {
-      const token = await getToken();
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/rd/withdrawl/${rdId}`,
-        {
-          amount: Number(withdrawForm.amount),
-          chequeNumber: withdrawForm.chequeNumber,
-          chequeDate: withdrawForm.chequeDate
-            ? new Date(withdrawForm.chequeDate)
-            : null,
-          notes: withdrawForm.notes,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Withdrawal recorded successfully");
-      setWithdrawForm({
-        amount: "",
-        chequeNumber: "",
-        chequeDate: "",
-        notes: "",
-      });
-      fetchRD();
-    } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to withdraw");
-    }
-  };
-
   if (!rd) return null;
 
-  const totalWithdrawn =
-    rd.withdrawals?.reduce((sum, w) => sum + w.amount, 0) || 0;
-  const balance = rd.totalDeposited - totalWithdrawn;
+  const paginate = (arr, page) => {
+    const start = (page - 1) * itemsPerPage;
+    return arr.slice(start, start + itemsPerPage);
+  };
+
+  const totalInstallmentPages = Math.ceil(
+    rd.installments.length / itemsPerPage
+  );
+  const totalWithdrawalPages = Math.ceil(
+    (rd.withdrawals || []).length / itemsPerPage
+  );
+
+  const balance =
+    rd.totalDeposited -
+    (rd.withdrawals?.reduce((sum, w) => sum + w.amount, 0) || 0);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-      <div className="relative w-full max-w-[90%] bg-white rounded-2xl shadow-2xl overflow-hidden">
-        {/* Close button */}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto border border-gray-200">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-50 p-2 bg-white rounded-full shadow hover:bg-gray-100"
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
         >
           <X size={22} />
         </button>
 
-        {/* Header */}
-        <div className="bg-gradient-to-r from-teal-400 via-green-300 to-teal-400 text-white p-4">
-          <h2 className="text-xl sm:text-2xl font-semibold text-center">
-            📅 RD Details – {rd.accountNumber}
-          </h2>
-        </div>
+        <h2 className="text-2xl font-semibold text-center text-teal-700 mb-5 tracking-wide">
+          📅 RD Account – {rd.accountNumber}
+        </h2>
 
-        {/* Installments Table */}
-        <div className="overflow-x-auto max-h-96 overflow-y-auto mt-4 p-4 bg-gradient-to-r from-violet-200 via-violet-100 to-pink-200 rounded-lg shadow-md">
-          <h3 className="font-semibold text-teal-700 mb-3 text-lg">
-            📅 Installment Schedule
+        {/* Installment Schedule */}
+        <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-xl border border-teal-200 shadow p-4 mb-5">
+          <h3 className="text-lg font-semibold text-teal-800 mb-3">
+            🗓️ Installment Schedule
           </h3>
-          <table className="min-w-full border text-sm">
-            <thead className="bg-gradient-to-r from-teal-200 via-teal-100 to-teal-200 text-gray-700">
-              <tr>
-                <th className="px-3 py-2">#</th>
-                <th className="px-3 py-2">Due Date</th>
-                <th className="px-3 py-2">Amount</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Paid At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rd.installments.map((inst, idx) => (
-                <tr
-                  key={idx}
-                  className={`border-b text-center hover:bg-gray-50 ${
-                    inst.status === "Paid" ? "bg-green-50" : ""
-                  }`}
-                >
-                  <td className="px-3 py-2">{idx + 1}</td>
-                  <td className="px-3 py-2">
-                    {new Date(inst.dueDate).toLocaleDateString("en-GB")}
-                  </td>
-                  <td className="px-3 py-2">₹{inst.amount}</td>
-                  <td className="px-3 py-2">
-                    <select
-                      value={inst.status}
-                      onChange={(e) => updateStatus(idx + 1, e.target.value)}
-                      className="border rounded px-2 py-1"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Paid">Paid</option>
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    {inst.paidAt
-                      ? new Date(inst.paidAt).toLocaleDateString("en-GB")
-                      : "-"}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border text-sm">
+              <thead className="bg-teal-100 text-gray-700">
+                <tr>
+                  <th className="px-3 py-2">#</th>
+                  <th className="px-3 py-2">Due Date</th>
+                  <th className="px-3 py-2">Amount</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Paid At</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginate(rd.installments, pageInstallments).map(
+                  (inst, idx) => {
+                    const globalIndex =
+                      (pageInstallments - 1) * itemsPerPage + idx + 1;
+                    return (
+                      <tr
+                        key={idx}
+                        className={`border-b text-center ${
+                          inst.status === "Paid" ? "bg-green-50" : ""
+                        }`}
+                      >
+                        <td className="px-3 py-2">{globalIndex}</td>
+                        <td
+                          className="px-3 py-2 cursor-pointer"
+                          onClick={() => setEditingDateIndex(globalIndex - 1)}
+                        >
+                          {editingDateIndex === globalIndex - 1 ? (
+                            <input
+                              type="date"
+                              value={
+                                editDate ||
+                                inst.tempDueDate ||
+                                new Date(inst.dueDate)
+                                  .toISOString()
+                                  .split("T")[0]
+                              }
+                              onChange={(e) => {
+                                setEditDate(e.target.value);
+                                const updated = [...rd.installments];
+                                updated[globalIndex - 1].tempDueDate =
+                                  e.target.value;
+                                setRD({ ...rd, installments: updated });
+                              }}
+                              onBlur={() => setEditingDateIndex(null)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === "Escape")
+                                  setEditingDateIndex(null);
+                              }}
+                              autoFocus
+                              className="border rounded px-2 py-1 w-36 text-center focus:ring-2 focus:ring-teal-300 outline-none"
+                            />
+                          ) : (
+                            <span className="hover:underline text-blue-700">
+                              {new Date(
+                                inst.tempDueDate || inst.dueDate
+                              ).toLocaleDateString("en-GB")}
+                              {inst.tempDueDate && (
+                                <span className="ml-1 text-xs text-orange-500">
+                                  (unsaved)
+                                </span>
+                              )}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">₹{inst.amount}</td>
+                        <td className="px-3 py-2">
+                          <select
+                            value={inst.status}
+                            onChange={(e) =>
+                              updateInstallmentStatus(
+                                globalIndex,
+                                e.target.value
+                              )
+                            }
+                            className={`border rounded px-2 py-1 ${
+                              inst.status === "Paid"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                          </select>
+                        </td>
+                        <td className="px-3 py-2">
+                          {inst.paidAt ? (
+                            new Date(inst.paidAt).toLocaleDateString("en-GB")
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              Click to add
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  }
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* Pagination for Installments */}
+        <div className="flex justify-end mt-2 gap-2 items-center">
+          <button
+            onClick={() => setPageInstallments((p) => Math.max(1, p - 1))}
+            disabled={pageInstallments === 1}
+            className="p-1 border rounded disabled:opacity-50"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-sm">
+            Page {pageInstallments} of{" "}
+            {Math.ceil(rd.installments.length / itemsPerPage)}
+          </span>
+          <button
+            onClick={() =>
+              setPageInstallments((p) =>
+                Math.min(
+                  Math.ceil(rd.installments.length / itemsPerPage),
+                  p + 1
+                )
+              )
+            }
+            disabled={
+              pageInstallments ===
+              Math.ceil(rd.installments.length / itemsPerPage)
+            }
+            className="p-1 border rounded disabled:opacity-50"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
 
-        {/* Withdraw Section */}
-        <div className="mt-6 p-4 bg-gradient-to-r from-green-50 via-green-100 to-green-50 rounded-lg shadow-md">
-          {/* Withdraw Form */}
-          <h3 className="font-semibold text-teal-700 mb-2 text-lg">
-            💸 Withdraw from RD
-          </h3>
-          <p className="text-sm text-gray-600 mb-3">
-            Available Balance:{" "}
-            <span className="font-semibold">₹{balance.toLocaleString()}</span>
-          </p>
+        {/* Withdrawals Form */}
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 p-4 rounded-lg shadow-md mb-5 w-fit">
+          <h4 className="font-semibold text-gray-700 mb-2">
+            💸 Withdraw Amount
+          </h4>
           <form
-            className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4"
-            onSubmit={handleWithdraw}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const amount = parseFloat(e.target.amount.value);
+              const chequeNumber = e.target.chequeNumber.value.trim();
+              const chequeDate = e.target.chequeDate.value;
+              const notes = e.target.notes.value.trim();
+
+              if (!amount || amount <= 0) {
+                toast.error("Please enter a valid amount");
+                return;
+              }
+              if (!chequeNumber || !chequeDate) {
+                toast.error("Please enter cheque number and date");
+                return;
+              }
+
+              try {
+                const token = await getToken();
+                await axios.put(
+                  `${process.env.NEXT_PUBLIC_API_URL}/api/rd/withdrawl/${rdId}`,
+                  { amount, chequeNumber, chequeDate, notes },
+                  { headers: { Authorization: `Bearer ${token}` } }
+                );
+                toast.success(`₹${amount.toFixed(2)} withdrawn successfully`);
+                fetchRD();
+                e.target.reset();
+              } catch (err) {
+                toast.error(err.response?.data?.error || "Withdrawal failed");
+              }
+            }}
+            className="flex flex-wrap gap-3 items-end"
           >
-            <input
-              type="number"
-              placeholder="Amount (₹)"
-              value={withdrawForm.amount}
-              onChange={(e) =>
-                setWithdrawForm({ ...withdrawForm, amount: e.target.value })
-              }
-              className="border rounded px-2 py-1 focus:ring-2 focus:ring-teal-400 outline-none"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Cheque Number"
-              value={withdrawForm.chequeNumber}
-              onChange={(e) =>
-                setWithdrawForm({
-                  ...withdrawForm,
-                  chequeNumber: e.target.value,
-                })
-              }
-              className="border rounded px-2 py-1 focus:ring-2 focus:ring-teal-400 outline-none"
-            />
-            <input
-              type="date"
-              value={withdrawForm.chequeDate}
-              onChange={(e) =>
-                setWithdrawForm({ ...withdrawForm, chequeDate: e.target.value })
-              }
-              className="border rounded px-2 py-1 focus:ring-2 focus:ring-teal-400 outline-none"
-            />
-            <input
-              type="text"
-              placeholder="Notes"
-              value={withdrawForm.notes}
-              onChange={(e) =>
-                setWithdrawForm({ ...withdrawForm, notes: e.target.value })
-              }
-              className="border rounded px-2 py-1 focus:ring-2 focus:ring-teal-400 outline-none"
-            />
+            <div>
+              <label className="text-sm text-gray-600 mr-3">Amount</label>
+              <input
+                type="number"
+                name="amount"
+                step="0.01"
+                min="1"
+                className="border rounded px-2 py-1 w-28 focus:ring-2 focus:ring-blue-300 outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 mr-3">Cheque No.</label>
+              <input
+                type="text"
+                name="chequeNumber"
+                className="border rounded px-2 py-1 w-32 focus:ring-2 focus:ring-blue-300 outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 mr-3">Cheque Date</label>
+              <input
+                type="date"
+                name="chequeDate"
+                className="border rounded px-2 py-1 w-36 focus:ring-2 focus:ring-blue-300 outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 mr-3">Notes</label>
+              <input
+                type="text"
+                name="notes"
+                className="border rounded px-2 py-1 w-40 focus:ring-2 focus:ring-blue-300 outline-none"
+              />
+            </div>
             <button
               type="submit"
-              className="col-span-1 md:col-span-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 rounded shadow hover:from-blue-700 hover:to-indigo-700"
             >
               Withdraw
             </button>
           </form>
+        </div>
 
-          {/* Withdrawals Table */}
-          {rd.withdrawals?.length > 0 && (
-            <div className="overflow-x-auto max-h-48 overflow-y-auto mt-4">
-              <h3 className="font-semibold text-teal-700 mb-2 text-lg">
-                🧾 Withdrawal History
-              </h3>
-              <table className="min-w-full border text-sm">
-                <thead className="bg-gradient-to-r from-teal-200 via-teal-100 to-teal-200 text-gray-700">
-                  <tr>
-                    <th className="px-3 py-2">#</th>
-                    <th className="px-3 py-2">Amount</th>
-                    <th className="px-3 py-2">Cheque Number</th>
-                    <th className="px-3 py-2">Cheque Date</th>
-                    <th className="px-3 py-2">Withdrawn At</th>
-                    <th className="px-3 py-2">Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rd.withdrawals.map((w, idx) => (
+        {/* Withdrawal History */}
+        <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-xl border border-rose-200 shadow p-4">
+          <h3 className="text-lg font-semibold text-rose-700 mb-3">
+            💰 Withdrawal History
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border text-sm">
+              <thead className="bg-rose-100 text-gray-700">
+                <tr>
+                  <th className="px-3 py-2">#</th>
+                  <th className="px-3 py-2">Amount</th>
+                  <th className="px-3 py-2">Cheque No.</th>
+                  <th className="px-3 py-2">Cheque Date</th>
+                  <th className="px-3 py-2">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginate(rd.withdrawals || [], pageWithdrawals).map(
+                  (w, idx) => (
                     <tr
                       key={idx}
-                      className="border-b hover:bg-gray-50 text-center"
+                      className={`border-b text-center ${
+                        idx % 2 === 0 ? "bg-rose-50/60" : "bg-white"
+                      }`}
                     >
-                      <td className="px-3 py-2">{idx + 1}</td>
-                      <td className="px-3 py-2">₹{w.amount}</td>
+                      <td className="px-3 py-2">
+                        {(pageWithdrawals - 1) * itemsPerPage + idx + 1}
+                      </td>
+                      <td className="px-3 py-2">₹{w.amount.toFixed(2)}</td>
                       <td className="px-3 py-2">{w.chequeNumber || "-"}</td>
                       <td className="px-3 py-2">
                         {w.chequeDate
                           ? new Date(w.chequeDate).toLocaleDateString("en-GB")
                           : "-"}
                       </td>
-                      <td className="px-3 py-2">
-                        {new Date(w.withdrawnAt).toLocaleDateString("en-GB")}
-                      </td>
                       <td className="px-3 py-2">{w.notes || "-"}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

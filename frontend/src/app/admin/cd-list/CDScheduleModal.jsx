@@ -16,6 +16,12 @@ export default function CDScheduleModal({ cdId, onClose }) {
   const [pageDividends, setPageDividends] = useState(1);
   const itemsPerPage = 6;
 
+  // Editing states for installment month & date
+  const [editingMonthIndex, setEditingMonthIndex] = useState(null);
+  const [editMonth, setEditMonth] = useState("");
+  const [editingDateIndex, setEditingDateIndex] = useState(null);
+  const [editDate, setEditDate] = useState("");
+
   // Fetch CD data
   const fetchCD = async () => {
     try {
@@ -25,7 +31,6 @@ export default function CDScheduleModal({ cdId, onClose }) {
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log(res.data);
       setCD(res.data);
     } catch (err) {
       toast.error("Failed to fetch CD data");
@@ -42,50 +47,26 @@ export default function CDScheduleModal({ cdId, onClose }) {
   const updateInstallment = async (installmentNo, status) => {
     try {
       const token = await getToken();
+
+      // Find the current installment's due date (possibly updated)
+      const installment = cd.installments.find(
+        (inst) => inst.monthNo === installmentNo
+      );
+
+      const updatedDate =
+        installment?.tempDueDate || installment?.dueDate || new Date();
+
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd/installment/${cdId}/${installmentNo}`,
-        { status },
+        { status, dueDate: updatedDate },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Installment #${installmentNo} marked as ${status}`);
+
+      toast.success(`Installment #${installmentNo} updated successfully`);
       fetchCD();
     } catch (err) {
+      console.error(err);
       toast.error("Failed to update installment");
-    }
-  };
-
-  // Partial withdrawal (1/3)
-  const handlePartialWithdrawal = async () => {
-    if (!confirm("Withdraw 1/3 of current balance?")) return;
-    try {
-      const token = await getToken();
-      const amount = cd.totalDeposited / 3;
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}/withdraw`,
-        { amount, reason: "Partial Withdrawal" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`₹${amount.toFixed(2)} withdrawn successfully`);
-      fetchCD();
-    } catch (err) {
-      toast.error(err.response?.data?.error || "Partial withdrawal failed");
-    }
-  };
-
-  // Full withdrawal / Close CD
-  const handleFullWithdrawal = async () => {
-    if (!confirm("Withdraw full balance and close CD?")) return;
-    try {
-      const token = await getToken();
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}/close`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Full balance withdrawn and CD closed");
-      onClose();
-    } catch (err) {
-      toast.error(err.response?.data?.error || "Full withdrawal failed");
     }
   };
 
@@ -104,7 +85,6 @@ export default function CDScheduleModal({ cdId, onClose }) {
   const dividends = cd.transactions.filter((t) => t.type === "Dividend");
   const totalWithdrawalPages = Math.ceil(withdrawals.length / itemsPerPage);
   const totalDividendPages = Math.ceil(dividends.length / itemsPerPage);
-
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto border border-gray-200">
@@ -144,8 +124,8 @@ export default function CDScheduleModal({ cdId, onClose }) {
             </div>
           </div>
         </div>
-        {/* Installments Table */}
-        {/* 🟢 INSTALLMENT SCHEDULE */}
+
+        {/* 🗓️ INSTALLMENT SCHEDULE */}
         <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-xl border border-teal-200 shadow p-4 mb-5">
           <h3 className="text-lg font-semibold text-teal-800 mb-3">
             🗓️ Installment Schedule
@@ -163,53 +143,160 @@ export default function CDScheduleModal({ cdId, onClose }) {
               </thead>
               <tbody>
                 {paginate(cd.installments, pageInstallments).map(
-                  (inst, idx) => (
-                    <tr
-                      key={idx}
-                      className={`border-b text-center ${
-                        idx % 2 === 0 ? "bg-teal-50/60" : "bg-white"
-                      }`}
-                    >
-                      <td className="px-3 py-2">
-                        {(pageInstallments - 1) * itemsPerPage + idx + 1}
-                      </td>
-                      <td className="px-3 py-2">
-                        {new Date(inst.dueDate).toLocaleString("default", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td className="px-3 py-2">₹{inst.amount}</td>
-                      <td className="px-3 py-2">
-                        <select
-                          value={inst.status}
-                          onChange={(e) =>
-                            updateInstallment(
-                              (pageInstallments - 1) * itemsPerPage + idx + 1,
-                              e.target.value
-                            )
-                          }
-                          className={`border rounded px-2 py-1 ${
-                            inst.status === "Paid"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
+                  (inst, idx) => {
+                    const globalIndex =
+                      (pageInstallments - 1) * itemsPerPage + idx + 1;
+
+                    return (
+                      <tr
+                        key={idx}
+                        className={`border-b text-center ${
+                          idx % 2 === 0 ? "bg-teal-50/60" : "bg-white"
+                        }`}
+                      >
+                        <td className="px-3 py-2">{globalIndex}</td>
+
+                        {/* 🗓️ Editable Month (Full Date) */}
+                        <td
+                          className="p-2 cursor-pointer"
+                          onClick={() => setEditingMonthIndex(idx)}
                         >
-                          <option value="Pending">Pending</option>
-                          <option value="Paid">Paid</option>
-                        </select>
-                      </td>
-                      <td className="px-3 py-2">
-                        {inst.paidAt
-                          ? new Date(inst.paidAt).toLocaleDateString("en-GB")
-                          : "-"}
-                      </td>
-                    </tr>
-                  )
+                          {editingMonthIndex === idx ? (
+                            <input
+                              type="date"
+                              value={
+                                editMonth ||
+                                new Date(inst.tempDueDate || inst.dueDate)
+                                  .toISOString()
+                                  .split("T")[0]
+                              }
+                              onChange={(e) => {
+                                const newVal = e.target.value;
+                                setEditMonth(newVal);
+                                const updated = [...cd.installments];
+                                updated[idx].tempDueDate = newVal; // store locally only
+                                setCD({ ...cd, installments: updated });
+                              }}
+                              onBlur={() => setEditingMonthIndex(null)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === "Escape") {
+                                  setEditingMonthIndex(null);
+                                }
+                              }}
+                              className="border px-2 py-1 rounded w-[130px] text-center"
+                              autoFocus
+                            />
+                          ) : (
+                            <span className="hover:underline text-blue-700">
+                              {new Date(
+                                inst.tempDueDate || inst.dueDate
+                              ).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "2-digit",
+                              })}
+                              {inst.tempDueDate && (
+                                <span className="ml-1 text-xs text-orange-500">
+                                  (unsaved)
+                                </span>
+                              )}
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="px-3 py-2">₹{inst.amount}</td>
+
+                        <td className="px-3 py-2">
+                          <select
+                            value={inst.status}
+                            onChange={(e) =>
+                              updateInstallment(globalIndex, e.target.value)
+                            }
+                            className={`border rounded px-2 py-1 ${
+                              inst.status === "Paid"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                          </select>
+                        </td>
+
+                        {/* Paid At Date Inline Edit */}
+                        <td
+                          className="px-3 py-2 cursor-pointer"
+                          onClick={() => setEditingDateIndex(globalIndex - 1)}
+                        >
+                          {editingDateIndex === globalIndex - 1 ? (
+                            <input
+                              type="date"
+                              value={
+                                editDate ||
+                                (inst.paidAt
+                                  ? new Date(inst.paidAt)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : "")
+                              }
+                              onChange={(e) => setEditDate(e.target.value)}
+                              onBlur={() => {
+                                setEditingDateIndex(null);
+                                toast.info(`Saved date ${editDate}`);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === "Escape")
+                                  setEditingDateIndex(null);
+                              }}
+                              autoFocus
+                              className="border rounded px-2 py-1 w-36 text-sm focus:ring-2 focus:ring-teal-300 outline-none"
+                            />
+                          ) : inst.paidAt ? (
+                            new Date(inst.paidAt).toLocaleDateString("en-GB")
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              Click to add
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  }
                 )}
               </tbody>
             </table>
           </div>
+        </div>
+        {/* Pagination for Installments */}
+        <div className="flex justify-end mt-2 gap-2 items-center">
+          <button
+            onClick={() => setPageInstallments((p) => Math.max(1, p - 1))}
+            disabled={pageInstallments === 1}
+            className="p-1 border rounded disabled:opacity-50"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-sm">
+            Page {pageInstallments} of{" "}
+            {Math.ceil(cd.installments.length / itemsPerPage)}
+          </span>
+          <button
+            onClick={() =>
+              setPageInstallments((p) =>
+                Math.min(
+                  Math.ceil(cd.installments.length / itemsPerPage),
+                  p + 1
+                )
+              )
+            }
+            disabled={
+              pageInstallments ===
+              Math.ceil(cd.installments.length / itemsPerPage)
+            }
+            className="p-1 border rounded disabled:opacity-50"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
 
         {/* Manual Withdrawal Form */}

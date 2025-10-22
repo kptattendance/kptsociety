@@ -578,7 +578,10 @@ export default function AdminRDTable() {
           {selectedRDId && (
             <RDScheduleModal
               rdId={selectedRDId}
-              onClose={() => setSelectedRDId(null)}
+              onClose={() => {
+                setSelectedRDId(null);
+                fetchRDs();
+              }}
             />
           )}
         </div>
