@@ -16,9 +16,10 @@ export const createRD = async (req, res) => {
       gracePeriodDays,
       lateFeePerInstallment,
       notes,
+      initialDeposit, // ✅ new
+      initialDepositDate, // ✅ new
     } = req.body;
 
-    // Validate member exists
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ error: "Member not found" });
 
@@ -26,12 +27,11 @@ export const createRD = async (req, res) => {
     const maturityDate = new Date(start);
     maturityDate.setMonth(maturityDate.getMonth() + Number(tenureMonths));
 
-    // Precompute maturity amount (simple CI formula)
     const years = tenureMonths / 12;
     const maturityAmount =
       depositAmount * tenureMonths * (1 + (interestRate / 100) * years);
 
-    // Generate installment schedule
+    // Generate installments
     const installments = [];
     for (let i = 0; i < tenureMonths; i++) {
       const due = new Date(start);
@@ -48,12 +48,16 @@ export const createRD = async (req, res) => {
       accountNumber,
       memberId,
       clerkId: member.clerkId,
+      initialDeposit: initialDeposit || 0,
+      initialDepositDate: initialDepositDate
+        ? new Date(initialDepositDate)
+        : null,
       depositAmount,
       tenureMonths,
       interestRate,
       startDate: start,
       maturityDate,
-      totalDeposited: 0,
+      totalDeposited: initialDeposit || 0, // include starting balance
       maturityAmount,
       installments,
       dueDayOfMonth,
@@ -125,7 +129,6 @@ export const makeRDDeposit = async (req, res) => {
     const { rdId } = req.params;
     const { paymentMode, reference, notes } = req.body;
 
-    // Fetch RD
     const rd = await RD.findById(rdId);
     if (!rd) return res.status(404).json({ error: "RD not found" });
     if (rd.status !== "Active")
@@ -143,10 +146,12 @@ export const makeRDDeposit = async (req, res) => {
     nextInstallment.reference = reference;
     nextInstallment.notes = notes;
 
-    // Recalculate totalDeposited based on all paid installments
-    rd.totalDeposited = rd.installments
+    // ✅ FIX: Recalculate totalDeposited including initialDeposit
+    const paidInstallmentsTotal = rd.installments
       .filter((i) => i.status === "Paid")
       .reduce((sum, i) => sum + i.amount, 0);
+
+    rd.totalDeposited = (rd.initialDeposit || 0) + paidInstallmentsTotal;
 
     await rd.save();
     res.json(rd);
@@ -314,9 +319,11 @@ export const updateRDInstallmentStatus = async (req, res) => {
     }
 
     // Recalculate totalDeposited from all paid installments
-    rd.totalDeposited = rd.installments
+    const paidInstallmentsTotal = rd.installments
       .filter((i) => i.status === "Paid")
       .reduce((sum, i) => sum + i.amount, 0);
+
+    rd.totalDeposited = (rd.initialDeposit || 0) + paidInstallmentsTotal;
 
     await rd.save();
     res.json(rd);

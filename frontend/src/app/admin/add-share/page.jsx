@@ -11,6 +11,7 @@ export default function AdminShareForm() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [formData, setFormData] = useState({
     memberId: "",
@@ -150,46 +151,67 @@ export default function AdminShareForm() {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 sm:grid-cols-2 gap-8"
         >
-          {/* Member Selection */}
-          <div className="sm:col-span-2">
+          {/* Member */}
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700">
               Select Member
             </label>
-            <select
-              name="memberId"
-              value={formData.memberId}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl 
-              focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm"
-            >
-              <option value="">-- Select Member --</option>
-              {members.map((m) => (
-                <option key={m._id} value={m._id}>
-                  {m.name} ({m.email})
-                </option>
-              ))}
-            </select>
-          </div>
 
-          {/* Member Info Card */}
-          {selectedMember && (
-            <div className="sm:col-span-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl p-6 shadow-md">
-              <h3 className="text-lg font-bold mb-2">👤 Member Details</h3>
-              <p>
-                <strong>Name:</strong> {selectedMember.name}
-              </p>
-              <p>
-                <strong>Email:</strong> {selectedMember.email || "N/A"}
-              </p>
-              <p>
-                <strong>Phone:</strong> {selectedMember.phone || "N/A"}
-              </p>
-              <p>
-                <strong>Member ID:</strong> {selectedMember._id || "N/A"}
-              </p>
-            </div>
-          )}
+            <input
+              type="text"
+              value={
+                searchTerm ||
+                (formData.memberId
+                  ? `${
+                      members.find((m) => m._id === formData.memberId)?.name
+                    } (${
+                      members.find((m) => m._id === formData.memberId)?.email
+                    })`
+                  : "")
+              }
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setFormData((prev) => ({ ...prev, memberId: "" })); // clear selected member
+              }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+              placeholder="Type member name or email..."
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm"
+            />
+
+            {searchTerm && (
+              <ul className="absolute z-10 bg-white border border-gray-300 w-full rounded-xl mt-1 max-h-48 overflow-y-auto shadow-lg">
+                {members
+                  .filter(
+                    (m) =>
+                      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      m.email.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((m) => (
+                    <li
+                      key={m._id}
+                      onMouseDown={() => {
+                        setFormData((prev) => ({ ...prev, memberId: m._id }));
+                        setSearchTerm(""); // clear typing
+                      }}
+                      className="px-3 py-2 hover:bg-purple-100 cursor-pointer transition"
+                    >
+                      {m.name} ({m.email})
+                    </li>
+                  ))}
+
+                {members.filter(
+                  (m) =>
+                    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    m.email.toLowerCase().includes(searchTerm.toLowerCase())
+                ).length === 0 && (
+                  <li className="px-3 py-2 text-gray-500">
+                    No matching members
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
 
           {/* Share Number */}
           <div>

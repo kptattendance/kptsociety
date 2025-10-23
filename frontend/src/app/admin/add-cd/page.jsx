@@ -9,6 +9,7 @@ export default function AdminCDForm() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [formData, setFormData] = useState({
     memberId: "",
@@ -89,25 +90,65 @@ export default function AdminCDForm() {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 sm:grid-cols-2 gap-8"
         >
-          {/* Select Member */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700">
               Select Member
             </label>
-            <select
-              name="memberId"
-              value={formData.memberId}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
-            >
-              <option value="">-- Select Member --</option>
-              {members.map((m) => (
-                <option key={m._id} value={m._id}>
-                  {m.name} ({m.email})
-                </option>
-              ))}
-            </select>
+
+            <input
+              type="text"
+              value={
+                searchTerm ||
+                (formData.memberId
+                  ? `${
+                      members.find((m) => m._id === formData.memberId)?.name
+                    } (${
+                      members.find((m) => m._id === formData.memberId)?.email
+                    })`
+                  : "")
+              }
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setFormData((prev) => ({ ...prev, memberId: "" })); // clear selected member
+              }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+              placeholder="Type member name or email..."
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm"
+            />
+
+            {searchTerm && (
+              <ul className="absolute z-10 bg-white border border-gray-300 w-full rounded-xl mt-1 max-h-48 overflow-y-auto shadow-lg">
+                {members
+                  .filter(
+                    (m) =>
+                      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      m.email.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((m) => (
+                    <li
+                      key={m._id}
+                      onMouseDown={() => {
+                        setFormData((prev) => ({ ...prev, memberId: m._id }));
+                        setSearchTerm(""); // clear typing
+                      }}
+                      className="px-3 py-2 hover:bg-purple-100 cursor-pointer transition"
+                    >
+                      {m.name} ({m.email})
+                    </li>
+                  ))}
+
+                {members.filter(
+                  (m) =>
+                    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    m.email.toLowerCase().includes(searchTerm.toLowerCase())
+                ).length === 0 && (
+                  <li className="px-3 py-2 text-gray-500">
+                    No matching members
+                  </li>
+                )}
+              </ul>
+            )}
           </div>
 
           {/* Start Date */}

@@ -43,6 +43,8 @@ const RDSchema = new mongoose.Schema(
     },
     clerkId: { type: String },
 
+    initialDeposit: { type: Number, default: 0 },
+    initialDepositDate: { type: Date },
     depositAmount: { type: Number, required: true },
     tenureMonths: { type: Number, required: true },
     interestRate: { type: Number, required: true },
