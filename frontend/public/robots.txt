@@ -1,11 +1,12 @@
-# *
+# -------------------------
+# Robots.txt for KPT Co-operative Society
+# -------------------------
+
 User-agent: *
 Allow: /
 
 # Host
 Host: https://kptsociety.vercel.app
 
-# Sitemaps
+# Sitemap
 Sitemap: https://kptsociety.vercel.app/sitemap.xml
-
-
