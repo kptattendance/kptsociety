@@ -5,7 +5,14 @@ import mongoose from "mongoose";
 // ------------------- Create CD Account -------------------
 export const createCD = async (req, res) => {
   try {
-    const { memberId, monthlyDeposit, startDate, accountNumber } = req.body;
+    const {
+      memberId,
+      monthlyDeposit,
+      startDate,
+      accountNumber,
+      initialDeposit,
+      initialDepositDate,
+    } = req.body;
 
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ error: "Member not found" });
@@ -24,10 +31,23 @@ export const createCD = async (req, res) => {
       startDate,
       clerkId: member.clerkId,
       monthlyDeposit: monthlyDeposit || 500,
-      balance: 0,
-      totalDeposited: 0,
+      initialDeposit: initialDeposit || 0, // ✅ Save initial deposit
+      initialDepositDate: initialDepositDate || null, // ✅ Save initial deposit date
+      balance: initialDeposit || 0, // ✅ Add to balance
+      totalDeposited: initialDeposit || 0, // ✅ Add to total deposited
       totalWithdrawn: 0,
       installments: [],
+      transactions: initialDeposit
+        ? [
+            {
+              type: "Deposit",
+              amount: initialDeposit,
+              date: initialDepositDate || new Date(),
+              clerkId: member.clerkId,
+              notes: "Initial deposit",
+            },
+          ]
+        : [],
     });
 
     const start = new Date(startDate || new Date());
@@ -95,35 +115,64 @@ export const getCDById = async (req, res) => {
 };
 
 // ------------------- Mark Installment Paid/Pending -------------------
-
 export const updateInstallment = async (req, res) => {
   try {
     const { cdId, installmentNo } = req.params;
-    const { status, clerkId, dueDate } = req.body;
+    const { status, clerkId, dueDate, amount } = req.body;
 
     const cd = await CD.findById(cdId);
     if (!cd) return res.status(404).json({ error: "CD not found" });
 
+    // Handle initial deposit (monthNo 0)
+    if (parseInt(installmentNo) === 0) {
+      if (status === "Paid") {
+        const depositAmount = Number(amount) || cd.initialDeposit || 0;
+        cd.initialDeposit = depositAmount;
+        cd.initialDepositDate = dueDate ? new Date(dueDate) : cd.startDate;
+        cd.balance += depositAmount;
+        cd.totalDeposited += depositAmount;
+
+        cd.transactions.push({
+          type: "Deposit",
+          amount: depositAmount,
+          date: new Date(),
+          clerkId,
+          notes: "Initial Deposit",
+        });
+      } else if (status === "Pending") {
+        // Reset initial deposit
+        cd.balance -= cd.initialDeposit || 0;
+        cd.totalDeposited -= cd.initialDeposit || 0;
+        cd.initialDeposit = 0;
+        cd.initialDepositDate = null;
+      }
+
+      await cd.save();
+      return res.json(cd);
+    }
+
+    // Handle regular installments
     const inst = cd.installments.find(
       (i) => i.monthNo === parseInt(installmentNo)
     );
     if (!inst) return res.status(404).json({ error: "Installment not found" });
 
-    // ✅ Update status and paidAt
+    // Update status and paidAt
     if (status) {
       inst.status = status;
       inst.paidAt = status === "Paid" ? new Date() : null;
     }
 
-    // ✅ Update dueDate if provided
-    if (dueDate) {
-      inst.dueDate = new Date(dueDate);
-    }
+    // Update dueDate if provided
+    if (dueDate) inst.dueDate = new Date(dueDate);
 
-    // ✅ Update clerk info if available
+    // Update amount if provided
+    if (amount) inst.amount = Number(amount);
+
+    // Update clerk info if available
     if (clerkId) inst.clerkId = clerkId;
 
-    // ✅ Handle payment logic
+    // Handle payment logic
     if (status === "Paid") {
       cd.totalDeposited += inst.amount;
       cd.balance += inst.amount;
@@ -135,7 +184,7 @@ export const updateInstallment = async (req, res) => {
       });
     }
 
-    // ✅ If last installment paid, auto-create next 12
+    // Auto-create next 12 installments if last one paid
     if (
       parseInt(installmentNo) === cd.installments.length &&
       status === "Paid"
@@ -277,21 +326,39 @@ export const deleteCD = async (req, res) => {
 export const updateCDAccount = async (req, res) => {
   try {
     const { cdId } = req.params;
-    const { monthlyDeposit, accountNumber, startDate, status } = req.body;
+    const {
+      monthlyDeposit,
+      accountNumber,
+      startDate,
+      status,
+      initialDeposit,
+      initialDepositDate,
+    } = req.body;
 
     const cd = await CD.findById(cdId);
     if (!cd) return res.status(404).json({ error: "CD not found" });
 
-    // ✅ Update editable fields
     if (accountNumber !== undefined) cd.accountNumber = accountNumber;
     if (monthlyDeposit !== undefined) cd.monthlyDeposit = monthlyDeposit;
     if (startDate !== undefined) cd.startDate = new Date(startDate);
     if (status) cd.status = status;
+    if (initialDeposit !== undefined) {
+      cd.initialDeposit = initialDeposit;
+      cd.balance += initialDeposit; // adjust balance if needed
+      cd.totalDeposited += initialDeposit;
+      cd.transactions.push({
+        type: "Deposit",
+        amount: initialDeposit,
+        date: initialDepositDate || new Date(),
+        notes: "Updated initial deposit",
+      });
+    }
+    if (initialDepositDate !== undefined)
+      cd.initialDepositDate = new Date(initialDepositDate);
 
-    // ✅ Recalculate installment schedule if startDate changed
+    // Recalculate installments if startDate changed
     if (startDate) {
-      cd.installments = []; // clear old schedule
-
+      cd.installments = [];
       const start = new Date(startDate);
       for (let i = 0; i < 12; i++) {
         const due = new Date(start);
@@ -309,7 +376,6 @@ export const updateCDAccount = async (req, res) => {
     await cd.save();
     res.json({ message: "CD updated successfully", cd });
   } catch (err) {
-    console.error("Error updating CD:", err);
     res.status(500).json({ error: err.message });
   }
 };

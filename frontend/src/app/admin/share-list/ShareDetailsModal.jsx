@@ -17,7 +17,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
   });
   const [saving, setSaving] = useState(false);
 
-  // 🟢 Local state to reflect updated withdrawals instantly
+  // 🟢 Local state for updated withdrawals
   const [localWithdrawals, setLocalWithdrawals] = useState(
     share.withdrawalHistory || []
   );
@@ -46,13 +46,11 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
 
       toast.success("Withdrawal recorded successfully");
 
-      // ✅ Update local state to instantly reflect new record
       setLocalWithdrawals((prev) => [
         ...prev,
-        res.data.updatedWithdrawal || withdrawalForm, // fallback if backend doesn't return updated data
+        res.data.updatedWithdrawal || withdrawalForm,
       ]);
 
-      // Reset form
       setWithdrawalForm({
         date: "",
         sharesReturned: "",
@@ -62,7 +60,6 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
         notes: "",
       });
 
-      // Refresh main table as before
       refreshShares();
     } catch (error) {
       console.error("Withdrawal failed:", error);
@@ -78,7 +75,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          className="absolute cursor-pointer top-4 right-4 text-gray-600 hover:text-red-600"
         >
           <X size={22} />
         </button>
@@ -100,9 +97,9 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
             <strong>📞 Phone:</strong> {share.memberId?.phone || "-"}
           </p>
           <p>
-            <strong>📅 Account Start Date:</strong>{" "}
-            {share.accountStartDate
-              ? new Date(share.accountStartDate).toLocaleDateString("en-GB")
+            <strong>🗓️ Purchase Date:</strong>{" "}
+            {share.purchaseDate
+              ? new Date(share.purchaseDate).toLocaleDateString("en-GB")
               : "-"}
           </p>
           <p>
@@ -127,7 +124,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
             <table className="min-w-full divide-y divide-gray-300 text-sm">
               <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
                 <tr>
-                  <th className="px-3 py-2 text-left">Start Date</th>
+                  <th className="px-3 py-2 text-left">Purchase Date</th>
                   <th className="px-3 py-2 text-left">Shares Bought</th>
                   <th className="px-3 py-2 text-left">Amount (₹)</th>
                   <th className="px-3 py-2 text-left">Payment Mode</th>
@@ -139,10 +136,8 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
                 {share.purchaseHistory.map((p, i) => (
                   <tr key={i} className="hover:bg-indigo-50 transition-colors">
                     <td className="px-3 py-2">
-                      {share.accountStartDate
-                        ? new Date(share.accountStartDate).toLocaleDateString(
-                            "en-GB"
-                          )
+                      {p.purchaseDate
+                        ? new Date(p.purchaseDate).toLocaleDateString("en-GB")
                         : "-"}
                     </td>
                     <td className="px-3 py-2">{p.sharesBought}</td>

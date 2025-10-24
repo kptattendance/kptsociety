@@ -307,7 +307,7 @@ export default function AdminShareTable() {
 
                 {/* Society Share No (sortable) */}
 
-                <th className="px-4 py-2 text-left">Start Date</th>
+                {/* <th className="px-4 py-2 text-left">Start Date</th> */}
                 <th className="px-4 py-2 text-left">Total Shares</th>
                 <th className="px-4 py-2 text-left">Share Price (₹)</th>
                 <th className="px-4 py-2 text-left">Processing Fee (₹)</th>
@@ -372,7 +372,7 @@ export default function AdminShareTable() {
                   </td>
 
                   {/* Editable Start Date */}
-                  <td className="px-4 py-2">
+                  {/* <td className="px-4 py-2">
                     {editingId === share._id ? (
                       <input
                         type="date"
@@ -392,7 +392,7 @@ export default function AdminShareTable() {
                     ) : (
                       "-"
                     )}
-                  </td>
+                  </td> */}
 
                   {/* Editable Shares */}
                   <td className="px-4 py-2">

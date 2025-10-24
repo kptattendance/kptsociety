@@ -16,6 +16,8 @@ export default function AdminCDForm() {
     startDate: "",
     monthlyDeposit: "",
     accountNumber: "",
+    initialDeposit: "",
+    initialDepositDate: "",
   });
 
   // Fetch all members
@@ -60,6 +62,8 @@ export default function AdminCDForm() {
           memberId: formData.memberId,
           monthlyDeposit: Number(formData.monthlyDeposit),
           startDate: formData.startDate,
+          initialDeposit: Number(formData.initialDeposit),
+          initialDepositDate: formData.initialDepositDate,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -69,6 +73,9 @@ export default function AdminCDForm() {
         memberId: "",
         startDate: "",
         monthlyDeposit: "",
+        accountNumber: "",
+        initialDeposit: "",
+        initialDepositDate: "",
       });
     } catch (error) {
       console.error("Error processing CD deposit:", error);
@@ -150,16 +157,48 @@ export default function AdminCDForm() {
               </ul>
             )}
           </div>
-
-          {/* Start Date */}
+          {/* Society CD Number */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Start Date
+              Society CD Number
+            </label>
+            <input
+              type="text"
+              name="accountNumber"
+              value={formData.accountNumber}
+              onChange={handleChange}
+              required
+              placeholder="Enter society CD number"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
+            />
+          </div>
+          {/* Initial Deposit Amount */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Initial Deposit Amount (₹)
+            </label>
+            <input
+              type="number"
+              name="initialDeposit"
+              value={formData.initialDeposit}
+              onChange={handleChange}
+              min="0"
+              step="1"
+              required
+              placeholder="Enter initial deposit amount"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
+            />
+          </div>
+
+          {/* Initial Deposit Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Initial Deposit Date
             </label>
             <input
               type="date"
-              name="startDate"
-              value={formData.startDate}
+              name="initialDepositDate"
+              value={formData.initialDepositDate}
               onChange={handleChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
@@ -183,22 +222,20 @@ export default function AdminCDForm() {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
             />
           </div>
-          {/* Society CD Number */}
+          {/* Start Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Society CD Number
+              Start Date
             </label>
             <input
-              type="text"
-              name="accountNumber"
-              value={formData.accountNumber}
+              type="date"
+              name="startDate"
+              value={formData.startDate}
               onChange={handleChange}
               required
-              placeholder="Enter society CD number"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
             />
           </div>
-
           {/* Submit Button */}
           <div className="sm:col-span-2 flex justify-center">
             <button

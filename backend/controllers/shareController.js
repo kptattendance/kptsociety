@@ -19,18 +19,19 @@ export const createOrAddShares = async (req, res) => {
       processingFee,
       accountStartDate,
       societyShareNumber,
+      purchaseDate, // optional custom date from UI
     } = req.body;
 
     if (!memberId || !sharesBought) {
       return res
         .status(400)
-        .json({ error: "memberId and sharesBought required" });
+        .json({ error: "memberId and sharesBought are required" });
     }
 
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ error: "Member not found" });
 
-    const clerkId = member.clerkId; // or take from req.user if using auth middleware
+    const clerkId = member.clerkId;
     const pricePerShare = sharePrice ?? 100;
     const amountPaid = amountFromShares(sharesBought, pricePerShare);
 
@@ -39,12 +40,13 @@ export const createOrAddShares = async (req, res) => {
 
     let shareAccount = await ShareAccount.findOne({ memberId });
 
+    // ------------------- Create new share account -------------------
     if (!shareAccount) {
-      // Creating new share account
-      if (amountPaid > limit)
+      if (amountPaid > limit) {
         return res
           .status(400)
           .json({ error: "Purchase exceeds ₹50,000 limit" });
+      }
 
       shareAccount = new ShareAccount({
         memberId,
@@ -59,27 +61,29 @@ export const createOrAddShares = async (req, res) => {
         currentAmountBalance: amountPaid,
         sharePrice: pricePerShare,
         processingFee,
-
         purchaseHistory: [
           {
+            purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
             sharesBought,
             amountPaid,
             paymentMode,
             reference,
             notes,
-            date: new Date(),
           },
         ],
       });
-    } else {
-      // Adding more shares
+    }
+
+    // ------------------- Add shares to existing account -------------------
+    else {
       const newTotalAmount = shareAccount.totalAmount + amountPaid;
-      if (newTotalAmount > limit)
+      if (newTotalAmount > limit) {
         return res.status(400).json({
           error: `Purchase exceeds ₹50,000 limit. Remaining limit: ₹${
             limit - shareAccount.totalAmount
           }`,
         });
+      }
 
       shareAccount.totalSharesPurchased += sharesBought;
       shareAccount.totalAmount += amountPaid;
@@ -92,12 +96,12 @@ export const createOrAddShares = async (req, res) => {
         shareAccount.accountStartDate = new Date(accountStartDate);
 
       shareAccount.purchaseHistory.push({
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
         sharesBought,
         amountPaid,
         paymentMode,
         reference,
         notes,
-        date: new Date(),
       });
     }
 
@@ -115,16 +119,16 @@ export const withdrawFromShareAccount = async (req, res) => {
     const { shareId } = req.params;
     const {
       sharesReturned = 0,
-      amountPaidOut, // numeric (we prefer computing from shares if not provided)
+      amountPaidOut,
       paymentMode = "Cheque",
       chequeNumber,
       reference,
       notes,
       processedBy,
-      date,
+      withdrawalDate, // renamed for consistency
     } = req.body;
 
-    if (!shareId) return res.status(400).json({ error: "shareId required" });
+    if (!shareId) return res.status(400).json({ error: "shareId is required" });
 
     const share = await ShareAccount.findById(shareId);
     if (!share)
@@ -132,7 +136,7 @@ export const withdrawFromShareAccount = async (req, res) => {
     if (share.status === "Closed")
       return res.status(400).json({ error: "Account already closed" });
 
-    // Compute amounts
+    // Compute payout
     const price = share.sharePrice ?? 100;
     const computedRefundFromShares = sharesReturned * price;
     const payout =
@@ -140,11 +144,12 @@ export const withdrawFromShareAccount = async (req, res) => {
         ? amountPaidOut
         : computedRefundFromShares;
 
-    // Ensure we aren't paying more than current balance
-    if (payout > share.currentAmountBalance + 0.0001)
+    // Check balance
+    if (payout > share.currentAmountBalance + 0.0001) {
       return res.status(400).json({
         error: `Withdrawal exceeds available balance. Remaining balance ₹${share.currentAmountBalance}`,
       });
+    }
 
     // Update balances
     share.currentAmountBalance = parseFloat(
@@ -155,12 +160,8 @@ export const withdrawFromShareAccount = async (req, res) => {
       share.currentSharesBalance - sharesReturned
     );
 
-    // If sharesReturned is provided we also decrement totalSharesPurchased?
-    // We keep totalSharesPurchased as lifetime metric, but we can optionally store "net" in another field.
-    // For now we keep lifetime totals and current balances separately.
-
     const wd = {
-      date: date ? new Date(date) : new Date(),
+      withdrawalDate: withdrawalDate ? new Date(withdrawalDate) : new Date(),
       sharesReturned,
       amountPaidOut: payout,
       paymentMode,
@@ -174,16 +175,10 @@ export const withdrawFromShareAccount = async (req, res) => {
 
     share.withdrawalHistory.push(wd);
 
-    // If current balance reaches zero and we want auto-close (optional)
-    // if (share.currentAmountBalance <= 0 && share.currentSharesBalance === 0) {
-    //   share.status = "Closed";
-    //   share.closedAt = new Date();
-    // }
-
     await share.save();
     res.json({ message: "Withdrawal recorded", withdrawal: wd, share });
   } catch (err) {
-    console.error("withdrawFromShareAccount err:", err);
+    console.error("withdrawFromShareAccount error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -197,6 +192,7 @@ export const getAllShares = async (req, res) => {
     );
     res.json(shares);
   } catch (err) {
+    console.error("getAllShares error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -207,6 +203,7 @@ export const getMemberShares = async (req, res) => {
     const { memberId } = req.params;
     const isMongoId = mongoose.Types.ObjectId.isValid(memberId);
     const query = isMongoId ? { memberId } : { clerkId: memberId };
+
     const shareAccount = await ShareAccount.findOne(query).populate(
       "memberId",
       "name email phone photo"
@@ -233,9 +230,6 @@ export const updateShareAccount = async (req, res) => {
     const { shareId } = req.params;
     const updates = req.body;
 
-    // Only allow certain fields by default, but since we want full editing we accept:
-    // societyShareNumber, accountStartDate, sharePrice, currentSharesBalance, currentAmountBalance, status, etc.
-    // For safety, normalize dates and numbers:
     if (updates.accountStartDate)
       updates.accountStartDate = new Date(updates.accountStartDate);
     if (typeof updates.sharePrice !== "undefined")
@@ -252,9 +246,10 @@ export const updateShareAccount = async (req, res) => {
 
     if (!share)
       return res.status(404).json({ error: "Share account not found" });
+
     res.json(share);
   } catch (err) {
-    console.error("updateShareAccount err:", err);
+    console.error("updateShareAccount error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -272,9 +267,10 @@ export const closeShareAccount = async (req, res) => {
     share.status = "Closed";
     share.closedAt = new Date();
     await share.save();
+
     res.json({ message: "Share account closed successfully", share });
   } catch (err) {
-    console.error("closeShareAccount err:", err);
+    console.error("closeShareAccount error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -290,7 +286,7 @@ export const deleteShareAccount = async (req, res) => {
     await ShareAccount.findByIdAndDelete(shareId);
     res.json({ message: "Share account deleted successfully" });
   } catch (err) {
-    console.error("deleteShareAccount err:", err);
+    console.error("deleteShareAccount error:", err);
     res.status(500).json({ error: err.message });
   }
 };

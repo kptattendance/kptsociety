@@ -12,11 +12,12 @@ export default function AdminShareForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const [formData, setFormData] = useState({
     memberId: "",
     shareNumber: "",
-    startDate: "",
+    purchaseDate: "",
   });
 
   const [totalPayable, setTotalPayable] = useState("");
@@ -35,7 +36,6 @@ export default function AdminShareForm() {
         const sortedMembers = res.data.sort((a, b) =>
           a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
         );
-
         setMembers(sortedMembers);
       } catch (err) {
         console.error("Error fetching members:", err);
@@ -44,7 +44,7 @@ export default function AdminShareForm() {
     fetchMembers();
   }, [getToken]);
 
-  // ✅ Handle form input changes
+  // ✅ Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -55,7 +55,7 @@ export default function AdminShareForm() {
     }
   };
 
-  // ✅ Auto-calculate shares based on total amount
+  // ✅ Auto-calculate shares and fees
   const handleAmountChange = (e) => {
     const enteredTotal = parseFloat(e.target.value) || 0;
     const calculatedShares = Math.floor(enteredTotal / 101); // ₹100/share + ₹1 fee/share
@@ -66,7 +66,7 @@ export default function AdminShareForm() {
     setFee(calculatedFee);
   };
 
-  // ✅ Submit handler
+  // ✅ Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -84,8 +84,8 @@ export default function AdminShareForm() {
       return;
     }
 
-    if (!formData.startDate) {
-      setMessage("❌ Please select the share start date.");
+    if (!formData.purchaseDate) {
+      setMessage("❌ Please select the purchase date.");
       setLoading(false);
       return;
     }
@@ -101,15 +101,13 @@ export default function AdminShareForm() {
 
       const payload = {
         memberId: formData.memberId,
-        shareNumber: formData.shareNumber,
-        startDate: formData.startDate,
-        totalSharesPurchased: shares,
-        sharesBought: shares, // ✅ correct key
+        societyShareNumber: formData.shareNumber,
+        purchaseDate: formData.purchaseDate,
+        sharesBought: shares,
         sharePrice: 100,
-        processingFee: fee, // ✅ keep this
+        processingFee: fee,
         totalAmount: totalPayable,
-        societyShareNumber: formData.shareNumber, // ✅ backend expects this name
-        accountStartDate: formData.startDate, // ✅ backend expects this name
+        paymentMode: "Cash",
       };
 
       await axios.post(
@@ -120,12 +118,8 @@ export default function AdminShareForm() {
         }
       );
 
-      setMessage("✅ Share purchase added successfully!");
-      setFormData({
-        memberId: "",
-        shareNumber: "",
-        startDate: "",
-      });
+      setMessage("✅ Share purchase recorded successfully!");
+      setFormData({ memberId: "", shareNumber: "", purchaseDate: "" });
       setSelectedMember(null);
       setTotalPayable("");
       setShares(0);
@@ -151,7 +145,7 @@ export default function AdminShareForm() {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 sm:grid-cols-2 gap-8"
         >
-          {/* Member */}
+          {/* Member Search */}
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700">
               Select Member
@@ -171,7 +165,7 @@ export default function AdminShareForm() {
               }
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setFormData((prev) => ({ ...prev, memberId: "" })); // clear selected member
+                setFormData((prev) => ({ ...prev, memberId: "" }));
               }}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
@@ -179,7 +173,7 @@ export default function AdminShareForm() {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm"
             />
 
-            {searchTerm && (
+            {showDropdown && searchTerm && (
               <ul className="absolute z-10 bg-white border border-gray-300 w-full rounded-xl mt-1 max-h-48 overflow-y-auto shadow-lg">
                 {members
                   .filter(
@@ -192,7 +186,7 @@ export default function AdminShareForm() {
                       key={m._id}
                       onMouseDown={() => {
                         setFormData((prev) => ({ ...prev, memberId: m._id }));
-                        setSearchTerm(""); // clear typing
+                        setSearchTerm("");
                       }}
                       className="px-3 py-2 hover:bg-purple-100 cursor-pointer transition"
                     >
@@ -229,15 +223,15 @@ export default function AdminShareForm() {
             />
           </div>
 
-          {/* Start Date */}
+          {/* Purchase Date */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Start Date
+              Purchase Date
             </label>
             <input
               type="date"
-              name="startDate"
-              value={formData.startDate}
+              name="purchaseDate"
+              value={formData.purchaseDate}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
               required
