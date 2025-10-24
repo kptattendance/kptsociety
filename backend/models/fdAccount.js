@@ -23,6 +23,7 @@ const FDSchema = new Schema(
       enum: ["monthly", "quarterly", "maturity"],
       default: "maturity",
     },
+    nominee: { type: String },
     autoRenew: { type: Boolean, default: false },
     preclosureAllowed: { type: Boolean, default: true },
     preclosurePenaltyPercent: { type: Number, default: 1.0 },

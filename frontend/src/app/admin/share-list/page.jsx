@@ -305,8 +305,6 @@ export default function AdminShareTable() {
                 {/* Photo (new, but keeps original order) */}
                 <th className="px-4 py-2 text-left">Photo</th>
 
-                {/* Society Share No (sortable) */}
-
                 {/* <th className="px-4 py-2 text-left">Start Date</th> */}
                 <th className="px-4 py-2 text-left">Total Shares</th>
                 <th className="px-4 py-2 text-left">Share Price (₹)</th>

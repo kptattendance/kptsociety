@@ -16,6 +16,7 @@ export default function AdminFDForm() {
     interestRate: "",
     tenureMonths: "",
     startDate: "",
+    nominee: "",
     autoRenew: false,
     preclosureAllowed: true,
     notes: "",
@@ -84,6 +85,7 @@ export default function AdminFDForm() {
         interestRate: "",
         tenureMonths: "",
         startDate: "",
+        nominee: "",
         autoRenew: false,
         preclosureAllowed: true,
         notes: "",
@@ -253,27 +255,18 @@ export default function AdminFDForm() {
             />
           </div>
 
-          {/* Auto Renew & Preclosure */}
-          <div className="flex gap-4 items-center sm:col-span-2">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="autoRenew"
-                checked={formData.autoRenew}
-                onChange={handleChange}
-              />
-              <span className="text-sm text-gray-700">Auto Renew</span>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Nominee
             </label>
-
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="preclosureAllowed"
-                checked={formData.preclosureAllowed}
-                onChange={handleChange}
-              />
-              <span className="text-sm text-gray-700">Allow Preclosure</span>
-            </label>
+            <input
+              type="text"
+              name="nominee"
+              value={formData.nominee}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
           </div>
 
           {/* Notes */}

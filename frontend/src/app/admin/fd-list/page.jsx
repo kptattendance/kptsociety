@@ -58,7 +58,7 @@ export default function AdminFDTable() {
           }
         })
       );
-
+      console.log(fdsData);
       setFDs(fdsData);
     } catch (error) {
       toast.error("❌ Failed to load FDs");
@@ -353,6 +353,7 @@ export default function AdminFDTable() {
                 <th className="px-4 py-2 text-left">Maturity Date</th>
                 <th className="px-4 py-2 text-left">Maturity Amount (₹)</th>
 
+                <th className="px-4 py-2 text-left">Nominee</th>
                 <th className="px-4 py-2 text-left">Status</th>
                 <th className="px-4 py-2 text-center">Withdraw</th>
                 <th className="px-4 py-2 text-center">Actions</th>
@@ -497,19 +498,22 @@ export default function AdminFDTable() {
                           ₹{fd.maturityAmount?.toLocaleString() || "-"}
                         </td>
 
-                        {/* Status */}
+                        <td className="px-4 py-2 text-gray-700">
+                          {fd.nominee || "-"}
+                        </td>
+
                         <td className="px-4 py-2">
-                          <input
-                            type="text"
-                            value={editForm.status || fd.status}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                status: e.target.value,
-                              })
-                            }
-                            className="border rounded px-2 py-1 w-20 text-center"
-                          />
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              fd.status === "Active"
+                                ? "bg-green-100 text-green-700"
+                                : fd.status === "Closed"
+                                ? "bg-gray-200 text-gray-600"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {fd.status}
+                          </span>
                         </td>
 
                         {/* Disabled withdraw */}
@@ -588,6 +592,11 @@ export default function AdminFDTable() {
                         <td className="px-4 py-2 font-medium text-green-700">
                           ₹{fd.maturityAmount?.toLocaleString() || "-"}
                         </td>
+
+                        <td className="px-4 py-2 text-gray-700">
+                          {fd.nominee || "-"}
+                        </td>
+
                         <td className="px-4 py-2">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -601,6 +610,7 @@ export default function AdminFDTable() {
                             {fd.status}
                           </span>
                         </td>
+
                         <td className="px-4 py-2 text-center">
                           <button
                             onClick={() => handleWithdrawClick(fd)}
