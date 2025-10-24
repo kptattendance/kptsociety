@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- 🏠 Home Page (This one URL covers all sections like #about, #services, etc.) -->
+  <url>
+    <loc>https://kptsociety.vercel.app/</loc>
+    <lastmod>2025-10-24</lastmod>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 🔐 Login Page -->
+  <url>
+    <loc>https://kptsociety.vercel.app/login</loc>
+    <lastmod>2025-10-24</lastmod>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- 
+  NOTE: 
+  - Private dashboards (/admin-dashboard, /member-dashboard) are excluded.
+  - All '#' links are covered by the main '/' URL.
+  -->
+
+</urlset>
