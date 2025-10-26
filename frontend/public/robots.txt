@@ -1,12 +1,13 @@
-# -------------------------
-# Robots.txt for KPT Co-operative Society
-# -------------------------
+Allow all crawlers by default
 
 User-agent: *
 Allow: /
 
-# Host
-Host: https://kptsociety.vercel.app
+Block private login-protected and dashboard pages
 
-# Sitemap
-Sitemap: https://kptsociety.vercel.app/sitemap.xml
+Disallow: /admin-dashboard
+Disallow: /member-dashboard
+
+Sitemap location (points to the index file)
+
+Sitemap: https://www.google.com/search?q=https://kptsociety.vercel.app/sitemap-index.xml
