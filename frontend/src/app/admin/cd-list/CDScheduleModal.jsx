@@ -4,6 +4,7 @@ import axios from "axios";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
+import LoadOverlay from "../../../components/LoadOverlay";
 
 export default function CDScheduleModal({ cdId, onClose }) {
   const { getToken } = useAuth();
@@ -15,6 +16,8 @@ export default function CDScheduleModal({ cdId, onClose }) {
   const [pageWithdrawals, setPageWithdrawals] = useState(1);
   const [pageDividends, setPageDividends] = useState(1);
   const itemsPerPage = 6;
+  const [processing, setProcessing] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   // Editing states for installment month & date
   const [editingMonthIndex, setEditingMonthIndex] = useState(null);
@@ -38,17 +41,19 @@ export default function CDScheduleModal({ cdId, onClose }) {
       setLoading(false);
     }
   };
-
+  // Inside CDScheduleModal
   useEffect(() => {
-    if (cdId) fetchCD();
+    if (cdId) {
+      fetchCD().then(() => onLoadComplete?.());
+    }
   }, [cdId]);
 
   // Update Installment Paid/Pending
   const updateInstallment = async (installmentNo, status) => {
     try {
+      setProcessing(true); // 🔹 Show overlay
       const token = await getToken();
 
-      // Find the current installment's due date (possibly updated)
       const installment = cd.installments.find(
         (inst) => inst.monthNo === installmentNo
       );
@@ -63,14 +68,16 @@ export default function CDScheduleModal({ cdId, onClose }) {
       );
 
       toast.success(`Installment #${installmentNo} updated successfully`);
-      fetchCD();
+      await fetchCD();
     } catch (err) {
       console.error(err);
       toast.error("Failed to update installment");
+    } finally {
+      setProcessing(false); // 🔹 Hide overlay
     }
   };
 
-  if (!cd) return null;
+  if (!cd) return <div>Loading...</div>; // safety check
 
   // Pagination helpers
   const paginate = (arr, page) => {
@@ -85,12 +92,13 @@ export default function CDScheduleModal({ cdId, onClose }) {
   const dividends = cd.transactions.filter((t) => t.type === "Dividend");
   const totalWithdrawalPages = Math.ceil(withdrawals.length / itemsPerPage);
   const totalDividendPages = Math.ceil(dividends.length / itemsPerPage);
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto border border-gray-200">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+          className="absolute top-3 right-3 cursor-pointer text-gray-500 hover:text-red-500"
         >
           <X size={22} />
         </button>
@@ -124,6 +132,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
             </div>
           </div>
         </div>
+        <LoadOverlay show={processing} />
 
         {/* 🗓️ INSTALLMENT SCHEDULE */}
         <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-xl border border-teal-200 shadow p-4 mb-5">
@@ -157,12 +166,23 @@ export default function CDScheduleModal({ cdId, onClose }) {
                         <td className="px-3 py-2">{globalIndex}</td>
 
                         {/* 🗓️ Editable Month (Full Date) */}
+
                         <td
                           className="p-2 cursor-pointer"
-                          onClick={() => setEditingMonthIndex(idx)}
+                          onClick={() => {
+                            setEditingMonthIndex(idx);
+                            setEditMonth(
+                              new Date(inst.tempDueDate || inst.dueDate)
+                                .toISOString()
+                                .split("T")[0]
+                            );
+                          }}
                         >
                           {editingMonthIndex === idx ? (
                             <input
+                              key={
+                                idx + (inst.tempDueDate || inst.dueDate || "")
+                              } // 👈 fix for reselecting same date
                               type="date"
                               value={
                                 editMonth ||
@@ -174,7 +194,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
                                 const newVal = e.target.value;
                                 setEditMonth(newVal);
                                 const updated = [...cd.installments];
-                                updated[idx].tempDueDate = newVal; // store locally only
+                                updated[idx].tempDueDate = newVal;
                                 setCD({ ...cd, installments: updated });
                               }}
                               onBlur={() => setEditingMonthIndex(null)}
@@ -192,8 +212,8 @@ export default function CDScheduleModal({ cdId, onClose }) {
                                 inst.tempDueDate || inst.dueDate
                               ).toLocaleDateString("en-GB", {
                                 day: "2-digit",
-                                month: "short",
-                                year: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
                               })}
                               {inst.tempDueDate && (
                                 <span className="ml-1 text-xs text-orange-500">
@@ -298,6 +318,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
             <ChevronRight size={18} />
           </button>
         </div>
+        <LoadOverlay show={withdrawing} />
 
         {/* Manual Withdrawal Form */}
         <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 p-4 rounded-lg shadow-md w-fit">
@@ -322,6 +343,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
               }
 
               try {
+                setWithdrawing(true); // 🔹 Show overlay
                 const token = await getToken();
                 await axios.post(
                   `${process.env.NEXT_PUBLIC_API_URL}/api/cd/${cdId}/withdraw`,
@@ -333,21 +355,25 @@ export default function CDScheduleModal({ cdId, onClose }) {
                 e.target.reset();
               } catch (err) {
                 toast.error(err.response?.data?.error || "Withdrawal failed");
+              } finally {
+                setWithdrawing(false); // 🔹 Hide overlay
               }
             }}
             className="flex flex-wrap gap-3 items-end"
           >
             <div>
-              <label className="text-sm text-gray-600 mr-3 ">Amount</label>
+              <label className="text-sm text-gray-600 mr-3">Amount</label>
               <input
                 type="number"
                 name="amount"
                 step="0.01"
                 min="1"
-                className="border rounded px-2 py-1 w-28 focus:ring-2 focus:ring-blue-300 outline-none"
+                onWheel={(e) => e.target.blur()}
+                className="border rounded px-2 py-1 w-28 focus:ring-2 focus:ring-blue-300 outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
               />
             </div>
+
             <div>
               <label className="text-sm text-gray-600 mr-3">Reason</label>
               <input
@@ -357,6 +383,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
                 className="border rounded px-2 py-1 w-40 focus:ring-2 focus:ring-blue-300 outline-none"
               />
             </div>
+
             <div>
               <label className="text-sm text-gray-600 mr-3">Cheque No.</label>
               <input

@@ -180,6 +180,7 @@ export default function AdminRDForm() {
             </label>
             <input
               type="number"
+              onWheel={(e) => e.target.blur()}
               name="initialDeposit"
               value={formData.initialDeposit || ""}
               onChange={handleChange}
@@ -209,6 +210,7 @@ export default function AdminRDForm() {
             </label>
             <input
               type="number"
+              onWheel={(e) => e.target.blur()}
               name="depositAmount"
               value={formData.depositAmount}
               onChange={handleChange}
@@ -224,6 +226,7 @@ export default function AdminRDForm() {
             </label>
             <input
               type="number"
+              onWheel={(e) => e.target.blur()}
               name="interestRate"
               step="0.1"
               value={formData.interestRate}
@@ -241,6 +244,7 @@ export default function AdminRDForm() {
             </label>
             <input
               type="number"
+              onWheel={(e) => e.target.blur()}
               name="tenureMonths"
               value={formData.tenureMonths}
               onChange={handleChange}

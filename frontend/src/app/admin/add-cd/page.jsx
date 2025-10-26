@@ -185,6 +185,7 @@ export default function AdminCDForm() {
               min="0"
               step="1"
               required
+              onWheel={(e) => e.target.blur()}
               placeholder="Enter initial deposit amount"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm"
             />
@@ -212,6 +213,7 @@ export default function AdminCDForm() {
             </label>
             <input
               type="number"
+              onWheel={(e) => e.target.blur()}
               name="monthlyDeposit"
               value={formData.monthlyDeposit}
               onChange={handleChange}

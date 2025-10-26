@@ -245,6 +245,7 @@ export default function AdminShareForm() {
             </label>
             <input
               type="number"
+              onWheel={(e) => e.target.blur()}
               value={totalPayable}
               onChange={handleAmountChange}
               placeholder="Enter total amount paid"

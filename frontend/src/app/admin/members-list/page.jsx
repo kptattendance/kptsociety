@@ -278,7 +278,7 @@ export default function MembersList() {
 
           <button
             onClick={handleDownloadExcel}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow transition"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 cursor-pointer rounded-lg shadow transition"
           >
             📥 Download Excel
           </button>
@@ -373,7 +373,7 @@ export default function MembersList() {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
           >
             Prev
           </button>
@@ -382,7 +382,7 @@ export default function MembersList() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${
+              className={`px-3 py-1 cursor-pointer rounded ${
                 currentPage === i + 1
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
@@ -395,7 +395,7 @@ export default function MembersList() {
           <button
             disabled={currentPage === totalPages || totalPages === 0}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
           >
             Next
           </button>

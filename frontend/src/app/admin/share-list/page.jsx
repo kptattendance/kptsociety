@@ -272,7 +272,7 @@ export default function AdminShareTable() {
           </div>
           <button
             onClick={handleDownloadExcel}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
+            className="flex cursor-pointer items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
           >
             <FileDown size={18} /> Download Excel
           </button>
@@ -486,13 +486,13 @@ export default function AdminShareTable() {
                       <>
                         <button
                           onClick={() => handleSave(share._id)}
-                          className="text-green-600 hover:text-green-800"
+                          className="text-green-600 cursor-pointer hover:text-green-800"
                         >
                           <Check size={16} />
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-red-500 cursor-pointer hover:text-red-700"
                         >
                           <X size={16} />
                         </button>
@@ -501,27 +501,27 @@ export default function AdminShareTable() {
                       <>
                         <button
                           onClick={() => handleEditClick(share)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 cursor-pointer hover:text-blue-800"
                         >
                           <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(share._id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 cursor-pointer hover:text-red-800"
                         >
                           <Trash2 size={16} />
                         </button>
                         {share.status !== "Closed" && (
                           <button
                             onClick={() => handleClose(share._id)}
-                            className="text-gray-600 hover:text-gray-800"
+                            className="text-gray-600 cursor-pointer hover:text-gray-800"
                           >
                             <Lock size={16} />
                           </button>
                         )}
                         <button
                           onClick={() => setSelectedShare(share)}
-                          className="text-indigo-600 hover:text-indigo-800"
+                          className="text-indigo-600 cursor-pointer hover:text-indigo-800"
                         >
                           <Eye size={16} />
                         </button>
@@ -543,7 +543,7 @@ export default function AdminShareTable() {
           )}
 
           {/* Pagination */}
-          {sortedFiltered.length > rowsPerPage && (
+          {/* {sortedFiltered.length > rowsPerPage && (
             <div className="flex justify-between items-center mt-4 text-sm">
               <p className="text-gray-600">
                 Page {currentPage} of {totalPages}
@@ -552,7 +552,7 @@ export default function AdminShareTable() {
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  className={`px-3 py-1 rounded-lg ${
+                  className={`px-3 py-1 cursor-pointer rounded-lg ${
                     currentPage === 1
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "bg-indigo-500 text-white hover:bg-indigo-600"
@@ -563,7 +563,7 @@ export default function AdminShareTable() {
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className={`px-3 py-1 rounded-lg ${
+                  className={`px-3 py-1 cursor-pointer rounded-lg ${
                     currentPage === totalPages
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "bg-indigo-500 text-white hover:bg-indigo-600"
@@ -573,7 +573,39 @@ export default function AdminShareTable() {
                 </button>
               </div>
             </div>
-          )}
+          )} */}
+
+          <div className="flex justify-center items-center mt-4 gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className="px-3 cursor-pointer py-1 bg-gray-200 rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 cursor-pointer rounded ${
+                  currentPage === i + 1
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

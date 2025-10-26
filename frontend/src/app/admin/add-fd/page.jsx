@@ -202,6 +202,7 @@ export default function AdminFDForm() {
               value={formData.principal}
               onChange={handleChange}
               required
+              onWheel={(e) => e.target.blur()}
               placeholder="Enter amount"
               className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -219,6 +220,7 @@ export default function AdminFDForm() {
               value={formData.interestRate}
               onChange={handleChange}
               required
+              onWheel={(e) => e.target.blur()}
               placeholder="e.g., 7.5"
               className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -235,6 +237,7 @@ export default function AdminFDForm() {
               value={formData.tenureMonths}
               onChange={handleChange}
               required
+              onWheel={(e) => e.target.blur()}
               placeholder="e.g., 12 for 1 year"
               className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />

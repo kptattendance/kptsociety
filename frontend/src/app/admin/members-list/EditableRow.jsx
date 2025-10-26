@@ -247,18 +247,18 @@ export default function EditableRow({
       <td className="px-3 py-2 flex gap-2 justify-center">
         <button
           onClick={() => handleUpdate(member._id)}
-          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-3 py-1 cursor-pointer bg-green-600 text-white rounded hover:bg-green-700"
         >
-          <Save className="w-4 h-4 inline-block" /> Save
+          <Save className="w-4 h-4 inline-block cursor-pointer" /> Save
         </button>
         <button
           onClick={() => {
             setEditingMemberId(null);
             setPreview(null);
           }}
-          className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
+          className="px-3 py-1 cursor-pointer bg-gray-600 text-white rounded hover:bg-gray-700"
         >
-          <X className="w-4 h-4 inline-block" /> Cancel
+          <X className="w-4 h-4 inline-block cursor-pointer" /> Cancel
         </button>
       </td>
     </>

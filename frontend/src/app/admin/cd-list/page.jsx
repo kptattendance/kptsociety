@@ -32,6 +32,7 @@ export default function AdminCDList() {
     monthlyDeposit: "",
     status: "",
   });
+  const [scheduleLoading, setScheduleLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 7;
@@ -234,7 +235,8 @@ export default function AdminCDList() {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-red-50 to-pink-100 p-6">
-      <LoadOverlay show={loading} message={loadingMessage} />
+      <LoadOverlay show={loading} message={loadingMessage} />{" "}
+      <LoadOverlay show={scheduleLoading} message="Loading Schedule..." />
       <div className="bg-white shadow-xl rounded-2xl p-6">
         <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">
           💰 CD Accounts
@@ -260,7 +262,7 @@ export default function AdminCDList() {
           </div>
           <button
             onClick={handleDownloadExcel}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+            className="bg-green-600 cursor-pointer hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
           >
             📥 Download Excel
           </button>
@@ -428,13 +430,13 @@ export default function AdminCDList() {
                       <>
                         <button
                           onClick={() => handleSave(cd._id)}
-                          className="text-green-600 hover:text-green-800"
+                          className="text-green-600 cursor-pointer hover:text-green-800"
                         >
                           <Check size={16} />
                         </button>
                         <button
                           onClick={handleCancel}
-                          className="text-gray-600 hover:text-gray-800"
+                          className="text-gray-600 cursor-pointer hover:text-gray-800"
                         >
                           <X size={16} />
                         </button>
@@ -443,20 +445,20 @@ export default function AdminCDList() {
                       <>
                         <button
                           onClick={() => handleEdit(cd)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 cursor-pointer hover:text-blue-800"
                         >
                           <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(cd._id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 cursor-pointer hover:text-red-800"
                         >
                           <Trash2 size={16} />
                         </button>
                         {cd.status === "Active" && (
                           <button
                             onClick={() => handleClose(cd._id)}
-                            className="text-gray-600 hover:text-gray-800"
+                            className="text-gray-600 cursor-pointer hover:text-gray-800"
                           >
                             <Lock size={16} />
                           </button>
@@ -467,54 +469,56 @@ export default function AdminCDList() {
 
                   <td className="px-4 py-2 text-center">
                     <button
-                      onClick={() => setSelectedCDId(cd._id)}
+                      onClick={() => setSelectedCDId(cd._id)} // just set the CD id to open modal
                       className="text-teal-500 cursor-pointer hover:text-green-700 font-medium"
                     >
                       Schedule
-                    </button>
+                    </button>{" "}
+                    {selectedCDId === cd._id && (
+                      <CDScheduleModal
+                        cdId={selectedCDId}
+                        onClose={handleModalClose}
+                        onLoadComplete={() => setScheduleLoading(false)}
+                      />
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-
-          {selectedCDId && (
-            <CDScheduleModal cdId={selectedCDId} onClose={handleModalClose} />
-          )}
         </div>
 
-        {/* ✅ Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center mt-6 space-x-2">
+        <div className="flex justify-center items-center mt-4 gap-2">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {[...Array(totalPages)].map((_, i) => (
             <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-md border text-sm bg-white hover:bg-teal-50 disabled:opacity-40"
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 cursor-pointer rounded ${
+                currentPage === i + 1
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
+              }`}
             >
-              Prev
+              {i + 1}
             </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-md border text-sm ${
-                  currentPage === i + 1
-                    ? "bg-teal-500 text-white"
-                    : "bg-white hover:bg-teal-50"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-md border text-sm bg-white hover:bg-teal-50 disabled:opacity-40"
-            >
-              Next
-            </button>
-          </div>
-        )}
+          ))}
+
+          <button
+            disabled={currentPage === totalPages || totalPages === 0}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

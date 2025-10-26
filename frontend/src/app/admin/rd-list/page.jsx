@@ -255,7 +255,7 @@ export default function AdminRDTable() {
           />
           <button
             onClick={handleDownloadExcel}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+            className="bg-green-600 cursor-pointer hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
           >
             📥 Download Excel
           </button>
@@ -491,13 +491,13 @@ export default function AdminRDTable() {
                         <>
                           <button
                             onClick={() => handleSave(rd._id)}
-                            className="text-green-600 hover:text-green-800"
+                            className="text-green-600 cursor-pointer hover:text-green-800"
                           >
                             <Check size={16} />
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 cursor-pointer hover:text-red-700"
                           >
                             <X size={16} />
                           </button>
@@ -506,20 +506,20 @@ export default function AdminRDTable() {
                         <>
                           <button
                             onClick={() => handleEditClick(rd)}
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-blue-600 cursor-pointer hover:text-blue-800"
                           >
                             <Pencil size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(rd._id)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-600 cursor-pointer hover:text-red-800"
                           >
                             <Trash2 size={16} />
                           </button>
                           {rd.status === "Active" && (
                             <button
                               onClick={() => handleClose(rd._id)}
-                              className="text-gray-600 hover:text-gray-800"
+                              className="text-gray-600 cursor-pointer hover:text-gray-800"
                             >
                               <Lock size={16} />
                             </button>
@@ -531,7 +531,7 @@ export default function AdminRDTable() {
                     <td className="text-center">
                       <button
                         onClick={() => setSelectedRDId(rd._id)}
-                        className="text-teal-500 cursor-pointer hover:text-green-800"
+                        className="text-teal-800 cursor-pointer hover:text-green-500"
                       >
                         Schedule
                       </button>
@@ -542,38 +542,37 @@ export default function AdminRDTable() {
             </tbody>
           </table>
 
-          {/* Pagination */}
-          {filteredRDs.length > rowsPerPage && (
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <p className="text-gray-600">
-                Page {currentPage} of {totalPages}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                  className={`px-3 py-1 rounded-lg ${
-                    currentPage === 1
-                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      : "bg-teal-500 text-white hover:bg-teal-600"
-                  }`}
-                >
-                  Previous
-                </button>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  className={`px-3 py-1 rounded-lg ${
-                    currentPage === totalPages
-                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      : "bg-teal-500 text-white hover:bg-teal-600"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="flex justify-center items-center mt-4 gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 cursor-pointer rounded ${
+                  currentPage === i + 1
+                    ? "bg-teal-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
 
           {selectedRDId && (
             <RDScheduleModal

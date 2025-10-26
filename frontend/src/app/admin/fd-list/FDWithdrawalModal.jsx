@@ -92,61 +92,84 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
       <LoadOverlay show={loading} message="Processing..." />
-      <div className="relative rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto w-[90%] md:w-[60%] bg-gray-50 p-6">
-        {/* Close button */}
+
+      <div className="relative w-[92%] md:w-[75%] max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-br from-white via-[#faf8f5] to-[#f7f4ef] shadow-[0_0_60px_-15px_rgba(0,0,0,0.2)] border border-[#f1e9dd] p-8 text-gray-800">
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          className="absolute top-4 right-4 cursor-pointer text-gray-400 hover:text-red-500 transition"
         >
-          <X size={24} />
+          <X size={26} />
         </button>
 
-        <h2 className="text-lg font-semibold text-indigo-700 mb-4">
-          💸 FD Withdrawal - {fd?.memberId?.name}
+        <h2 className="text-2xl font-semibold mb-6 text-center bg-gradient-to-r from-[#c8a75e] via-[#d4af37] to-[#b8860b] bg-clip-text text-transparent drop-shadow-sm">
+          💸 FD Withdrawal — {fd?.memberId?.name}
         </h2>
 
         {/* FD Summary */}
-        <div className="mb-4 p-4 rounded-lg shadow-sm text-white bg-gradient-to-r from-green-400 to-blue-500">
-          <p>💰 Principal Remaining: ₹{remainingPrincipal?.toLocaleString()}</p>
-          <p>
-            📈 Updated Maturity Amount: ₹
-            {Number(maturityAmount).toLocaleString()}
+        <div className="mb-6 rounded-2xl p-5 bg-gradient-to-r from-[#fdf7ef] to-[#fff5dc] shadow-inner border border-[#f0e3c2]">
+          <p className="text-base mb-2">
+            💰{" "}
+            <span className="font-medium text-[#b8860b]">
+              Principal Remaining:
+            </span>{" "}
+            ₹{remainingPrincipal?.toLocaleString()}
+          </p>
+          <p className="text-base">
+            📈{" "}
+            <span className="font-medium text-[#b8860b]">
+              Updated Maturity Amount:
+            </span>{" "}
+            ₹{Number(maturityAmount).toLocaleString()}
           </p>
         </div>
 
-        {/* Past withdrawals */}
-        <div className="mb-4 p-4 rounded-lg shadow-sm text-white bg-gradient-to-r from-pink-400 to-purple-500">
-          <h3 className="font-medium mb-2">Withdrawal History</h3>
+        {/* Withdrawal History */}
+        <div className="mb-6 rounded-2xl p-5 bg-gradient-to-r from-[#f8f5ee] via-[#fdf8f2] to-[#fffefb] shadow-inner border border-[#eee2c5]">
+          <h3 className="font-semibold text-lg mb-3 text-[#b8860b]">
+            Withdrawal History
+          </h3>
           {withdrawals.length === 0 ? (
-            <p className="text-sm italic">No withdrawals yet.</p>
+            <p className="italic text-sm text-gray-500">No withdrawals yet.</p>
           ) : (
-            <div className="overflow-x-auto max-h-52">
-              <table className="min-w-full divide-y divide-gray-200 text-sm bg-white text-black rounded">
-                <thead className="bg-gray-100 sticky top-0">
+            <div className="overflow-x-auto max-h-56">
+              <table className="min-w-full text-sm text-gray-700 rounded-xl">
+                <thead className="bg-gradient-to-r from-[#fff3d9] to-[#fffaed] sticky top-0 border-b border-[#e9d6a4]">
                   <tr>
-                    <th className="px-2 py-1 text-left">Sl No</th>
-                    <th className="px-2 py-1 text-left">Amount (₹)</th>
-                    <th className="px-2 py-1 text-left">Cheque No</th>
-                    <th className="px-2 py-1 text-left">Cheque Date</th>
-                    <th className="px-2 py-1 text-left">Reason</th>
+                    <th className="px-3 py-2 text-left font-semibold">Sl No</th>
+                    <th className="px-3 py-2 text-left font-semibold">
+                      Amount (₹)
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold">
+                      Cheque No
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold">
+                      Cheque Date
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold">
+                      Reason
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {withdrawals.map((w, i) => (
-                    <tr key={i} className="hover:bg-gray-100">
-                      <td className="px-2 py-1">{i + 1}</td>
-                      <td className="px-2 py-1">
+                    <tr
+                      key={i}
+                      className="hover:bg-[#fffaf0] transition-colors duration-150"
+                    >
+                      <td className="px-3 py-2">{i + 1}</td>
+                      <td className="px-3 py-2">
                         ₹{w.amount.toLocaleString()}
                       </td>
-                      <td className="px-2 py-1">{w.chequeNumber || "-"}</td>
-                      <td className="px-2 py-1">
+                      <td className="px-3 py-2">{w.chequeNumber || "-"}</td>
+                      <td className="px-3 py-2">
                         {w.chequeDate
                           ? new Date(w.chequeDate).toLocaleDateString("en-GB")
                           : "-"}
                       </td>
-                      <td className="px-2 py-1">{w.reason || "-"}</td>
+                      <td className="px-3 py-2">{w.reason || "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -155,9 +178,9 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
           )}
         </div>
 
-        {/* New withdrawal form */}
-        <div className="p-4 rounded-lg shadow-sm bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
-          <form onSubmit={handleWithdrawSubmit} className="space-y-3">
+        {/* New Withdrawal Form */}
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-[#fff6e5] via-[#fff9ef] to-[#fffdf7] border border-[#f0e3c2] shadow-inner">
+          <form onSubmit={handleWithdrawSubmit} className="space-y-4">
             <input
               type="number"
               placeholder="Withdrawal Amount (₹)"
@@ -165,9 +188,12 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
               onChange={(e) =>
                 setWithdrawData({ ...withdrawData, amount: e.target.value })
               }
+              onWheel={(e) => e.target.blur()} // 👈 Prevent scroll change
               required
-              className="border w-full rounded-lg px-3 py-2 text-black"
+              className="w-full px-4 py-2 rounded-lg text-gray-800 placeholder-gray-400 bg-white border border-[#f0e3c2] focus:ring-2 focus:ring-[#d4af37]/50 outline-none 
+             appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
+
             <input
               type="text"
               placeholder="Cheque Number"
@@ -178,7 +204,7 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
                   chequeNumber: e.target.value,
                 })
               }
-              className="border w-full rounded-lg px-3 py-2 text-black"
+              className="w-full px-4 py-2 rounded-lg text-gray-800 placeholder-gray-400 bg-white border border-[#f0e3c2] focus:ring-2 focus:ring-[#d4af37]/50 outline-none"
             />
             <input
               type="date"
@@ -187,7 +213,7 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
               onChange={(e) =>
                 setWithdrawData({ ...withdrawData, chequeDate: e.target.value })
               }
-              className="border w-full rounded-lg px-3 py-2 text-black"
+              className="w-full px-4 py-2 rounded-lg text-gray-800 placeholder-gray-400 bg-white border border-[#f0e3c2] focus:ring-2 focus:ring-[#d4af37]/50 outline-none"
             />
             <textarea
               placeholder="Reason (optional)"
@@ -195,19 +221,19 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
               onChange={(e) =>
                 setWithdrawData({ ...withdrawData, reason: e.target.value })
               }
-              className="border w-full rounded-lg px-3 py-2 text-black"
+              className="w-full px-4 py-2 rounded-lg text-gray-800 placeholder-gray-400 bg-white border border-[#f0e3c2] focus:ring-2 focus:ring-[#d4af37]/50 outline-none"
             />
-            <div className="flex justify-between mt-4">
+            <div className="flex justify-between pt-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-800 text-white"
+                className="px-5 py-2 rounded-lg bg-[#f8f3e4] hover:bg-[#f1e8cf] transition font-medium text-gray-700 border cursor-pointer border-[#e8d6a5]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 text-white"
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#caa434] hover:from-[#e0b949] cursor-pointer hover:to-[#d4af37] transition font-semibold text-white shadow-md"
               >
                 Withdraw
               </button>

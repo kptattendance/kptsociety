@@ -266,7 +266,7 @@ export default function AdminLoanList() {
           />
           <button
             onClick={handleDownloadExcel}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow cursor-pointer"
           >
             📥 Download Excel
           </button>
@@ -495,13 +495,13 @@ export default function AdminLoanList() {
                         <>
                           <button
                             onClick={() => submitEdit(loan._id)}
-                            className="p-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200"
+                            className="p-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 cursor-pointer"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setEditingLoanId(null)}
-                            className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                            className="p-2 bg-gray-200 cursor-pointer text-gray-700 rounded-md hover:bg-gray-300"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -510,13 +510,13 @@ export default function AdminLoanList() {
                         <>
                           <button
                             onClick={() => startEditing(loan)}
-                            className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
+                            className="p-2 rounded-full cursor-pointer bg-blue-100 text-blue-600 hover:bg-blue-200"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(loan._id)}
-                            className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                            className="p-2 rounded-full cursor-pointer bg-red-100 text-red-600 hover:bg-red-200"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -532,7 +532,7 @@ export default function AdminLoanList() {
                             selectedLoanId === loan._id ? null : loan._id
                           )
                         }
-                        className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm shadow"
+                        className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm shadow cursor-pointer"
                       >
                         View
                       </button>
@@ -550,22 +550,35 @@ export default function AdminLoanList() {
           </table>
         </div>
 
-        {/* ✅ Pagination */}
-        <div className="flex justify-between items-center mt-6 text-sm">
+        
+
+        <div className="flex justify-center items-center mt-4 gap-2">
           <button
-            onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-300"
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
           >
             ← Prev
           </button>
-          <span className="text-gray-700">
-            Page {currentPage} of {totalPages}
-          </span>
+
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 cursor-pointer rounded ${
+                currentPage === i + 1
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
           <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-300"
+            disabled={currentPage === totalPages || totalPages === 0}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
           >
             Next →
           </button>

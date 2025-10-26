@@ -105,7 +105,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 text-gray-600 hover:text-red-500"
+            className="absolute top-3 right-3 cursor-pointer text-gray-600 hover:text-red-500"
           >
             <X size={22} />
           </button>
@@ -238,6 +238,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                 placeholder="Enter amount"
                 value={prepayAmount}
                 onChange={(e) => setPrepayAmount(e.target.value)}
+                onWheel={(e) => e.target.blur()}
                 className="border border-amber-500  px-3 py-2 rounded flex-1"
               />
               <select

@@ -274,7 +274,7 @@ export default function AdminFDTable() {
           />
           <button
             onClick={handleDownloadExcel}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow cursor-pointer"
           >
             📥 Download Excel
           </button>
@@ -525,13 +525,13 @@ export default function AdminFDTable() {
                         <td className="px-4 py-2 text-center flex space-x-2 justify-center">
                           <button
                             onClick={() => handleSave(fd._id)}
-                            className="text-green-600 hover:text-green-800"
+                            className="text-green-600 cursor-pointer hover:text-green-800"
                           >
                             <Check size={18} />
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-600 cursor-pointer hover:text-red-800"
                           >
                             <X size={18} />
                           </button>
@@ -614,7 +614,7 @@ export default function AdminFDTable() {
                         <td className="px-4 py-2 text-center">
                           <button
                             onClick={() => handleWithdrawClick(fd)}
-                            className="text-indigo-600 hover:text-indigo-800 font-medium"
+                            className="text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
                           >
                             <Wallet size={18} className="inline mr-1" />
                             Withdraw
@@ -623,20 +623,20 @@ export default function AdminFDTable() {
                         <td className="px-4 py-2 text-center flex space-x-2 justify-center">
                           <button
                             onClick={() => handleEditClick(fd)}
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-blue-600 hover:text-blue-800 cursor-pointer"
                           >
                             <Pencil size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(fd._id)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-600 hover:text-red-800 cursor-pointer"
                           >
                             <Trash2 size={18} />
                           </button>
                           {fd.status === "Active" && (
                             <button
                               onClick={() => handleClose(fd._id)}
-                              className="text-gray-600 hover:text-gray-800"
+                              className="text-gray-600 hover:text-gray-800 cursor-pointer"
                             >
                               <Lock size={18} />
                             </button>
@@ -652,7 +652,7 @@ export default function AdminFDTable() {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {/* {totalPages > 1 && (
           <div className="flex justify-center mt-4 space-x-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
@@ -678,7 +678,38 @@ export default function AdminFDTable() {
               Next
             </button>
           </div>
-        )}
+        )} */}
+        <div className="flex justify-center items-center mt-4 gap-2">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 cursor-pointer rounded ${
+                currentPage === i + 1
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            disabled={currentPage === totalPages || totalPages === 0}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {/* Withdrawal Modal */}

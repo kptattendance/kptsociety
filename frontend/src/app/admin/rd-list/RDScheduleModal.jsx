@@ -79,7 +79,7 @@ export default function RDScheduleModal({ rdId, onClose }) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto border border-gray-200">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+          className="absolute top-3 right-3  text-gray-500 cursor-pointer hover:text-red-500"
         >
           <X size={22} />
         </button>
@@ -271,8 +271,8 @@ export default function RDScheduleModal({ rdId, onClose }) {
               <input
                 type="number"
                 name="amount"
-                step="0.01"
                 min="1"
+                onWheel={(e) => e.target.blur()}
                 className="border rounded px-2 py-1 w-28 focus:ring-2 focus:ring-blue-300 outline-none"
                 required
               />
@@ -305,7 +305,7 @@ export default function RDScheduleModal({ rdId, onClose }) {
             </div>
             <button
               type="submit"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 rounded shadow hover:from-blue-700 hover:to-indigo-700"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 rounded shadow hover:from-blue-700 cursor-pointer hover:to-indigo-700"
             >
               Withdraw
             </button>

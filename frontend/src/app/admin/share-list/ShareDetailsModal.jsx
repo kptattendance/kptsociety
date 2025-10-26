@@ -75,7 +75,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute cursor-pointer top-4 right-4 text-gray-600 hover:text-red-600"
+          className="absolute cursor-pointer top-3 right-3 text-gray-600 hover:text-red-600"
         >
           <X size={22} />
         </button>
@@ -209,7 +209,8 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
               name="sharesReturned"
               value={withdrawalForm.sharesReturned}
               onChange={handleWithdrawalChange}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400"
+              onWheel={(e) => e.target.blur()}
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               placeholder="Shares Returned"
             />
             <input
@@ -217,7 +218,8 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
               name="amountPaidOut"
               value={withdrawalForm.amountPaidOut}
               onChange={handleWithdrawalChange}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400"
+              onWheel={(e) => e.target.blur()}
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               placeholder="Amount Paid"
             />
             <input

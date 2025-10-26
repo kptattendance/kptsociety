@@ -194,6 +194,7 @@ export default function AdminLoanApplicationForm() {
           <input
             type="number"
             name="loanAmount"
+            onWheel={(e) => e.target.blur()}
             value={form.loanAmount}
             onChange={handleChange}
             placeholder="Enter loan amount"
@@ -211,6 +212,7 @@ export default function AdminLoanApplicationForm() {
             type="number"
             name="interestRate"
             value={form.interestRate}
+            onWheel={(e) => e.target.blur()}
             onChange={handleChange}
             placeholder="Enter interest rate"
             className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
@@ -225,6 +227,7 @@ export default function AdminLoanApplicationForm() {
           </label>
           <input
             type="number"
+            onWheel={(e) => e.target.blur()}
             name="tenure"
             value={form.tenure}
             onChange={handleChange}
@@ -311,6 +314,7 @@ export default function AdminLoanApplicationForm() {
           <label className="mb-1 font-medium text-gray-700">Basic Salary</label>
           <input
             type="number"
+            onWheel={(e) => e.target.blur()}
             name="basicSalary"
             value={form.basicSalary}
             onChange={handleChange}
@@ -324,6 +328,7 @@ export default function AdminLoanApplicationForm() {
           <label className="mb-1 font-medium text-gray-700">Gross Salary</label>
           <input
             type="number"
+            onWheel={(e) => e.target.blur()}
             name="grossSalary"
             value={form.grossSalary}
             onChange={handleChange}
