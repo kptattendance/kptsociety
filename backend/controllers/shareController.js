@@ -290,3 +290,72 @@ export const deleteShareAccount = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// ------------------- Update Purchase Entry -------------------
+export const updatePurchaseEntry = async (req, res) => {
+  try {
+    const { shareId, purchaseIndex } = req.params;
+    const updates = req.body;
+
+    const share = await ShareAccount.findById(shareId);
+    if (!share)
+      return res.status(404).json({ error: "Share account not found" });
+
+    if (!share.purchaseHistory[purchaseIndex])
+      return res.status(404).json({ error: "Purchase entry not found" });
+
+    Object.assign(share.purchaseHistory[purchaseIndex], updates);
+
+    // Optionally, recalc totals if sharesBought or amountPaid changed
+    share.totalSharesPurchased = share.purchaseHistory.reduce(
+      (sum, p) => sum + (p.sharesBought || 0),
+      0
+    );
+    share.totalAmount = share.purchaseHistory.reduce(
+      (sum, p) => sum + (p.amountPaid || 0),
+      0
+    );
+    share.currentSharesBalance = share.totalSharesPurchased;
+    share.currentAmountBalance = share.totalAmount;
+
+    await share.save();
+    res.json({ message: "Purchase entry updated successfully", share });
+  } catch (err) {
+    console.error("updatePurchaseEntry error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ------------------- Delete Purchase Entry -------------------
+export const deletePurchaseEntry = async (req, res) => {
+  try {
+    const { shareId, purchaseIndex } = req.params;
+
+    const share = await ShareAccount.findById(shareId);
+    if (!share)
+      return res.status(404).json({ error: "Share account not found" });
+
+    if (!share.purchaseHistory[purchaseIndex])
+      return res.status(404).json({ error: "Purchase entry not found" });
+
+    share.purchaseHistory.splice(purchaseIndex, 1);
+
+    // Recalculate totals
+    share.totalSharesPurchased = share.purchaseHistory.reduce(
+      (sum, p) => sum + (p.sharesBought || 0),
+      0
+    );
+    share.totalAmount = share.purchaseHistory.reduce(
+      (sum, p) => sum + (p.amountPaid || 0),
+      0
+    );
+    share.currentSharesBalance = share.totalSharesPurchased;
+    share.currentAmountBalance = share.totalAmount;
+
+    await share.save();
+    res.json({ message: "Purchase entry deleted successfully", share });
+  } catch (err) {
+    console.error("deletePurchaseEntry error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

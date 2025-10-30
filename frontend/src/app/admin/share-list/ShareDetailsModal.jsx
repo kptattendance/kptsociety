@@ -4,6 +4,7 @@ import { X, Plus } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default function ShareDetailsModal({ share, onClose, refreshShares }) {
   const { getToken } = useAuth();
@@ -16,10 +17,15 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
     notes: "",
   });
   const [saving, setSaving] = useState(false);
-
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editData, setEditData] = useState({});
   // 🟢 Local state for updated withdrawals
   const [localWithdrawals, setLocalWithdrawals] = useState(
     share.withdrawalHistory || []
+  );
+  // Add this at the top
+  const [localPurchases, setLocalPurchases] = useState(
+    share.purchaseHistory || []
   );
 
   if (!share) return null;
@@ -66,6 +72,59 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
       toast.error("Failed to add withdrawal");
     } finally {
       setSaving(false);
+    }
+  };
+  const handleEditClick = (p, index) => {
+    setEditingIndex(index);
+    setEditData(p);
+  };
+
+  const handleChange = (e) => {
+    setEditData({ ...editData, [e.target.name]: e.target.value });
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const token = await getToken();
+
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/share/${share._id}/purchase/${editingIndex}`,
+        editData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Purchase updated");
+
+      // Update local state immediately
+      const updated = [...localPurchases];
+      updated[editingIndex] = { ...editData };
+      setLocalPurchases(updated);
+
+      setEditingIndex(null);
+      refreshShares(); // optional — keeps backend in sync
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Update failed");
+    }
+  };
+
+  const handleDelete = async (index) => {
+    if (!window.confirm("Delete this purchase record?")) return;
+    try {
+      const token = await getToken();
+
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/share/${share._id}/purchase/${index}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Purchase deleted");
+
+      // Update local list immediately
+      setLocalPurchases((prev) => prev.filter((_, i) => i !== index));
+
+      refreshShares(); // optional — to sync parent data
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Delete failed");
     }
   };
 
@@ -124,27 +183,116 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
             <table className="min-w-full divide-y divide-gray-300 text-sm">
               <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
                 <tr>
-                  <th className="px-3 py-2 text-left">Purchase Date</th>
-                  <th className="px-3 py-2 text-left">Shares Bought</th>
-                  <th className="px-3 py-2 text-left">Amount (₹)</th>
-                  <th className="px-3 py-2 text-left">Payment Mode</th>
-                  <th className="px-3 py-2 text-left">Reference</th>
+                  <th className="px-3 py-2 text-left">Date</th>
+                  <th className="px-3 py-2 text-left">Shares</th>
+                  <th className="px-3 py-2 text-left">Amount</th>
+                  <th className="px-3 py-2 text-left">Mode</th>
+                  <th className="px-3 py-2 text-left">Ref</th>
                   <th className="px-3 py-2 text-left">Notes</th>
+                  <th className="px-3 py-2 text-left">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {share.purchaseHistory.map((p, i) => (
+                {localPurchases.map((p, i) => (
                   <tr key={i} className="hover:bg-indigo-50 transition-colors">
-                    <td className="px-3 py-2">
-                      {p.purchaseDate
-                        ? new Date(p.purchaseDate).toLocaleDateString("en-GB")
-                        : "-"}
-                    </td>
-                    <td className="px-3 py-2">{p.sharesBought}</td>
-                    <td className="px-3 py-2">₹{p.amountPaid}</td>
-                    <td className="px-3 py-2">{p.paymentMode}</td>
-                    <td className="px-3 py-2">{p.reference || "-"}</td>
-                    <td className="px-3 py-2">{p.notes || "-"}</td>
+                    {editingIndex === i ? (
+                      <>
+                        <td className="px-3 py-2">
+                          <input
+                            type="date"
+                            name="purchaseDate"
+                            value={editData.purchaseDate?.substring(0, 10)}
+                            onChange={handleChange}
+                            className="border rounded px-1"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            name="sharesBought"
+                            value={editData.sharesBought}
+                            onChange={handleChange}
+                            className="border rounded px-1 w-20"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            name="amountPaid"
+                            value={editData.amountPaid}
+                            onChange={handleChange}
+                            className="border rounded px-1 w-24"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            name="paymentMode"
+                            value={editData.paymentMode}
+                            onChange={handleChange}
+                            className="border rounded px-1"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            name="reference"
+                            value={editData.reference || ""}
+                            onChange={handleChange}
+                            className="border rounded px-1"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            name="notes"
+                            value={editData.notes || ""}
+                            onChange={handleChange}
+                            className="border rounded px-1"
+                          />
+                        </td>
+                        <td className="px-3 py-2 flex gap-2">
+                          <button
+                            onClick={handleUpdate}
+                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingIndex(null)}
+                            className="px-2 py-1 bg-gray-400 text-white rounded text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-3 py-2">
+                          {p.purchaseDate
+                            ? new Date(p.purchaseDate).toLocaleDateString(
+                                "en-GB"
+                              )
+                            : "-"}
+                        </td>
+                        <td className="px-3 py-2">{p.sharesBought}</td>
+                        <td className="px-3 py-2">₹{p.amountPaid}</td>
+                        <td className="px-3 py-2">{p.paymentMode}</td>
+                        <td className="px-3 py-2">{p.reference || "-"}</td>
+                        <td className="px-3 py-2">{p.notes || "-"}</td>
+                        <td className="px-3 py-2 flex gap-2">
+                          <button
+                            onClick={() => handleEditClick(p, i)}
+                            className="text-indigo-600 hover:text-indigo-800"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(i)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
