@@ -52,6 +52,6 @@ router.get(
 // ✅ Get a single FD by ID
 router.get("/:fdId", requireAuthWithRole(["admin", "member"]), getFDById);
 
-router.post("/:fdId/withdraw", addFDWithdrawal);
+router.post("/:fdId/withdraw", requireAuthWithRole(["admin"]), addFDWithdrawal);
 router.get("/:fdId/withdrawals", getFDWithdrawals);
 export default router;

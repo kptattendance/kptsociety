@@ -218,30 +218,18 @@ export const addFDWithdrawal = async (req, res) => {
     const { fdId } = req.params;
     const { amount, reason, chequeNumber, chequeDate, paymentMode } = req.body;
 
+    console.log("Processing FD withdrawal...");
+
     const fd = await FD.findById(fdId);
     if (!fd) return res.status(404).json({ error: "FD not found" });
+
     if (fd.status !== "Active")
       return res.status(400).json({ error: "FD is not active" });
 
     if (amount <= 0)
       return res.status(400).json({ error: "Invalid withdrawal amount" });
 
-    const remainingPrincipal = fd.principal - amount;
-    if (remainingPrincipal < 0)
-      return res
-        .status(400)
-        .json({ error: "Withdrawal amount exceeds remaining principal" });
-
-    // ✅ Update principal
-    fd.principal = remainingPrincipal;
-
-    // ✅ Recalculate maturity amount
-    const years = fd.tenureMonths / 12;
-    fd.maturityAmount = (
-      remainingPrincipal * Math.pow(1 + fd.interestRate / 100, years)
-    ).toFixed(2);
-
-    // ✅ Push withdrawal record
+    // ✅ Record withdrawal
     fd.withdrawals.push({
       amount,
       reason,
@@ -252,11 +240,18 @@ export const addFDWithdrawal = async (req, res) => {
       date: new Date(),
     });
 
+    // ✅ Close the FD after withdrawal
+    fd.status = "Closed";
+    fd.notes = `FD closed after withdrawal of ₹${amount} on ${new Date().toLocaleDateString()}`;
+
     await fd.save();
 
-    res.json({ message: "Withdrawal added successfully", fd });
+    res.json({
+      message: "Withdrawal processed and FD closed successfully",
+      fd,
+    });
   } catch (error) {
-    console.error("Withdrawal error:", error);
+    console.error("FD Withdrawal error:", error);
     res.status(500).json({ error: error.message });
   }
 };

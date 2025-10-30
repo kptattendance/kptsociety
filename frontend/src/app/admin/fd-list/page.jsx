@@ -498,22 +498,37 @@ export default function AdminFDTable() {
                           ₹{fd.maturityAmount?.toLocaleString() || "-"}
                         </td>
 
-                        <td className="px-4 py-2 text-gray-700">
-                          {fd.nominee || "-"}
+                        {/* Nominee field (editable) */}
+                        <td className="px-4 py-2">
+                          <input
+                            type="text"
+                            value={editForm.nominee ?? fd.nominee ?? ""}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                nominee: e.target.value,
+                              })
+                            }
+                            className="border rounded px-2 py-1 w-32"
+                            placeholder="Nominee name"
+                          />
                         </td>
 
+                        {/* Status field (editable dropdown) */}
                         <td className="px-4 py-2">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              fd.status === "Active"
-                                ? "bg-green-100 text-green-700"
-                                : fd.status === "Closed"
-                                ? "bg-gray-200 text-gray-600"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
+                          <select
+                            value={editForm.status ?? fd.status}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                status: e.target.value,
+                              })
+                            }
+                            className="border rounded px-2 py-1"
                           >
-                            {fd.status}
-                          </span>
+                            <option value="Active">Active</option>
+                            <option value="Closed">Closed</option>
+                          </select>
                         </td>
 
                         {/* Disabled withdraw */}
