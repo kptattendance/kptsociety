@@ -161,7 +161,7 @@ export default function AdminRDTable() {
     const exportData = rds.map((rd, index) => {
       const totalWithdrawn =
         rd.withdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
-      const availableBalance = (rd.totalDeposited || 0) - totalWithdrawn;
+      rd.availableBalance = (rd.totalDeposited || 0) - totalWithdrawn;
 
       return {
         "Sl. No.": index + 1,
@@ -171,7 +171,7 @@ export default function AdminRDTable() {
         "Deposit Amount (₹)": rd.depositAmount || 0,
         "Total Deposited (₹)": rd.totalDeposited || 0,
         "Total Withdrawn (₹)": totalWithdrawn,
-        "Available Balance (₹)": availableBalance,
+        "Available Balance (₹)": rd.availableBalance,
         "Interest Rate (%)": rd.interestRate || 0,
         "Tenure (Months)": rd.tenureMonths || 0,
         "Start Date": rd.startDate
@@ -318,8 +318,7 @@ export default function AdminRDTable() {
                     (sum, w) => sum + (w.amount || 0),
                     0
                   ) || 0;
-                const availableBalance =
-                  (rd.totalDeposited || 0) - totalWithdrawn;
+                rd.availableBalance = (rd.totalDeposited || 0) - totalWithdrawn;
 
                 return (
                   <tr
@@ -391,7 +390,7 @@ export default function AdminRDTable() {
                       ₹{totalWithdrawn.toLocaleString()}
                     </td>
                     <td className="px-4 py-2 font-medium text-gray-700">
-                      ₹{availableBalance.toLocaleString()}
+                      ₹{rd.availableBalance.toLocaleString()}
                     </td>
 
                     <td className="px-4 py-2">
