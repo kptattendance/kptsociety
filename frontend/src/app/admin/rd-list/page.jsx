@@ -318,7 +318,10 @@ export default function AdminRDTable() {
                     (sum, w) => sum + (w.amount || 0),
                     0
                   ) || 0;
-                rd.availableBalance = (rd.totalDeposited || 0) - totalWithdrawn;
+                rd.availableBalance = Math.max(
+                  (rd.totalDeposited || 0) - totalWithdrawn,
+                  0
+                );
 
                 return (
                   <tr
