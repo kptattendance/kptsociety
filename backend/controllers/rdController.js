@@ -381,7 +381,7 @@ export const makeRDWithdrawal = async (req, res) => {
 
     // Immediately close the account after withdrawal
     rd.status = "Closed";
-
+    rd.availableBalance = 0;
     await rd.save();
 
     res.json({
