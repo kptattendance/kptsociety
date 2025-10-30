@@ -9,13 +9,15 @@ export default function RDScheduleModal({ rdId, onClose }) {
   const { getToken } = useAuth();
   const [rd, setRD] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [statusProcessing, setStatusProcessing] = useState(null);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const [pageInstallments, setPageInstallments] = useState(1);
   const [pageWithdrawals, setPageWithdrawals] = useState(1);
   const itemsPerPage = 6;
 
   const [editingDateIndex, setEditingDateIndex] = useState(null);
-  const [editDate, setEditDate] = useState("");
+  const [editDates, setEditDates] = useState({});
 
   // Fetch RD details
   const fetchRD = async () => {
@@ -40,6 +42,7 @@ export default function RDScheduleModal({ rdId, onClose }) {
 
   const updateInstallmentStatus = async (installmentNo, status) => {
     try {
+      setStatusProcessing(installmentNo); // start spinner
       const token = await getToken();
       const installment = rd.installments[installmentNo - 1];
       const updatedDate = installment?.tempDueDate || installment?.dueDate;
@@ -49,10 +52,13 @@ export default function RDScheduleModal({ rdId, onClose }) {
         { status, dueDate: updatedDate },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       toast.success(`Installment #${installmentNo} updated successfully`);
       fetchRD();
     } catch (err) {
       toast.error("Failed to update installment");
+    } finally {
+      setStatusProcessing(null); // stop spinner
     }
   };
 
@@ -87,6 +93,36 @@ export default function RDScheduleModal({ rdId, onClose }) {
         <h2 className="text-2xl font-semibold text-center text-teal-700 mb-5 tracking-wide">
           📅 RD Account – {rd.accountNumber}
         </h2>
+
+        {/* Account Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 text-center">
+          <div className="bg-teal-50 border border-teal-200 rounded-lg py-3 shadow-sm">
+            <h4 className="text-sm text-gray-600 font-medium">
+              👤 Member Name
+            </h4>
+            <p className="text-lg font-semibold text-teal-700 mt-1">
+              {rd.memberId?.name || "N/A"}
+            </p>
+          </div>
+
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg py-3 shadow-sm">
+            <h4 className="text-sm text-gray-600 font-medium">
+              💰 Total Deposited
+            </h4>
+            <p className="text-lg font-semibold text-emerald-700 mt-1">
+              ₹{rd.totalDeposited?.toFixed(2) || "0.00"}
+            </p>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg py-3 shadow-sm">
+            <h4 className="text-sm text-gray-600 font-medium">
+              🏦 Maturity Amount
+            </h4>
+            <p className="text-lg font-semibold text-yellow-700 mt-1">
+              ₹{rd.maturityAmount?.toFixed(2) || "0.00"}
+            </p>
+          </div>
+        </div>
 
         {/* Installment Schedule */}
         <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-xl border border-teal-200 shadow p-4 mb-5">
@@ -125,20 +161,36 @@ export default function RDScheduleModal({ rdId, onClose }) {
                             <input
                               type="date"
                               value={
-                                editDate ||
+                                editDates[globalIndex - 1] ||
                                 inst.tempDueDate ||
                                 new Date(inst.dueDate)
                                   .toISOString()
                                   .split("T")[0]
                               }
                               onChange={(e) => {
-                                setEditDate(e.target.value);
-                                const updated = [...rd.installments];
-                                updated[globalIndex - 1].tempDueDate =
-                                  e.target.value;
-                                setRD({ ...rd, installments: updated });
+                                const value = e.target.value;
+                                setEditDates((prev) => ({
+                                  ...prev,
+                                  [globalIndex - 1]: value,
+                                }));
+
+                                setRD((prev) => {
+                                  const updated = [...prev.installments];
+                                  updated[globalIndex - 1] = {
+                                    ...updated[globalIndex - 1],
+                                    tempDueDate: value,
+                                  };
+                                  return { ...prev, installments: updated };
+                                });
                               }}
-                              onBlur={() => setEditingDateIndex(null)}
+                              onBlur={() => {
+                                setEditingDateIndex(null);
+                                setEditDates((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[globalIndex - 1];
+                                  return copy;
+                                });
+                              }}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" || e.key === "Escape")
                                   setEditingDateIndex(null);
@@ -163,21 +215,32 @@ export default function RDScheduleModal({ rdId, onClose }) {
                         <td className="px-3 py-2">
                           <select
                             value={inst.status}
+                            disabled={statusProcessing === globalIndex}
                             onChange={(e) =>
                               updateInstallmentStatus(
                                 globalIndex,
                                 e.target.value
                               )
                             }
-                            className={`border rounded px-2 py-1 ${
+                            className={`border rounded px-2 py-1 cursor-pointer ${
                               inst.status === "Paid"
                                 ? "bg-green-100 text-green-700"
                                 : "bg-gray-100 text-gray-700"
+                            } ${
+                              statusProcessing === globalIndex
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                             }`}
                           >
                             <option value="Pending">Pending</option>
                             <option value="Paid">Paid</option>
                           </select>
+
+                          {statusProcessing === globalIndex && (
+                            <span className="ml-2 text-blue-600 animate-pulse text-xs">
+                              Processing...
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-2">
                           {inst.paidAt ? (
@@ -251,6 +314,7 @@ export default function RDScheduleModal({ rdId, onClose }) {
               }
 
               try {
+                setWithdrawing(true);
                 const token = await getToken();
                 await axios.put(
                   `${process.env.NEXT_PUBLIC_API_URL}/api/rd/withdrawl/${rdId}`,
@@ -262,6 +326,8 @@ export default function RDScheduleModal({ rdId, onClose }) {
                 e.target.reset();
               } catch (err) {
                 toast.error(err.response?.data?.error || "Withdrawal failed");
+              } finally {
+                setWithdrawing(false);
               }
             }}
             className="flex flex-wrap gap-3 items-end"
@@ -305,9 +371,16 @@ export default function RDScheduleModal({ rdId, onClose }) {
             </div>
             <button
               type="submit"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 rounded shadow hover:from-blue-700 cursor-pointer hover:to-indigo-700"
+              disabled={withdrawing}
+              className={`bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 rounded shadow cursor-pointer transition-all
+    ${
+      withdrawing
+        ? "opacity-60 cursor-not-allowed"
+        : "hover:from-blue-700 hover:to-indigo-700"
+    }
+  `}
             >
-              Withdraw
+              {withdrawing ? "Processing..." : "Withdraw"}
             </button>
           </form>
         </div>

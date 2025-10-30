@@ -124,7 +124,7 @@ export default function AdminFDForm() {
               value={formData.fdNumber}
               onChange={handleChange}
               required
-              placeholder="e.g., KPT-FD-001"
+              placeholder="e.g., KPTCS/FD/172"
               className="mt-1 block w-full border border-gray-300 rounded-xl px-3 py-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>

@@ -56,8 +56,8 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
     e.preventDefault();
     const amount = Number(withdrawData.amount);
     if (!amount || amount <= 0) return toast.warn("Enter a valid amount");
-    if (amount > maturityAmount)
-      return toast.error("Withdrawal exceeds available balance");
+    // if (amount > maturityAmount)
+    //   return toast.error("Withdrawal exceeds available balance");
 
     try {
       setLoading(true);

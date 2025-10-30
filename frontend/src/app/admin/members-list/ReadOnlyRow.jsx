@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Pencil, Trash2, MapPin, Home } from "lucide-react";
+import MemberProfileModal from "./MemberProfileModal";
 
 export default function ReadOnlyRow({
   member,
@@ -10,6 +11,7 @@ export default function ReadOnlyRow({
   handleDelete,
 }) {
   const [hovered, setHovered] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
 
   const formatDate = (date) =>
     date ? new Date(date).toLocaleDateString("en-GB") : "-";
@@ -32,7 +34,10 @@ export default function ReadOnlyRow({
       </td>
 
       {/* Name */}
-      <td className="px-3 py-3 font-semibold text-gray-800 whitespace-nowrap">
+      <td
+        className="px-3 py-3  cursor-pointer hover:text-red-500 font-semibold text-gray-800 whitespace-nowrap"
+        onClick={() => setSelectedMemberId(m._id)}
+      >
         {member.name}
       </td>
 
@@ -122,6 +127,12 @@ export default function ReadOnlyRow({
           <Trash2 size={16} />
         </button>
       </td>
+      {selectedMemberId && (
+        <MemberProfileModal
+          memberId={selectedMemberId}
+          onClose={() => setSelectedMemberId(null)}
+        />
+      )}
     </>
   );
 }

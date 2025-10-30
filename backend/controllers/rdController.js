@@ -355,24 +355,22 @@ const findRD = async (idOrClerk) => {
 // ------------------- Record a Withdrawal -------------------
 export const makeRDWithdrawal = async (req, res) => {
   try {
-    const { rdId } = req.params; // can be RD _id or Clerk ID
+    const { rdId } = req.params;
     const { amount, chequeNumber, chequeDate, notes } = req.body;
 
     const rd = await findRD(rdId);
     if (!rd) return res.status(404).json({ error: "RD not found" });
-    if (rd.status !== "Active")
-      return res.status(400).json({ error: "RD not active" });
+
+    if (rd.status !== "Active" && rd.status !== "Matured") {
+      return res
+        .status(400)
+        .json({ error: `RD already ${rd.status.toLowerCase()}` });
+    }
 
     // Ensure withdrawals array exists
     if (!rd.withdrawals) rd.withdrawals = [];
 
-    const totalWithdrawn = rd.withdrawals.reduce((sum, w) => sum + w.amount, 0);
-    const availableBalance = rd.totalDeposited - totalWithdrawn;
-    if (amount > availableBalance)
-      return res
-        .status(400)
-        .json({ error: "Withdrawal exceeds available balance" });
-
+    // Add withdrawal entry (no balance computation)
     rd.withdrawals.push({
       amount,
       chequeNumber,
@@ -381,8 +379,15 @@ export const makeRDWithdrawal = async (req, res) => {
       notes,
     });
 
+    // Immediately close the account after withdrawal
+    rd.status = "Closed";
+
     await rd.save();
-    res.json(rd);
+
+    res.json({
+      message: "Withdrawal recorded and RD account closed successfully",
+      rd,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

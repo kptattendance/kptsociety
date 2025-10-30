@@ -168,7 +168,7 @@ export default function AdminRDForm() {
               value={formData.accountNumber}
               onChange={handleChange}
               required
-              placeholder="e.g., RD/2025/001"
+              placeholder="e.g., RD128/183"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-green-400 shadow-sm"
             />
           </div>
