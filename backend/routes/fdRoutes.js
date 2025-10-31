@@ -10,6 +10,7 @@ import {
   deleteFD,
   getFDWithdrawals,
   addFDWithdrawal,
+  deleteFDWithdrawal,
 } from "../controllers/fdController.js";
 
 import { requireAuthWithRole } from "../middlewares/auth.js";
@@ -29,6 +30,11 @@ router.post("/", requireAuthWithRole(["admin"]), createFD);
 // ✅ Update existing FD (Admin Edit)
 router.put("/:fdId", requireAuthWithRole(["admin"]), updateFD);
 
+router.delete(
+  "/:fdId/withdrawal/:withdrawalId",
+  requireAuthWithRole(["admin"]),
+  deleteFDWithdrawal
+);
 // ✅ Delete FD (Admin only)
 router.delete("/:fdId", requireAuthWithRole(["admin"]), deleteFD);
 

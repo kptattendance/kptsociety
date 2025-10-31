@@ -58,7 +58,6 @@ export default function AdminFDTable() {
           }
         })
       );
-      console.log(fdsData);
       setFDs(fdsData);
     } catch (error) {
       toast.error("❌ Failed to load FDs");

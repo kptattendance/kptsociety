@@ -5,7 +5,7 @@ import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
-import { X } from "lucide-react"; // For cross icon
+import { Pencil, Trash2, X } from "lucide-react"; // For cross icon
 
 export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
   const { getToken } = useAuth();
@@ -56,8 +56,6 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
     e.preventDefault();
     const amount = Number(withdrawData.amount);
     if (!amount || amount <= 0) return toast.warn("Enter a valid amount");
-    // if (amount > maturityAmount)
-    //   return toast.error("Withdrawal exceeds available balance");
 
     try {
       setLoading(true);
@@ -86,6 +84,31 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
     } catch (error) {
       console.error("Withdrawal failed:", error);
       toast.error("❌ Withdrawal failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleDeleteWithdrawal = async (withdrawalId) => {
+    if (!window.confirm("Are you sure you want to delete this withdrawal?"))
+      return;
+
+    try {
+      setLoading(true);
+      const token = await getToken(); // ✅ get token properly
+
+      const res = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/fd/${fd._id}/withdrawal/${withdrawalId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success(res.data.message || "Withdrawal deleted successfully");
+      fetchWithdrawals(); // ✅ refresh list
+      refreshFDs(); // ✅ update FD data on main table
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error(error.response?.data?.error || "Failed to delete withdrawal");
     } finally {
       setLoading(false);
     }
@@ -127,55 +150,50 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
         </div>
 
         {/* Withdrawal History */}
-        <div className="mb-6 rounded-2xl p-5 bg-gradient-to-r from-[#f8f5ee] via-[#fdf8f2] to-[#fffefb] shadow-inner border border-[#eee2c5]">
-          <h3 className="font-semibold text-lg mb-3 text-[#b8860b]">
-            Withdrawal History
-          </h3>
-          {withdrawals.length === 0 ? (
-            <p className="italic text-sm text-gray-500">No withdrawals yet.</p>
-          ) : (
-            <div className="overflow-x-auto max-h-56">
-              <table className="min-w-full text-sm text-gray-700 rounded-xl">
-                <thead className="bg-gradient-to-r from-[#fff3d9] to-[#fffaed] sticky top-0 border-b border-[#e9d6a4]">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-semibold">Sl No</th>
-                    <th className="px-3 py-2 text-left font-semibold">
-                      Amount (₹)
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold">
-                      Cheque No
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold">
-                      Cheque Date
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold">
-                      Reason
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {withdrawals.map((w, i) => (
-                    <tr
-                      key={i}
-                      className="hover:bg-[#fffaf0] transition-colors duration-150"
+        <div className="overflow-x-auto max-h-56">
+          <table className="min-w-full text-sm text-gray-700 rounded-xl">
+            <thead className="bg-gradient-to-r from-[#fff3d9] to-[#fffaed] sticky top-0 border-b border-[#e9d6a4]">
+              <tr>
+                <th className="px-3 py-2 text-left font-semibold">Sl No</th>
+                <th className="px-3 py-2 text-left font-semibold">
+                  Amount (₹)
+                </th>
+                <th className="px-3 py-2 text-left font-semibold">Cheque No</th>
+                <th className="px-3 py-2 text-left font-semibold">
+                  Cheque Date
+                </th>
+                <th className="px-3 py-2 text-left font-semibold">Reason</th>
+                <th className="px-3 py-2 text-left font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {withdrawals.map((w, i) => (
+                <tr
+                  key={w._id}
+                  className="hover:bg-[#fffaf0] transition-colors duration-150"
+                >
+                  <td className="px-3 py-2">{i + 1}</td>
+                  <td className="px-3 py-2">₹{w.amount.toLocaleString()}</td>
+                  <td className="px-3 py-2">{w.chequeNumber || "-"}</td>
+                  <td className="px-3 py-2">
+                    {w.chequeDate
+                      ? new Date(w.chequeDate).toLocaleDateString("en-GB")
+                      : "-"}
+                  </td>
+                  <td className="px-3 py-2">{w.reason || "-"}</td>
+                  <td className="px-3 py-2 flex gap-2">
+                    <button
+                      onClick={() => handleDeleteWithdrawal(w._id)}
+                      className="text-red-600 hover:text-red-800"
+                      title="Delete Withdrawal"
                     >
-                      <td className="px-3 py-2">{i + 1}</td>
-                      <td className="px-3 py-2">
-                        ₹{w.amount.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2">{w.chequeNumber || "-"}</td>
-                      <td className="px-3 py-2">
-                        {w.chequeDate
-                          ? new Date(w.chequeDate).toLocaleDateString("en-GB")
-                          : "-"}
-                      </td>
-                      <td className="px-3 py-2">{w.reason || "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* New Withdrawal Form */}

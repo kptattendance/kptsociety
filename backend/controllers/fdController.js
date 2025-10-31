@@ -218,8 +218,6 @@ export const addFDWithdrawal = async (req, res) => {
     const { fdId } = req.params;
     const { amount, reason, chequeNumber, chequeDate, paymentMode } = req.body;
 
-    console.log("Processing FD withdrawal...");
-
     const fd = await FD.findById(fdId);
     if (!fd) return res.status(404).json({ error: "FD not found" });
 
@@ -268,6 +266,33 @@ export const getFDWithdrawals = async (req, res) => {
     res.json(fd.withdrawals);
   } catch (error) {
     console.error("Get withdrawals error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteFDWithdrawal = async (req, res) => {
+  try {
+    const { fdId, withdrawalId } = req.params;
+
+    const fd = await FD.findById(fdId);
+    if (!fd) return res.status(404).json({ error: "FD not found" });
+
+    const withdrawal = fd.withdrawals.id(withdrawalId);
+    if (!withdrawal)
+      return res.status(404).json({ error: "Withdrawal not found" });
+
+    // ✅ Delete the withdrawal
+    withdrawal.deleteOne();
+
+    // ✅ Save FD after removing withdrawal
+    await fd.save();
+
+    res.json({
+      message: `Withdrawal deleted successfully.`,
+      updatedPrincipal: fd.principal,
+    });
+  } catch (error) {
+    console.error("Delete withdrawal error:", error);
     res.status(500).json({ error: error.message });
   }
 };
