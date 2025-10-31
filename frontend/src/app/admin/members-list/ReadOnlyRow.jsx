@@ -9,9 +9,9 @@ export default function ReadOnlyRow({
   setEditingMemberId,
   setEditData,
   handleDelete,
+  setSelectedMemberId,
 }) {
   const [hovered, setHovered] = useState(false);
-  const [selectedMemberId, setSelectedMemberId] = useState(null);
 
   const formatDate = (date) =>
     date ? new Date(date).toLocaleDateString("en-GB") : "-";
@@ -33,10 +33,9 @@ export default function ReadOnlyRow({
         )}
       </td>
 
-      {/* Name */}
       <td
-        className="px-3 py-3  cursor-pointer hover:text-red-500 font-semibold text-gray-800 whitespace-nowrap"
-        onClick={() => setSelectedMemberId(m._id)}
+        className="px-3 py-3 cursor-pointer hover:text-red-500 font-semibold text-gray-800 whitespace-nowrap"
+        onClick={() => setSelectedMemberId(member._id)} // now uses prop
       >
         {member.name}
       </td>
@@ -127,12 +126,6 @@ export default function ReadOnlyRow({
           <Trash2 size={16} />
         </button>
       </td>
-      {selectedMemberId && (
-        <MemberProfileModal
-          memberId={selectedMemberId}
-          onClose={() => setSelectedMemberId(null)}
-        />
-      )}
     </>
   );
 }

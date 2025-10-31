@@ -10,6 +10,7 @@ import { saveAs } from "file-saver";
 import EditableRow from "./EditableRow";
 import ReadOnlyRow from "./ReadOnlyRow";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import MemberProfileModal from "./MemberProfileModal";
 
 export default function MembersList() {
   const [members, setMembers] = useState([]);
@@ -23,6 +24,7 @@ export default function MembersList() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const rowsPerPage = 6;
   const { getToken } = useAuth();
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
 
   const departments = [
     { value: "at", label: "Automobile Engineering" },
@@ -359,13 +361,20 @@ export default function MembersList() {
                         setEditingMemberId={setEditingMemberId}
                         setEditData={setEditData}
                         handleDelete={handleDelete}
+                        setSelectedMemberId={setSelectedMemberId} // 👈 add this
                       />
                     )}
                   </tr>
                 ))
               )}
             </tbody>
-          </table>
+          </table>{" "}
+          {selectedMemberId && (
+            <MemberProfileModal
+              memberId={selectedMemberId}
+              onClose={() => setSelectedMemberId(null)}
+            />
+          )}
         </div>
 
         {/* Pagination */}
