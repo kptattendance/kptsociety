@@ -133,8 +133,8 @@ export default function UserProfile() {
     0
   );
 
-  const totalRD = rds.reduce((acc, rd) => acc + (rd.balance || 0), 0);
-  const totalFD = fds.reduce((acc, fd) => acc + (fd.amount || 0), 0);
+  const totalRD = rds.reduce((acc, rd) => acc + (rd.availableBalance || 0), 0);
+  const totalFD = fds.reduce((acc, fd) => acc + (fd.principal || 0), 0);
   const totalCD = cds.reduce((acc, cd) => acc + (cd.balance || 0), 0);
   const totalShares = shares.reduce(
     (acc, s) => acc + (s.totalAmount || s.amount || 0),
