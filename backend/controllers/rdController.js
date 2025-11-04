@@ -28,8 +28,13 @@ export const createRD = async (req, res) => {
     maturityDate.setMonth(maturityDate.getMonth() + Number(tenureMonths));
 
     const years = tenureMonths / 12;
+    const P = depositAmount;
+    const r = interestRate / 100; // annual rate in decimal
+    const t = tenureMonths / 12; // convert months to years
+
+    // Yearly compounding RD formula
     const maturityAmount =
-      depositAmount * tenureMonths * (1 + (interestRate / 100) * years);
+      P * ((Math.pow(1 + r, t) - 1) / (1 - Math.pow(1 + r, -1 / 12)));
 
     // Generate installments
     const installments = [];

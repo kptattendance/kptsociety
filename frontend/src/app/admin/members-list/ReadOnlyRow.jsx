@@ -38,6 +38,7 @@ export default function ReadOnlyRow({
         onClick={() => setSelectedMemberId(member._id)} // now uses prop
       >
         {member.name}
+        {member.clerkId}
       </td>
 
       <td className="px-3 py-3 text-gray-700">{member.email}</td>
