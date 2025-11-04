@@ -19,53 +19,80 @@ export default function UserProfile() {
 
   const fetchData = async () => {
     if (!user) return;
+
     try {
       const token = await getToken();
 
       // Member profile
-      const profileRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/members/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProfile(profileRes.data);
+      try {
+        const profileRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/members/${user.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setProfile(profileRes.data);
+      } catch (err) {
+        console.error("Error fetching member profile:", err);
+      }
 
       // Loan details
-      const loanRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setLoans(Array.isArray(loanRes.data) ? loanRes.data : [loanRes.data]);
+      try {
+        const loanRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setLoans(Array.isArray(loanRes.data) ? loanRes.data : [loanRes.data]);
+      } catch (err) {
+        console.error("Error fetching loan details:", err);
+      }
 
       // RD details
-      const rdRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setRds(Array.isArray(rdRes.data) ? rdRes.data : [rdRes.data]);
+      try {
+        const rdRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setRds(Array.isArray(rdRes.data) ? rdRes.data : [rdRes.data]);
+      } catch (err) {
+        console.error("Error fetching RD details:", err);
+      }
 
       // FD details
-      const fdRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/fd/member/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setFds(Array.isArray(fdRes.data) ? fdRes.data : [fdRes.data]);
+      try {
+        const fdRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/fd/member/${user.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setFds(Array.isArray(fdRes.data) ? fdRes.data : [fdRes.data]);
+      } catch (err) {
+        console.error("Error fetching FD details:", err);
+      }
 
       // CD details
-      const cdRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/cd/member/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      console.log(cdRes);
-      setCds(Array.isArray(cdRes.data) ? cdRes.data : [cdRes.data]);
+      try {
+        const cdRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/cd/member/${user.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log(cdRes);
+        setCds(Array.isArray(cdRes.data) ? cdRes.data : [cdRes.data]);
+      } catch (err) {
+        console.error("Error fetching CD details:", err);
+      }
 
       // Share details
-      const shareRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setShares(Array.isArray(shareRes.data) ? shareRes.data : [shareRes.data]);
+      try {
+        const shareRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setShares(
+          Array.isArray(shareRes.data) ? shareRes.data : [shareRes.data]
+        );
+      } catch (err) {
+        console.error("Error fetching share details:", err);
+      }
     } catch (err) {
-      console.error("Error fetching data:", err);
+      console.error("Error in fetchData setup:", err);
     } finally {
       setLoading(false);
     }
