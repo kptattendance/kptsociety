@@ -2,29 +2,80 @@
 
 export default function AboutUs() {
   return (
-    <div className="h-full bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-8">
-      <div className="max-w-3xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-          About Us
-        </h1>
-        <div className="space-y-4 text-gray-700">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+      <div className="mx-auto bg-white/80 backdrop-blur-md shadow-2xl overflow-hidden">
+        {/* Hero Section with Background Image */}
+        <div
+          className="relative w-full h-[500px] flex items-center justify-center text-center"
+          style={{
+            backgroundImage: "url('/clgimg3.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/40"></div>
+
+          {/* Text Content */}
+          <h1 className="relative z-10 text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg px-4">
+            Welcome to KPT Co-Operative Society - Mangalore
+          </h1>
+        </div>
+
+        {/* About Section */}
+        <div className="p-8 text-gray-700 leading-relaxed space-y-4">
           <p>
-            <strong>History:</strong> KPT Cooperative Society was established in
-            [Year] to provide financial support and savings facilities to the
-            staff of KPT College. Over the years, it has grown to support
-            hundreds of members.
+            The{" "}
+            <strong>
+              Karnataka Government Polytechnic (KPT) Cooperative Society
+            </strong>{" "}
+            was established in the year <strong>1958</strong>. As per records,
+            the official registration date is <strong>29th August 1958</strong>.
+            Since its inception, the society has been actively contributing to
+            the financial welfare of its members.
           </p>
+
+          <h2 className="text-2xl font-semibold text-indigo-700 mt-6 border-l-4 border-pink-400 pl-3">
+            Objectives of the Association
+          </h2>
+          <ul className="list-disc pl-8 space-y-2">
+            <li>
+              To provide loans to members and depositors for beneficial and
+              productive purposes.
+            </li>
+            <li>
+              To promote a spirit of thrift, self-help, and cooperation among
+              members.
+            </li>
+            <li>
+              To collect capital through shares, member deposits, and loans.
+            </li>
+            <li>
+              To supply educational materials (such as stationery) required by
+              members and students.
+            </li>
+            <li>
+              To implement student scholarships and other welfare programs as
+              per the management rules.
+            </li>
+            <li>
+              To raise and manage the necessary capital to fulfill the
+              association’s objectives.
+            </li>
+            <li>
+              To undertake other works aligned with the bylaws and goals of the
+              society.
+            </li>
+          </ul>
+
+          <h2 className="text-2xl font-semibold text-indigo-700 mt-6 border-l-4 border-pink-400 pl-3">
+            Working Capital / Fund Collection
+          </h2>
           <p>
-            <strong>Objectives:</strong> The society aims to promote financial
-            stability among staff members by offering loans, deposits, and
-            savings schemes. It also fosters a sense of community and mutual
-            support.
-          </p>
-          <p>
-            <strong>Role:</strong> The society manages various financial
-            products, ensures timely processing of deposits and loans, and
-            provides a secure portal for members to access account details
-            online.
+            The society manages its funds through share capital, member
+            deposits, and loans. These resources are utilized to provide
+            financial assistance and welfare benefits for the members and their
+            families.
           </p>
         </div>
       </div>

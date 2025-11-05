@@ -7,6 +7,7 @@ import Services from "../components/HomePageComponents/Services";
 import Downloads from "../components/HomePageComponents/Downloads";
 import Gallery from "../components/HomePageComponents/Gallery";
 import Footer from "../components/Footer";
+import OurTeam from "../components/HomePageComponents/OurTeam";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <AboutUs />
       <Membership />
       <Services />
+      <OurTeam />
       <LoanCalculatorPage />
       <Downloads />
       {/* <NewsAndAnnouncements /> */}

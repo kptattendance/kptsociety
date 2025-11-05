@@ -44,7 +44,7 @@ export default function ContactUs() {
               <h2 className="title-font font-semibold text-gray-900 tracking-widest text-xs mt-4">
                 PHONE
               </h2>
-              <p className="leading-relaxed">+91-9876543210</p>
+              <p className="leading-relaxed">+91-9741127644 / +91-9742023708</p>
             </div>
           </div>
         </div>

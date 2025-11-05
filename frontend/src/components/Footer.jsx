@@ -143,7 +143,7 @@ export default function Footer() {
               <li className="flex justify-center md:justify-start items-center gap-2">
                 <Phone className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                 <a href="tel:+918123456789" className="hover:text-indigo-600">
-                  +91 81234 56789
+                  +91-9741127644 / +91-9742023708{" "}
                 </a>
               </li>
               <li className="flex justify-center md:justify-start items-center gap-2">
@@ -152,7 +152,7 @@ export default function Footer() {
                   href="mailto:info@kptsociety.com"
                   className="hover:text-indigo-600"
                 >
-                  info@kptsociety.com
+                  kptsociety@gmail.com
                 </a>
               </li>
             </ul>

@@ -2,10 +2,10 @@
 
 export default function Gallery() {
   const images = [
-    { src: "/gallery/event1.jpg", alt: "Annual General Meeting" },
-    { src: "/gallery/event2.jpg", alt: "Independence Day Celebration" },
-    { src: "/gallery/event3.jpg", alt: "Cultural Program" },
-    { src: "/gallery/event4.jpg", alt: "Staff Picnic" },
+    { src: "/1.jpg", alt: "Annual General Meeting" },
+    { src: "/2.jpg", alt: "Independence Day Celebration" },
+    { src: "/3.jpg", alt: "Cultural Program" },
+    { src: "/2.jpg", alt: "Annual General Meeting -2025" },
   ];
 
   return (

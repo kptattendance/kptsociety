@@ -7,16 +7,26 @@ export default function Downloads() {
       link: "/downloads/membership-form.pdf",
     },
     {
-      name: "Loan Application Form",
+      name: "Loan Application Form (Long Term / Short Term)",
       link: "/downloads/loan-form.pdf",
     },
     {
-      name: "Fixed Deposit Policy",
+      name: "Fixed Deposit / RD Application Form",
       link: "/downloads/fd-policy.pdf",
     },
     {
-      name: "Recurring Deposit Circular",
-      link: "/downloads/rd-circular.pdf",
+      name: "By-Laws Cover Page 1958",
+      link: "/bylaw.jpg",
+    },
+
+    {
+      name: "Co-operative Society Objectives",
+      link: "/2.pdf",
+    },
+
+    {
+      name: "Consolidated Registration Form",
+      link: "/1.pdf",
     },
   ];
 
