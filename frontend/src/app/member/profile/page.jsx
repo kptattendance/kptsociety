@@ -75,6 +75,7 @@ export default function UserProfile() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/fd/member/${user.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log(fdRes);
         setFds(Array.isArray(fdRes.data) ? fdRes.data : [fdRes.data]);
       } catch (err) {
         console.error("Error fetching FD details:", err);
