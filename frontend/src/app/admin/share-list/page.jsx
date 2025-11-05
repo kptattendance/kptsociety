@@ -451,7 +451,10 @@ export default function AdminShareTable() {
 
                   {/* Amount */}
                   <td className="px-4 py-2 font-medium text-gray-700">
-                    ₹{share.totalAmount?.toLocaleString() || 0}
+                    ₹
+                    {Math.round(Number(share.totalAmount) || 0).toLocaleString(
+                      "en-IN"
+                    )}
                   </td>
 
                   {/* Status */}

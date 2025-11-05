@@ -383,19 +383,25 @@ export default function AdminRDTable() {
                         />
                       ) : (
                         <>
-                          ₹{Math.round(rd.depositAmount || 0).toLocaleString()}
+                          ₹
+                          {Math.round(rd.depositAmount || 0).toLocaleString(
+                            "en-IN"
+                          )}
                         </>
                       )}
                     </td>
 
                     <td className="px-4 py-2">
-                      ₹{Math.round(rd.totalDeposited || 0).toLocaleString()}
+                      ₹
+                      {Math.round(rd.totalDeposited || 0).toLocaleString(
+                        "en-IN"
+                      )}
                     </td>
                     <td className="px-4 py-2">
-                      ₹{Math.round(totalWithdrawn).toLocaleString()}
+                      ₹{Math.round(totalWithdrawn).toLocaleString("en-IN")}
                     </td>
                     <td className="px-4 py-2 font-medium text-gray-700">
-                      ₹{Math.round(rd.availableBalance).toLocaleString()}
+                      ₹{Math.round(rd.availableBalance).toLocaleString("en-IN")}
                     </td>
 
                     <td className="px-4 py-2">
@@ -456,7 +462,10 @@ export default function AdminRDTable() {
                       {new Date(rd.maturityDate).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-4 py-2 font-medium">
-                      ₹{Math.round(rd.maturityAmount || 0).toLocaleString()}
+                      ₹
+                      {Math.round(rd.maturityAmount || 0).toLocaleString(
+                        "en-IN"
+                      )}
                     </td>
 
                     <td className="px-4 py-2">

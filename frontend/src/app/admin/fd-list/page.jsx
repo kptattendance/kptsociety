@@ -423,7 +423,7 @@ export default function AdminFDTable() {
                           />
                         </td>
                         <td className="px-4 py-2 text-center text-gray-400">
-                          ₹
+                          ₹ ₹
                           {Array.isArray(fd.withdrawals) &&
                           fd.withdrawals.length > 0
                             ? fd.withdrawals
@@ -431,7 +431,7 @@ export default function AdminFDTable() {
                                   (sum, w) => sum + (Number(w.amount) || 0),
                                   0
                                 )
-                                .toLocaleString()
+                                .toLocaleString("en-IN")
                             : 0}
                         </td>
 
@@ -494,7 +494,10 @@ export default function AdminFDTable() {
                             : "-"}
                         </td>
                         <td className="px-4 py-2 font-medium text-green-700">
-                          ₹{fd.maturityAmount?.toLocaleString() || "-"}
+                          ₹
+                          {Math.round(fd.maturityAmount || 0).toLocaleString(
+                            "en-IN"
+                          ) || "-"}
                         </td>
 
                         {/* Nominee field (editable) */}
@@ -573,20 +576,23 @@ export default function AdminFDTable() {
                           </div>
                         </td>
                         <td className="px-4 py-2 font-medium text-gray-700">
-                          ₹{fd.principal?.toLocaleString()}
+                          ₹
+                          {Math.round(fd.principal || 0).toLocaleString(
+                            "en-IN"
+                          )}
                         </td>
 
                         <td className="px-4 py-2 font-medium text-amber-700">
-                          ₹
+                          ₹ ₹
                           {fd.totalWithdrawn
-                            ? Number(fd.totalWithdrawn).toLocaleString()
+                            ? Number(fd.totalWithdrawn).toLocaleString("en-IN")
                             : Array.isArray(fd.withdrawals)
                             ? fd.withdrawals
                                 .reduce(
                                   (sum, w) => sum + (Number(w.amount) || 0),
                                   0
                                 )
-                                .toLocaleString()
+                                .toLocaleString("en-IN")
                             : 0}
                         </td>
 
@@ -604,7 +610,10 @@ export default function AdminFDTable() {
                             : "-"}
                         </td>
                         <td className="px-4 py-2 font-medium text-green-700">
-                          ₹{fd.maturityAmount?.toLocaleString() || "-"}
+                          ₹
+                          {Math.round(fd.maturityAmount || 0).toLocaleString(
+                            "en-IN"
+                          )}
                         </td>
 
                         <td className="px-4 py-2 text-gray-700">

@@ -213,10 +213,17 @@ export default function AdminCDList() {
       "Member Name": cd.memberId?.name || "Unknown",
       "Phone Number": cd.memberId?.phone || "N/A",
       "Start Date": cd.memberId?.startDate || "N/A",
-      "Monthly Deposit (₹)": cd.monthlyDeposit?.toLocaleString() || "0",
-      "Total Deposited (₹)": cd.totalDeposited?.toLocaleString() || "0",
-      "Total Withdrawn (₹)": cd.totalWithdrawn?.toLocaleString() || "0",
-      "Balance (₹)": cd.balance?.toLocaleString() || "0",
+      "Monthly Deposit (₹)": Math.round(cd.monthlyDeposit || 0).toLocaleString(
+        "en-IN"
+      ),
+      "Total Deposited (₹)": Math.round(cd.totalDeposited || 0).toLocaleString(
+        "en-IN"
+      ),
+      "Total Withdrawn (₹)": Math.round(cd.totalWithdrawn || 0).toLocaleString(
+        "en-IN"
+      ),
+      "Balance (₹)": Math.round(cd.balance || 0).toLocaleString("en-IN"),
+
       Status: cd.status || "-",
     }));
 
@@ -386,17 +393,23 @@ export default function AdminCDList() {
                         className="border rounded-md px-2 py-1 w-28"
                       />
                     ) : (
-                      `₹${cd.monthlyDeposit?.toLocaleString()}`
+                      `₹${Math.round(cd.monthlyDeposit || 0).toLocaleString(
+                        "en-IN"
+                      )}`
                     )}
                   </td>
 
                   <td className="px-4 py-2">
-                    ₹{cd.totalDeposited?.toLocaleString()}
+                    ₹
+                    {Math.round(cd.totalDeposited || 0).toLocaleString("en-IN")}
                   </td>
                   <td className="px-4 py-2">
-                    ₹{cd.totalWithdrawn?.toLocaleString()}
+                    ₹
+                    {Math.round(cd.totalWithdrawn || 0).toLocaleString("en-IN")}
                   </td>
-                  <td className="px-4 py-2">₹{cd.balance?.toLocaleString()}</td>
+                  <td className="px-4 py-2">
+                    ₹{Math.round(cd.balance || 0).toLocaleString("en-IN")}
+                  </td>
 
                   <td className="px-4 py-2">
                     {editId === cd._id ? (

@@ -138,14 +138,14 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
             <span className="font-medium text-[#b8860b]">
               Principal Remaining:
             </span>{" "}
-            ₹{remainingPrincipal?.toLocaleString()}
+            ₹{Math.round(remainingPrincipal || 0).toLocaleString("en-IN")}
           </p>
           <p className="text-base">
             📈{" "}
             <span className="font-medium text-[#b8860b]">
               Updated Maturity Amount:
             </span>{" "}
-            ₹{Number(maturityAmount).toLocaleString()}
+            ₹{Math.round(Number(maturityAmount) || 0).toLocaleString("en-IN")}
           </p>
         </div>
 
@@ -173,7 +173,10 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
                   className="hover:bg-[#fffaf0] transition-colors duration-150"
                 >
                   <td className="px-3 py-2">{i + 1}</td>
-                  <td className="px-3 py-2">₹{w.amount.toLocaleString()}</td>
+                  <td className="px-3 py-2">
+                    ₹{Math.round(w.amount || 0).toLocaleString("en-IN")}
+                  </td>
+
                   <td className="px-3 py-2">{w.chequeNumber || "-"}</td>
                   <td className="px-3 py-2">
                     {w.chequeDate

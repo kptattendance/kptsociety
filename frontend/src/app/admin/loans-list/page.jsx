@@ -224,10 +224,14 @@ export default function AdminLoanList() {
       "Start Date": loan.startDate
         ? new Date(loan.startDate).toLocaleDateString("en-IN")
         : "-",
-      "Amount (₹)": loan.loanAmount?.toLocaleString("en-IN") || "0",
+      "Amount (₹)": Math.round(loan.loanAmount || 0).toLocaleString("en-IN"),
+
       "Interest (%)": loan.interestRate || "-",
       Tenure: loan.tenure || "-",
-      "Pending Amount (₹)": loan.pendingAmount?.toLocaleString("en-IN") || "0",
+      "Pending Amount (₹)": Math.round(loan.pendingAmount || 0).toLocaleString(
+        "en-IN"
+      ),
+
       "Pending Inst.": loan.pendingInstallments || 0,
       Status: loan.status || "-",
     }));
@@ -470,7 +474,11 @@ export default function AdminLoanList() {
                         ) : field === "chequeNumber" ? (
                           loan.chequeDetails?.chequeNumber || "-"
                         ) : field === "loanAmount" ? (
-                          `₹${loan.loanAmount?.toLocaleString() || "-"}`
+                          `₹${
+                            Math.round(loan.loanAmount || 0).toLocaleString(
+                              "en-IN"
+                            ) || "-"
+                          }`
                         ) : (
                           loan[field] || "-"
                         )}
@@ -549,8 +557,6 @@ export default function AdminLoanList() {
             </tbody>
           </table>
         </div>
-
-        
 
         <div className="flex justify-center items-center mt-4 gap-2">
           <button
