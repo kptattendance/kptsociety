@@ -136,7 +136,10 @@ const MemberRD = () => {
                     <td className="py-2 px-3 text-right">{rd.tenureMonths}</td>
                     <td className="py-2 px-3 text-right">{rd.interestRate}</td>
                     <td className="py-2 px-3 text-right">
-                      ₹{rd.maturityAmount?.toLocaleString()}
+                      ₹
+                      {Math.round(rd.maturityAmount || 0).toLocaleString(
+                        "en-IN"
+                      )}
                     </td>
                     <td className="py-2 px-3 text-right">
                       {new Date(rd.maturityDate).toLocaleDateString("en-IN")}

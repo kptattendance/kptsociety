@@ -333,12 +333,16 @@ export default function UserProfile() {
                 />
                 <InfoItem
                   label="Total Principal"
-                  value={`₹${Math.round(totalPrincipal).toLocaleString()}`}
+                  value={`₹${Math.round(totalPrincipal).toLocaleString(
+                    "en-IN"
+                  )}`}
                   iconColor="text-blue-600"
                 />
                 <InfoItem
                   label="Total Maturity Value"
-                  value={`₹${Math.round(totalMaturity).toLocaleString()}`}
+                  value={`₹${Math.round(totalMaturity).toLocaleString(
+                    "en-IN"
+                  )}`}
                   iconColor="text-blue-600"
                 />
               </InfoCard>
