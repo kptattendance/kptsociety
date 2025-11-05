@@ -110,27 +110,29 @@ export default function OurTeam() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto bg-white/70 backdrop-blur-sm shadow-xl rounded-2xl p-6">
-        <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 sm:p-6">
+      <div className="mx-auto bg-white/70 backdrop-blur-sm shadow-xl rounded-2xl p-4 sm:p-6 max-w-7xl">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
           OUR TEAM
         </h1>
 
-        <div className="grid gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-3 sm:gap-4">
           {members.map((member) => (
             <div
               key={member.id}
-              className="flex flex-col items-center text-center bg-white/60 backdrop-blur-md rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow duration-300"
+              className="flex flex-col items-center text-center bg-white/60 backdrop-blur-md rounded-lg p-2 sm:p-3 shadow-sm hover:shadow-md transition-shadow duration-300"
             >
               <img
                 src={member.image}
                 alt={member.name}
-                className="w-24 h-24 object-cover rounded-full shadow mb-3 border border-indigo-200"
+                className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full shadow mb-2 border border-indigo-200"
               />
-              <h2 className="text-sm font-semibold text-gray-800 leading-tight uppercase">
+              <h2 className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-800 leading-tight uppercase">
                 {member.name}
               </h2>
-              <p className="text-xs text-gray-600">{member.role}</p>
+              <p className="text-[8px] sm:text-[10px] md:text-xs text-gray-600">
+                {member.role}
+              </p>
             </div>
           ))}
         </div>
