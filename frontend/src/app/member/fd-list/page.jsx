@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
+import { Calendar, IndianRupee, Clock, Info } from "lucide-react";
 
 const MemberFD = () => {
   const { getToken } = useAuth();
@@ -21,7 +22,6 @@ const MemberFD = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log(res.data);
       setFDs(Array.isArray(res.data) ? res.data : [res.data]);
     } catch (err) {
       console.error("Error fetching FDs:", err);
@@ -36,7 +36,9 @@ const MemberFD = () => {
 
   if (loading)
     return (
-      <p className="p-6 text-center text-gray-500">Loading FD accounts...</p>
+      <p className="p-6 text-center text-gray-500 animate-pulse">
+        Loading FD accounts...
+      </p>
     );
 
   if (!fds.length)
@@ -57,142 +59,157 @@ const MemberFD = () => {
     return Math.max(totalMonths - elapsedMonths, 0);
   };
 
-  // ✅ Take member details from first FD (since all FDs belong to same member)
   const member = fds[0]?.memberId;
 
   return (
-    <div className="p-4 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-8 bg-gradient-to-b from-green-50 to-white min-h-screen">
       {/* ✅ Member Info */}
       {member && (
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 bg-white shadow-md rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row items-center gap-5 bg-white rounded-2xl shadow-lg p-6 border border-green-100 hover:shadow-xl transition">
           <img
             src={member.photo}
             alt="Member"
-            className="w-20 h-20 rounded-full border-2 border-green-400 object-cover"
+            className="w-24 h-24 rounded-full border-4 border-green-300 object-cover shadow-sm"
           />
           <div className="text-center sm:text-left">
-            <h3 className="text-xl font-semibold text-green-700">
+            <h3 className="text-2xl font-semibold text-green-700 tracking-wide">
               {member.name}
             </h3>
-            <p className="text-gray-600">
-              📞 {member.phone || "Not Available"}
-            </p>
-            <p className="text-gray-600">📧 {member.email}</p>
+            <div className="mt-1 space-y-1 text-gray-600 text-sm sm:text-base">
+              <p>📞 {member.phone || "Not Available"}</p>
+              <p>📧 {member.email}</p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ✅ FD Accounts */}
-      <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800">
+      {/* ✅ FD Section Header */}
+      <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mt-6">
         💰 My Fixed Deposit Accounts
       </h2>
 
-      {fds.map((fd) => {
-        const remainingMonths = getRemainingMonths(
-          fd.startDate,
-          fd.maturityDate
-        );
+      {/* ✅ FD Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+        {fds.map((fd) => {
+          const remainingMonths = getRemainingMonths(
+            fd.startDate,
+            fd.maturityDate
+          );
 
-        return (
-          <div
-            key={fd._id}
-            className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden"
-          >
-            {/* FD Summary */}
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">Account No</p>
-                <p className="font-medium">{fd.accountNumber}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">Principal</p>
-                <p className="font-medium">₹{fd.principal?.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">Tenure</p>
-                <p className="font-medium">{fd.tenureMonths} months</p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">Interest</p>
-                <p className="font-medium">{fd.interestRate}%</p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">
-                  Maturity Amount
-                </p>
-                <p className="font-medium">
-                  ₹{fd.maturityAmount?.toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">
-                  Maturity Date
-                </p>
-                <p className="font-medium">
-                  {new Date(fd.maturityDate).toLocaleDateString("en-IN")}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">
-                  Remaining Months
-                </p>
-                <p
-                  className={`font-medium ${
-                    remainingMonths <= 3
-                      ? "text-red-600"
-                      : remainingMonths <= 12
-                      ? "text-yellow-600"
-                      : "text-green-700"
-                  }`}
-                >
-                  {remainingMonths}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs sm:text-sm">Status</p>
-                <p
-                  className={`font-medium px-2 py-1 rounded-full text-center ${
+          return (
+            <div
+              key={fd._id}
+              className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
+            >
+              {/* FD Header */}
+              <div className="bg-gradient-to-r from-green-600 to-emerald-400 text-white p-4 flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
+                  FD #{fd.accountNumber}
+                </h3>
+                <span
+                  className={`px-3 py-1 text-xs font-medium rounded-full ${
                     fd.status === "Active"
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-white/20"
                       : fd.status === "Closed"
-                      ? "bg-gray-200 text-gray-700"
-                      : "bg-yellow-100 text-yellow-700"
+                      ? "bg-gray-300 text-gray-800"
+                      : "bg-yellow-300 text-yellow-900"
                   }`}
                 >
                   {fd.status}
-                </p>
+                </span>
+              </div>
+
+              {/* FD Summary */}
+              <div className="p-5 space-y-3 text-sm sm:text-base">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-gray-500">Principal</p>
+                    <p className="font-semibold flex items-center gap-1">
+                      <IndianRupee className="w-4 h-4" />
+                      {fd.principal?.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Maturity Amount</p>
+                    <p className="font-semibold text-green-700 flex items-center gap-1">
+                      <IndianRupee className="w-4 h-4" />
+                      {fd.maturityAmount?.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Interest Rate</p>
+                    <p className="font-semibold">{fd.interestRate}%</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Tenure</p>
+                    <p className="font-semibold">{fd.tenureMonths} months</p>
+                  </div>
+                </div>
+
+                {/* Dates */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-gray-600">
+                  <p className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-green-600" />
+                    <strong>Start:</strong>{" "}
+                    {new Date(fd.startDate).toLocaleDateString("en-IN")}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-red-600" />
+                    <strong>Maturity:</strong>{" "}
+                    {new Date(fd.maturityDate).toLocaleDateString("en-IN")}
+                  </p>
+                </div>
+
+                {/* Remaining Months */}
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-gray-600" />
+                  <span
+                    className={`font-semibold ${
+                      remainingMonths <= 3
+                        ? "text-red-600"
+                        : remainingMonths <= 12
+                        ? "text-yellow-600"
+                        : "text-green-700"
+                    }`}
+                  >
+                    {remainingMonths} months remaining
+                  </span>
+                </div>
+
+                {/* FD Details */}
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg text-gray-700 text-sm space-y-1 border border-gray-100">
+                  <p>
+                    <strong>Compounding:</strong> {fd.compoundingFrequency}
+                  </p>
+                  <p>
+                    <strong>Payout:</strong> {fd.payoutFrequency}
+                  </p>
+                  <p>
+                    <strong>Auto Renew:</strong> {fd.autoRenew ? "Yes" : "No"}
+                  </p>
+                  <p>
+                    <strong>Preclosure:</strong>{" "}
+                    {fd.preclosureAllowed ? "Allowed" : "Not Allowed"}
+                  </p>
+                  {fd.preclosureAllowed && (
+                    <p>
+                      <strong>Penalty:</strong> {fd.preclosurePenaltyPercent}%
+                    </p>
+                  )}
+                  {fd.notes && (
+                    <p className="flex items-start gap-1 mt-2">
+                      <Info className="w-4 h-4 text-blue-600 mt-0.5" />
+                      <span>
+                        <strong>Notes:</strong> {fd.notes}
+                      </span>
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-
-            {/* FD Details */}
-            <div className="p-4 bg-gray-50 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t text-sm sm:text-base">
-              <p>
-                <strong>Compounding:</strong> {fd.compoundingFrequency}
-              </p>
-              <p>
-                <strong>Payout:</strong> {fd.payoutFrequency}
-              </p>
-              <p>
-                <strong>Auto Renew:</strong> {fd.autoRenew ? "Yes" : "No"}
-              </p>
-              <p>
-                <strong>Preclosure Allowed:</strong>{" "}
-                {fd.preclosureAllowed ? "Yes" : "No"}
-              </p>
-              {fd.preclosureAllowed && (
-                <p>
-                  <strong>Penalty %:</strong> {fd.preclosurePenaltyPercent}%
-                </p>
-              )}
-              {fd.notes && (
-                <p className="col-span-2">
-                  <strong>Notes:</strong> {fd.notes}
-                </p>
-              )}
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };

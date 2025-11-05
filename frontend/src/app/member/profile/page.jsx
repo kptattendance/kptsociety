@@ -51,13 +51,20 @@ export default function UserProfile() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setRds(
-          Array.isArray(rdRes.data)
-            ? rdRes.data
-            : rdRes.data
-            ? [rdRes.data]
-            : []
-        );
+
+        const data = rdRes.data;
+        // ✅ Normalize RD data into an array
+        const rdArray = data?.rdAccounts
+          ? data.rdAccounts // multiple RDs
+          : data?.rdAccount
+          ? [data.rdAccount] // single RD
+          : Array.isArray(data)
+          ? data
+          : data
+          ? [data]
+          : [];
+
+        setRds(rdArray);
       } catch (err) {
         console.error("Error fetching RD details:", err);
       }
@@ -91,14 +98,18 @@ export default function UserProfile() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log(shareRes)
-        setShares(
-          Array.isArray(shareRes.data)
-            ? shareRes.data
-            : shareRes.data
-            ? [shareRes.data]
-            : []
-        );
+        console.log(shareRes);
+
+        const data = shareRes.data;
+        const shareArray = data?.shareAccount
+          ? [data.shareAccount] // ✅ extract the nested object
+          : Array.isArray(data)
+          ? data
+          : data
+          ? [data]
+          : [];
+
+        setShares(shareArray);
       } catch (err) {
         console.error("Error fetching share details:", err);
       }
