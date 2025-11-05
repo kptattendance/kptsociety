@@ -1,13 +1,30 @@
-Allow all crawlers by default
+
+# ===========================
+# KPT Co-operative Society | robots.txt
+# Website: https://www.kptsociety.in
+# Last Updated: 04 November 2025
+# ===========================
 
 User-agent: *
+# ✅ Allow public pages for indexing
 Allow: /
 
-Block private login-protected and dashboard pages
+# 🚫 Disallow private, API, and admin routes
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /account/
+Disallow: /clerk/
+Disallow: /login/
+Disallow: /register/
+Disallow: /_next/
+Disallow: /static/
 
-Disallow: /admin-dashboard
-Disallow: /member-dashboard
+# ✅ Sitemap location
+Sitemap: https://www.kptsociety.in/sitemap.xml
 
-Sitemap location (points to the index file)
-
-Sitemap: https://www.google.com/search?q=https://kptsociety.vercel.app/sitemap-index.xml
+# ===========================
+# Notes:
+# - Keep this file in /public/ directory of your Next.js project.
+# - Submit your sitemap in Google Search Console & Bing Webmaster Tools.
+# ===========================

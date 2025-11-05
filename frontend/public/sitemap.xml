@@ -1,0 +1,81 @@
+/public/sitemap.xml
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
+  <!-- 🌐 Homepage -->
+  <url>
+    <loc>https://www.kptsociety.in/</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 🏛 About Page -->
+  <url>
+    <loc>https://www.kptsociety.in/about</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 💰 Services / Financial Products -->
+  <url>
+    <loc>https://www.kptsociety.in/services</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 🧾 Membership / Join Page -->
+  <url>
+    <loc>https://www.kptsociety.in/membership</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 📸 Gallery / Events -->
+  <url>
+    <loc>https://www.kptsociety.in/gallery</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- 📞 Contact -->
+  <url>
+    <loc>https://www.kptsociety.in/contact</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 📰 News / Announcements -->
+  <url>
+    <loc>https://www.kptsociety.in/news</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- 👥 Team / Committee -->
+  <url>
+    <loc>https://www.kptsociety.in/team</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- 📄 Terms & Privacy -->
+  <url>
+    <loc>https://www.kptsociety.in/privacy-policy</loc>
+    <lastmod>2025-11-04</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>
