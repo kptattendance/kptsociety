@@ -51,7 +51,13 @@ export default function UserProfile() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setRds(Array.isArray(rdRes.data) ? rdRes.data : [rdRes.data]);
+        setRds(
+          Array.isArray(rdRes.data)
+            ? rdRes.data
+            : rdRes.data
+            ? [rdRes.data]
+            : []
+        );
       } catch (err) {
         console.error("Error fetching RD details:", err);
       }
@@ -86,7 +92,11 @@ export default function UserProfile() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setShares(
-          Array.isArray(shareRes.data) ? shareRes.data : [shareRes.data]
+          Array.isArray(shareRes.data)
+            ? shareRes.data
+            : shareRes.data
+            ? [shareRes.data]
+            : []
         );
       } catch (err) {
         console.error("Error fetching share details:", err);
@@ -133,11 +143,21 @@ export default function UserProfile() {
     0
   );
 
-  const totalRD = rds.reduce((acc, rd) => acc + (rd.availableBalance || 0), 0);
   const totalFD = fds.reduce((acc, fd) => acc + (fd.principal || 0), 0);
   const totalCD = cds.reduce((acc, cd) => acc + (cd.balance || 0), 0);
+
+  // 🟡 RD: use totalDeposited if availableBalance is 0 or undefined
+  const totalRD = rds.reduce(
+    (acc, rd) =>
+      acc +
+      (rd.availableBalance > 0 ? rd.availableBalance : rd.totalDeposited || 0),
+    0
+  );
+
+  // 🟣 Shares: use currentAmountBalance or totalAmount
   const totalShares = shares.reduce(
-    (acc, s) => acc + (s.totalAmount || s.amount || 0),
+    (acc, s) =>
+      acc + (s.currentAmountBalance || s.totalAmount || s.amount || 0),
     0
   );
 
