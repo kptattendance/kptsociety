@@ -14,11 +14,7 @@ export default function Home() {
     <>
       <AboutUs />
       <Membership />
-      <Services />
       <OurTeam />
-      <LoanCalculatorPage />
-      <Downloads />
-      {/* <NewsAndAnnouncements /> */}
       <Gallery />
       <ContactUs />
       <Footer />

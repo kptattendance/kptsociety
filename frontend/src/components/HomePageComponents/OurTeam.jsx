@@ -110,26 +110,27 @@ export default function OurTeam() {
   ];
 
   return (
-    <div className="h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-8">
-      <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-center mb-10 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+      <div className="max-w-7xl mx-auto bg-white/70 backdrop-blur-sm shadow-xl rounded-2xl p-6">
+        <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           OUR TEAM
         </h1>
-        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+
+        <div className="grid gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {members.map((member) => (
             <div
               key={member.id}
-              className="flex flex-col items-center text-center bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300"
+              className="flex flex-col items-center text-center bg-white/60 backdrop-blur-md rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow duration-300"
             >
               <img
                 src={member.image}
                 alt={member.name}
-                className="w-32 h-32 object-cover rounded-full shadow-md mb-4 border-2 border-indigo-200"
+                className="w-24 h-24 object-cover rounded-full shadow mb-3 border border-indigo-200"
               />
-              <h2 className="text-lg font-semibold text-gray-800 uppercase">
+              <h2 className="text-sm font-semibold text-gray-800 leading-tight uppercase">
                 {member.name}
               </h2>
-              <p className="text-sm text-gray-600">{member.role}</p>
+              <p className="text-xs text-gray-600">{member.role}</p>
             </div>
           ))}
         </div>

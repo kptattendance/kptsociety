@@ -20,7 +20,6 @@ export default function ReadOnlyRow({
     <>
       {/* Photo */}
       <td className="px-3 py-3">
-        {member.clerkId}
         {member.photo ? (
           <img
             src={member.photo}
