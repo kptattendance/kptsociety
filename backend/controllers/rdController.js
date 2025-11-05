@@ -215,25 +215,30 @@ export const updateRD = async (req, res) => {
       if (updates[field] !== undefined) rd[field] = updates[field];
     });
 
-    // Recalculate maturity if relevant fields changed
+    // Recalculate maturity only if relevant fields changed
     if (
       updates.depositAmount ||
       updates.interestRate ||
       updates.tenureMonths ||
       updates.startDate
     ) {
-      const { maturityDate, maturityAmount } = calculateMaturity(
-        rd.depositAmount,
-        rd.tenureMonths,
-        rd.interestRate,
-        rd.startDate
-      );
+      const start = rd.startDate ? new Date(rd.startDate) : new Date();
+      const maturityDate = new Date(start);
+      maturityDate.setMonth(maturityDate.getMonth() + Number(rd.tenureMonths));
+
+      const P = Number(rd.depositAmount);
+      const r = Number(rd.interestRate) / 100; // annual rate in decimal
+      const t = Number(rd.tenureMonths) / 12; // years
+
+      // ✅ Yearly compounding RD formula (same as createRD)
+      const maturityAmount =
+        P * ((Math.pow(1 + r, t) - 1) / (1 - Math.pow(1 + r, -1 / 12)));
+
       rd.maturityDate = maturityDate;
       rd.maturityAmount = maturityAmount;
     }
 
     await rd.save();
-
     res.json(rd);
   } catch (err) {
     console.error(err);

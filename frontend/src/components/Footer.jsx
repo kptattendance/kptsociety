@@ -58,7 +58,7 @@ export default function Footer() {
             <ul className="text-sm text-gray-600 space-y-2 list-none">
               <li>
                 <a
-                  href="https://kptwebsite.com"
+                  href="https://gpt.karnataka.gov.in/kptmangalore/public/en"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-indigo-600"
@@ -69,6 +69,8 @@ export default function Footer() {
               <li>
                 <Link
                   href="https://www.kptplacements.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-indigo-600"
                 >
                   KPT Placements
@@ -77,6 +79,8 @@ export default function Footer() {
               <li>
                 <Link
                   href="https://kptblogs.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-indigo-600"
                 >
                   KPT Blogs
@@ -85,6 +89,8 @@ export default function Footer() {
               <li>
                 <Link
                   href="https://www.kptsociety.in/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-indigo-600"
                 >
                   KPT Alumni

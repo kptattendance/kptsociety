@@ -168,10 +168,10 @@ export default function AdminRDTable() {
         "Account Number": rd.accountNumber || "-",
         "Member Name": rd.memberId?.name || "Unknown",
         "Phone Number": rd.memberId?.phone || "N/A",
-        "Deposit Amount (₹)": rd.depositAmount || 0,
-        "Total Deposited (₹)": rd.totalDeposited || 0,
-        "Total Withdrawn (₹)": totalWithdrawn,
-        "Available Balance (₹)": rd.availableBalance,
+        "Deposit Amount (₹)": Math.round(rd.depositAmount || 0),
+        "Total Deposited (₹)": Math.round(rd.totalDeposited || 0),
+        "Total Withdrawn (₹)": Math.round(totalWithdrawn),
+        "Available Balance (₹)": Math.round(rd.availableBalance),
         "Interest Rate (%)": rd.interestRate || 0,
         "Tenure (Months)": rd.tenureMonths || 0,
         "Start Date": rd.startDate
@@ -180,7 +180,8 @@ export default function AdminRDTable() {
         "Maturity Date": rd.maturityDate
           ? new Date(rd.maturityDate).toLocaleDateString("en-GB")
           : "-",
-        "Maturity Amount (₹)": rd.maturityAmount || "-",
+        "Maturity Amount (₹)": Math.round(rd.maturityAmount || 0),
+
         Status: rd.status || "-",
       };
     });
@@ -367,7 +368,6 @@ export default function AdminRDTable() {
                         </p>
                       </div>
                     </td>
-
                     <td className="px-4 py-2 font-medium">
                       {editingId === rd._id ? (
                         <input
@@ -382,18 +382,20 @@ export default function AdminRDTable() {
                           className="border rounded-md px-2 py-1 w-24 text-center"
                         />
                       ) : (
-                        `₹${rd.depositAmount?.toLocaleString()}`
+                        <>
+                          ₹{Math.round(rd.depositAmount || 0).toLocaleString()}
+                        </>
                       )}
                     </td>
 
                     <td className="px-4 py-2">
-                      ₹{rd.totalDeposited?.toLocaleString() || 0}
+                      ₹{Math.round(rd.totalDeposited || 0).toLocaleString()}
                     </td>
                     <td className="px-4 py-2">
-                      ₹{totalWithdrawn.toLocaleString()}
+                      ₹{Math.round(totalWithdrawn).toLocaleString()}
                     </td>
                     <td className="px-4 py-2 font-medium text-gray-700">
-                      ₹{rd.availableBalance.toLocaleString()}
+                      ₹{Math.round(rd.availableBalance).toLocaleString()}
                     </td>
 
                     <td className="px-4 py-2">
@@ -454,7 +456,7 @@ export default function AdminRDTable() {
                       {new Date(rd.maturityDate).toLocaleDateString("en-GB")}
                     </td>
                     <td className="px-4 py-2 font-medium">
-                      ₹{rd.maturityAmount?.toLocaleString()}
+                      ₹{Math.round(rd.maturityAmount || 0).toLocaleString()}
                     </td>
 
                     <td className="px-4 py-2">

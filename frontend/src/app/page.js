@@ -16,7 +16,7 @@ export default function Home() {
       <Services />
       <LoanCalculatorPage />
       <Downloads />
-      <NewsAndAnnouncements />
+      {/* <NewsAndAnnouncements /> */}
       <Gallery />
       <ContactUs />
       <Footer />
