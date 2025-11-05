@@ -91,6 +91,7 @@ export default function UserProfile() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        console.log(shareRes)
         setShares(
           Array.isArray(shareRes.data)
             ? shareRes.data
