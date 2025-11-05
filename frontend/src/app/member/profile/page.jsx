@@ -155,8 +155,12 @@ export default function UserProfile() {
         : 0),
     0
   );
+  const totalPrincipal = fds.reduce((acc, fd) => acc + (fd.principal || 0), 0);
+  const totalMaturity = fds.reduce(
+    (acc, fd) => acc + (fd.maturityAmount || 0),
+    0
+  );
 
-  const totalFD = fds.reduce((acc, fd) => acc + (fd.principal || 0), 0);
   const totalCD = cds.reduce((acc, cd) => acc + (cd.balance || 0), 0);
 
   // 🟡 RD: use totalDeposited if availableBalance is 0 or undefined
@@ -315,7 +319,6 @@ export default function UserProfile() {
                 />
               </InfoCard>
             )}
-
             {fds.length > 0 && (
               <InfoCard title="Fixed Deposit Summary" color="blue">
                 <InfoItem
@@ -324,8 +327,13 @@ export default function UserProfile() {
                   iconColor="text-blue-600"
                 />
                 <InfoItem
-                  label="Total FD Amount"
-                  value={`₹${totalFD.toLocaleString()}`}
+                  label="Total Principal"
+                  value={`₹${totalPrincipal.toLocaleString()}`}
+                  iconColor="text-blue-600"
+                />
+                <InfoItem
+                  label="Total Maturity Value"
+                  value={`₹${totalMaturity.toLocaleString()}`}
                   iconColor="text-blue-600"
                 />
               </InfoCard>
