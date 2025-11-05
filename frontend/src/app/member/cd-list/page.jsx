@@ -148,9 +148,14 @@ const MemberCD = () => {
                 <div className="text-right">
                   <p>
                     Balance: ₹
-                    {(cd.totalDeposited - cd.totalWithdrawn).toLocaleString()}
+                    {Math.round(
+                      cd.totalDeposited - cd.totalWithdrawn
+                    ).toLocaleString("en-IN")}
                   </p>
-                  <p>Total Deposit: ₹{cd.totalDeposited.toLocaleString()}</p>
+                  <p>
+                    Total Deposit: ₹
+                    {Math.round(cd.totalDeposited || 0).toLocaleString("en-IN")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -183,7 +188,10 @@ const MemberCD = () => {
                             {new Date(inst.dueDate).toLocaleDateString("en-GB")}
                           </td>
                           <td className="px-3 py-2 text-right">
-                            ₹{inst.amount.toLocaleString()}
+                            ₹
+                            {Math.round(inst.amount || 0).toLocaleString(
+                              "en-IN"
+                            )}
                           </td>
                           <td className="px-3 py-2 text-right">
                             <span

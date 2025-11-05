@@ -286,12 +286,16 @@ export default function UserProfile() {
               <InfoCard title="Loan Summary" color="teal">
                 <InfoItem
                   label="Total Loan Amount"
-                  value={`₹${totalLoanAmount.toLocaleString()}`}
+                  value={`₹${Math.round(totalLoanAmount).toLocaleString(
+                    "en-IN"
+                  )}`}
                   iconColor="text-teal-600"
                 />
                 <InfoItem
                   label="Pending Principal"
-                  value={`₹${pendingPrincipal.toLocaleString()}`}
+                  value={`₹${Math.round(pendingPrincipal).toLocaleString(
+                    "en-IN"
+                  )}`}
                   iconColor="text-teal-600"
                 />
                 <InfoItem
@@ -319,7 +323,7 @@ export default function UserProfile() {
                 />
                 <InfoItem
                   label="Total RD Balance"
-                  value={`₹${totalRD.toLocaleString()}`}
+                  value={`₹${Math.round(totalRD).toLocaleString("en-IN")}`}
                   iconColor="text-indigo-600"
                 />
               </InfoCard>
@@ -357,7 +361,7 @@ export default function UserProfile() {
                 />
                 <InfoItem
                   label="Total CD Balance"
-                  value={`₹${totalCD.toLocaleString()}`}
+                  value={`₹${Math.round(totalCD).toLocaleString("en-IN")}`}
                   iconColor="text-emerald-600"
                 />
               </InfoCard>
@@ -372,7 +376,7 @@ export default function UserProfile() {
                 />
                 <InfoItem
                   label="Total Share Value"
-                  value={`₹${totalShares.toLocaleString()}`}
+                  value={`₹${Math.round(totalShares).toLocaleString("en-IN")}`}
                   iconColor="text-amber-600"
                 />
               </InfoCard>

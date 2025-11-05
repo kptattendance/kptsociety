@@ -126,14 +126,16 @@ const MemberFD = () => {
                     <p className="text-gray-500">Principal</p>
                     <p className="font-semibold flex items-center gap-1">
                       <IndianRupee className="w-4 h-4" />
-                      {fd.principal?.toLocaleString()}
+                      {Math.round(fd.principal || 0).toLocaleString("en-IN")}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-500">Maturity Amount</p>
                     <p className="font-semibold text-green-700 flex items-center gap-1">
                       <IndianRupee className="w-4 h-4" />
-                      {fd.maturityAmount?.toLocaleString()}
+                      {Math.round(fd.maturityAmount || 0).toLocaleString(
+                        "en-IN"
+                      )}
                     </p>
                   </div>
                   <div>

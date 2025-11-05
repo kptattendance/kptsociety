@@ -133,7 +133,8 @@ const MemberLoan = () => {
 
                     <td className="px-3 py-2">{loan.loanType}</td>
                     <td className="px-3 py-2 text-right">
-                      ₹{loan.loanAmount.toLocaleString()}
+                      ₹
+                      {Math.round(loan.loanAmount || 0).toLocaleString("en-IN")}
                     </td>
                     <td className="px-3 py-2 text-right">
                       {loan.interestRate}
@@ -164,7 +165,10 @@ const MemberLoan = () => {
                       {pendingInstallments}
                     </td>
                     <td className="px-3 py-2 text-right">
-                      ₹{pendingPrincipal.toLocaleString()}
+                      ₹
+                      {Math.round(pendingPrincipal || 0).toLocaleString(
+                        "en-IN"
+                      )}
                     </td>
                   </tr>
                 </tbody>
@@ -203,7 +207,10 @@ const MemberLoan = () => {
                             })}
                           </td>
                           <td className="px-2 py-1 text-right">
-                            ₹{lump.amount.toLocaleString()}
+                            ₹
+                            {Math.round(lump.amount || 0).toLocaleString(
+                              "en-IN"
+                            )}
                           </td>
                           <td className="px-2 py-1 text-right">{lump.mode}</td>
                           <td className="px-2 py-1 text-right">
@@ -250,16 +257,28 @@ const MemberLoan = () => {
                           })}
                         </td>
                         <td className="px-2 py-1 text-right">
-                          ₹{repay.principal.toFixed(2).toLocaleString()}
+                          ₹
+                          {Math.round(repay.principal || 0).toLocaleString(
+                            "en-IN"
+                          )}
                         </td>
                         <td className="px-2 py-1 text-right">
-                          ₹{repay.interest.toFixed(2).toLocaleString()}
+                          ₹
+                          {Math.round(repay.interest || 0).toLocaleString(
+                            "en-IN"
+                          )}
                         </td>
                         <td className="px-2 py-1 text-right">
-                          ₹{repay.totalEMI.toFixed(2).toLocaleString()}
+                          ₹
+                          {Math.round(repay.totalEMI || 0).toLocaleString(
+                            "en-IN"
+                          )}
                         </td>
                         <td className="px-2 py-1 text-right text-blue-700 font-medium">
-                          ₹{repay.scheduleOS.toFixed(2).toLocaleString()}
+                          ₹
+                          {Math.round(repay.scheduleOS || 0).toLocaleString(
+                            "en-IN"
+                          )}
                         </td>
                         <td className="px-2 py-1 text-center">
                           <span

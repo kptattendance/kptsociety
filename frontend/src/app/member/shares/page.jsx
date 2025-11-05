@@ -103,7 +103,7 @@ export default function MemberSharePage() {
           <div className="bg-pink-50 rounded-lg shadow p-4 text-center">
             <p className="text-gray-600 text-sm">Total Investment (₹)</p>
             <p className="text-xl font-bold text-pink-700">
-              ₹{share.totalAmount?.toLocaleString()}
+              ₹{Math.round(share.totalAmount || 0).toLocaleString("en-IN")}
             </p>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function MemberSharePage() {
                     </td>
                     <td className="border px-3 py-2">{p.sharesBought}</td>
                     <td className="border px-3 py-2">
-                      ₹{p.amountPaid?.toLocaleString()}
+                      ₹{Math.round(p.amountPaid || 0).toLocaleString("en-IN")}{" "}
                     </td>
                     <td className="border px-3 py-2">{p.paymentMode || "-"}</td>
                     <td className="border px-3 py-2">{p.reference || "-"}</td>
@@ -164,7 +164,10 @@ export default function MemberSharePage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-3 text-gray-500 italic">
+                  <td
+                    colSpan="6"
+                    className="text-center py-3 text-gray-500 italic"
+                  >
                     No records found.
                   </td>
                 </tr>

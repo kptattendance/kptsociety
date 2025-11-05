@@ -128,10 +128,13 @@ const MemberRD = () => {
 
                     <td className="py-2 px-3">{rd.accountNumber}</td>
                     <td className="py-2 px-3 text-right">
-                      ₹{rd.depositAmount.toLocaleString()}
+                      ₹
+                      {Math.round(rd.depositAmount || 0).toLocaleString(
+                        "en-IN"
+                      )}
                     </td>
                     <td className="py-2 px-3 text-right font-semibold text-gray-700">
-                      ₹{Math.round(rd.availableBalance).toLocaleString()}
+                      ₹{Math.round(rd.availableBalance).toLocaleString("en-IN")}
                     </td>
                     <td className="py-2 px-3 text-right">{rd.tenureMonths}</td>
                     <td className="py-2 px-3 text-right">{rd.interestRate}</td>
@@ -208,7 +211,8 @@ const MemberRD = () => {
                           })}
                         </td>
                         <td className="py-1 px-2 text-right">
-                          ₹{inst.amount.toLocaleString()}
+                          ₹
+                          {Math.round(inst.amount || 0).toLocaleString("en-IN")}
                         </td>
                         <td className="py-1 px-2 text-right">
                           {inst.paymentMode || "-"}
