@@ -18,8 +18,6 @@ const MemberRD = () => {
       if (!user) return;
 
       const token = await getToken();
-      console.log(token);
-      console.log(user.id);
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
         {
@@ -28,10 +26,22 @@ const MemberRD = () => {
       );
 
       const rdArray = Array.isArray(res.data) ? res.data : [res.data];
-      setRDs(rdArray);
+
+      // ✅ Compute available balance for each RD (same logic as AdminRDTable)
+      const updatedRDs = rdArray.map((rd) => {
+        const totalWithdrawn =
+          rd.withdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
+        const availableBalance = Math.max(
+          (rd.totalDeposited || 0) - totalWithdrawn,
+          0
+        );
+        return { ...rd, availableBalance };
+      });
+
+      setRDs(updatedRDs);
 
       const pages = {};
-      rdArray.forEach((rd) => (pages[rd._id] = 1));
+      updatedRDs.forEach((rd) => (pages[rd._id] = 1));
       setCurrentPage(pages);
     } catch (err) {
       console.error("Error fetching RDs:", err);
@@ -98,7 +108,6 @@ const MemberRD = () => {
 
                 <tbody>
                   <tr className="border-b even:bg-gray-50 hover:bg-gray-100 transition-colors">
-                    {/* ✅ Member Info Column */}
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-3">
                         <img
@@ -117,13 +126,12 @@ const MemberRD = () => {
                       </div>
                     </td>
 
-                    {/* ✅ Existing Columns */}
                     <td className="py-2 px-3">{rd.accountNumber}</td>
                     <td className="py-2 px-3 text-right">
                       ₹{rd.depositAmount.toLocaleString()}
                     </td>
-                    <td className="py-2 px-3 text-right">
-                      ₹{rd.availableBalance.toLocaleString()}
+                    <td className="py-2 px-3 text-right font-semibold text-gray-700">
+                      ₹{Math.round(rd.availableBalance).toLocaleString()}
                     </td>
                     <td className="py-2 px-3 text-right">{rd.tenureMonths}</td>
                     <td className="py-2 px-3 text-right">{rd.interestRate}</td>
@@ -157,8 +165,8 @@ const MemberRD = () => {
             <h3 className="text-lg sm:text-xl font-semibold mb-2 text-indigo-700">
               Installment Schedule
             </h3>
-            <div className=" bg-gradient-to-r from-pink-200 to-teal-100 p-6">
-              <div className="overflow-x-auto mb-2 ">
+            <div className="bg-gradient-to-r from-pink-200 to-teal-100 p-6">
+              <div className="overflow-x-auto mb-2">
                 <table
                   className="min-w-full text-sm sm:text-base rounded-lg overflow-hidden shadow-lg"
                   style={{
