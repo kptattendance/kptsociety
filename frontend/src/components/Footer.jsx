@@ -67,17 +67,26 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <Link href="/placements" className="hover:text-indigo-600">
+                <Link
+                  href="https://www.kptplacements.org/"
+                  className="hover:text-indigo-600"
+                >
                   KPT Placements
                 </Link>
               </li>
               <li>
-                <Link href="/blogs" className="hover:text-indigo-600">
+                <Link
+                  href="https://kptblogs.vercel.app/"
+                  className="hover:text-indigo-600"
+                >
                   KPT Blogs
                 </Link>
               </li>
               <li>
-                <Link href="/alumni" className="hover:text-indigo-600">
+                <Link
+                  href="https://www.kptsociety.in/"
+                  className="hover:text-indigo-600"
+                >
                   KPT Alumni
                 </Link>
               </li>
