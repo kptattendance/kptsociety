@@ -149,10 +149,11 @@ export default function MemberSharePage() {
                 share.purchaseHistory.map((p, i) => (
                   <tr key={i} className="hover:bg-gray-50">
                     <td className="border px-3 py-2">
-                      {p.date
-                        ? new Date(p.date).toLocaleDateString("en-GB")
+                      {p.purchaseDate
+                        ? new Date(p.purchaseDate).toLocaleDateString("en-GB")
                         : "-"}
                     </td>
+
                     <td className="border px-3 py-2">{p.sharesBought}</td>
                     <td className="border px-3 py-2">
                       ₹{Math.round(p.amountPaid || 0).toLocaleString("en-IN")}{" "}
