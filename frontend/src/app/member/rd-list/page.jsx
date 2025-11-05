@@ -85,7 +85,8 @@ const MemberRD = () => {
                   <tr>
                     <th className="py-2 px-3 text-left">Member</th>
                     <th className="py-2 px-3 text-left">Account No</th>
-                    <th className="py-2 px-3 text-right">Deposit</th>
+                    <th className="py-2 px-3 text-right">Monthly Deposit</th>
+                    <th className="py-2 px-3 text-right">Available Balance</th>
                     <th className="py-2 px-3 text-right">Tenure (months)</th>
                     <th className="py-2 px-3 text-right">Interest %</th>
                     <th className="py-2 px-3 text-right">Maturity Amt</th>
@@ -120,6 +121,9 @@ const MemberRD = () => {
                     <td className="py-2 px-3">{rd.accountNumber}</td>
                     <td className="py-2 px-3 text-right">
                       ₹{rd.depositAmount.toLocaleString()}
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      ₹{rd.availableBalance.toLocaleString()}
                     </td>
                     <td className="py-2 px-3 text-right">{rd.tenureMonths}</td>
                     <td className="py-2 px-3 text-right">{rd.interestRate}</td>

@@ -3,8 +3,8 @@
 export default function Gallery() {
   const images = [
     { src: "/1.jpg", alt: "Annual General Meeting" },
-    { src: "/2.jpg", alt: "Independence Day Celebration" },
-    { src: "/3.jpg", alt: "Cultural Program" },
+    { src: "/2.jpg", alt: "Annual General Meeting -2025" },
+    { src: "/3.jpg", alt: "Annual General Meeting -2025" },
     { src: "/2.jpg", alt: "Annual General Meeting -2025" },
   ];
 
