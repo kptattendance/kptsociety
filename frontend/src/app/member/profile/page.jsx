@@ -155,8 +155,13 @@ export default function UserProfile() {
         : 0),
     0
   );
-  const totalPrincipal = fds.reduce((acc, fd) => acc + (fd.principal || 0), 0);
-  const totalMaturity = fds.reduce(
+
+  const activeFDs = fds.filter((fd) => fd.status?.toLowerCase() !== "closed");
+  const totalPrincipal = activeFDs.reduce(
+    (acc, fd) => acc + (fd.principal || 0),
+    0
+  );
+  const totalMaturity = activeFDs.reduce(
     (acc, fd) => acc + (fd.maturityAmount || 0),
     0
   );
@@ -323,17 +328,17 @@ export default function UserProfile() {
               <InfoCard title="Fixed Deposit Summary" color="blue">
                 <InfoItem
                   label="Number of FD Accounts"
-                  value={fds.length}
+                  value={activeFDs.length}
                   iconColor="text-blue-600"
                 />
                 <InfoItem
                   label="Total Principal"
-                  value={`₹${totalPrincipal.toLocaleString()}`}
+                  value={`₹${Math.round(totalPrincipal).toLocaleString()}`}
                   iconColor="text-blue-600"
                 />
                 <InfoItem
                   label="Total Maturity Value"
-                  value={`₹${totalMaturity.toLocaleString()}`}
+                  value={`₹${Math.round(totalMaturity).toLocaleString()}`}
                   iconColor="text-blue-600"
                 />
               </InfoCard>
