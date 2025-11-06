@@ -123,7 +123,7 @@ export const updateInstallment = async (req, res) => {
     const cd = await CD.findById(cdId);
     if (!cd) return res.status(404).json({ error: "CD not found" });
 
-    // Handle initial deposit (monthNo 0)
+    // 🔹 Handle initial deposit (monthNo 0)
     if (parseInt(installmentNo) === 0) {
       if (status === "Paid") {
         const depositAmount = Number(amount) || cd.initialDeposit || 0;
@@ -140,9 +140,15 @@ export const updateInstallment = async (req, res) => {
           notes: "Initial Deposit",
         });
       } else if (status === "Pending") {
-        // Reset initial deposit
+        // 🔹 Reverse initial deposit
         cd.balance -= cd.initialDeposit || 0;
         cd.totalDeposited -= cd.initialDeposit || 0;
+
+        // Remove related transaction if exists
+        cd.transactions = cd.transactions.filter(
+          (t) => t.notes !== "Initial Deposit"
+        );
+
         cd.initialDeposit = 0;
         cd.initialDepositDate = null;
       }
@@ -151,40 +157,51 @@ export const updateInstallment = async (req, res) => {
       return res.json(cd);
     }
 
-    // Handle regular installments
+    // 🔹 Regular installments
     const inst = cd.installments.find(
       (i) => i.monthNo === parseInt(installmentNo)
     );
     if (!inst) return res.status(404).json({ error: "Installment not found" });
 
-    // Update status and paidAt
+    // Update status, paidAt, and due date
     if (status) {
       inst.status = status;
       inst.paidAt = status === "Paid" ? new Date() : null;
     }
 
-    // Update dueDate if provided
     if (dueDate) inst.dueDate = new Date(dueDate);
-
-    // Update amount if provided
     if (amount) inst.amount = Number(amount);
-
-    // Update clerk info if available
     if (clerkId) inst.clerkId = clerkId;
 
-    // Handle payment logic
+    // 🔹 Handle Paid → adds balance
     if (status === "Paid") {
       cd.totalDeposited += inst.amount;
       cd.balance += inst.amount;
+
       cd.transactions.push({
         type: "Deposit",
         amount: inst.amount,
         date: new Date(),
         clerkId,
+        notes: `Installment #${inst.monthNo}`,
       });
     }
 
-    // Auto-create next 12 installments if last one paid
+    // 🔹 Handle Paid → Pending → reverses balance
+    else if (status === "Pending") {
+      // Reverse only if it was previously paid
+      if (inst.paidAt || inst.status === "Pending") {
+        cd.totalDeposited -= inst.amount;
+        cd.balance -= inst.amount;
+
+        // Remove transaction related to this installment
+        cd.transactions = cd.transactions.filter(
+          (t) => t.notes !== `Installment #${inst.monthNo}`
+        );
+      }
+    }
+
+    // 🔹 Auto-generate next 12 months after last paid
     if (
       parseInt(installmentNo) === cd.installments.length &&
       status === "Paid"
@@ -205,6 +222,7 @@ export const updateInstallment = async (req, res) => {
     await cd.save();
     res.json(cd);
   } catch (err) {
+    console.error("updateInstallment error:", err);
     res.status(500).json({ error: err.message });
   }
 };

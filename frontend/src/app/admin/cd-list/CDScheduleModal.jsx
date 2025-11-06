@@ -25,6 +25,16 @@ export default function CDScheduleModal({ cdId, onClose }) {
   const [editingDateIndex, setEditingDateIndex] = useState(null);
   const [editDate, setEditDate] = useState("");
 
+  // Keep this inside your component or a helper file
+  const formatDateLocal = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`; // ✅ always local, no UTC shift
+  };
+
   // Fetch CD data
   const fetchCD = async () => {
     try {
@@ -174,9 +184,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
                           onClick={() => {
                             setEditingMonthIndex(idx);
                             setEditMonth(
-                              new Date(inst.tempDueDate || inst.dueDate)
-                                .toISOString()
-                                .split("T")[0]
+                              formatDateLocal(inst.tempDueDate || inst.dueDate)
                             );
                           }}
                         >
@@ -184,13 +192,13 @@ export default function CDScheduleModal({ cdId, onClose }) {
                             <input
                               key={
                                 idx + (inst.tempDueDate || inst.dueDate || "")
-                              } // 👈 fix for reselecting same date
+                              }
                               type="date"
                               value={
                                 editMonth ||
-                                new Date(inst.tempDueDate || inst.dueDate)
-                                  .toISOString()
-                                  .split("T")[0]
+                                formatDateLocal(
+                                  inst.tempDueDate || inst.dueDate
+                                )
                               }
                               onChange={(e) => {
                                 const newVal = e.target.value;
@@ -200,13 +208,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
                                 setCD({ ...cd, installments: updated });
                               }}
                               onBlur={() => setEditingMonthIndex(null)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === "Escape") {
-                                  setEditingMonthIndex(null);
-                                }
-                              }}
                               className="border px-2 py-1 rounded w-[130px] text-center"
-                              autoFocus
                             />
                           ) : (
                             <span className="hover:underline text-blue-700">
@@ -257,14 +259,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
                           {editingDateIndex === globalIndex - 1 ? (
                             <input
                               type="date"
-                              value={
-                                editDate ||
-                                (inst.paidAt
-                                  ? new Date(inst.paidAt)
-                                      .toISOString()
-                                      .split("T")[0]
-                                  : "")
-                              }
+                              value={editDate || formatDateLocal(inst.paidAt)}
                               onChange={(e) => setEditDate(e.target.value)}
                               onBlur={() => {
                                 setEditingDateIndex(null);
