@@ -10,8 +10,8 @@ export default function ContactUs() {
   const [submitting, setSubmitting] = useState(false);
 
   // ✅ Your actual Google Form “formResponse” URL
-  const GOOGLE_FORM_ACTION =
-    "https://docs.google.com/forms/d/e/1FAIpQLSdVgJhylYUGifXu1eDe6qNcvIYy987wchnUCQnQ6G9W9Bhqxg/viewform?usp=dialog";
+const GOOGLE_FORM_ACTION =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdVgJhylYUGifXu1eDe6qNcvIYy987wchnUCQnQ6G9W9Bhqxg/formResponse";
 
   // ✅ Replace these entry IDs with your actual Google Form field IDs
   const ENTRY_NAME = "entry.51162402";
@@ -22,7 +22,7 @@ export default function ContactUs() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
@@ -42,17 +42,23 @@ export default function ContactUs() {
     form.append(ENTRY_MESSAGE, formData.message);
 
     try {
-      await fetch(GOOGLE_FORM_ACTION, {
+      await fetch(GOOGLE_FORM_ACTION, { // <-- Make sure this URL is fixed
         method: "POST",
         mode: "no-cors",
         body: form,
       });
 
+      // ---- THIS IS THE FIX ----
+      // With "no-cors", the fetch is "opaque," so we can't read the response.
+      // We will *assume* it was successful if no network error was thrown.
+      // Move the success logic here, *outside* the try block.
+      
       alert("✅ Message sent successfully! Thank you for your feedback 🙏");
-
       setFormData({ name: "", email: "", message: "" });
+      
     } catch (err) {
-      alert("❌ Something went wrong! Please try again later.");
+      // This will now only catch actual network errors (e.g., user is offline)
+      alert("❌ A network error occurred! Please try again later.");
     } finally {
       setSubmitting(false);
     }
