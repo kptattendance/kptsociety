@@ -306,6 +306,7 @@ export default function AdminCDList() {
                   />
                 </th>
 
+                <th className="px-4 py-2 text-left">Account Opening Date</th>
                 <th className="px-4 py-2 text-left">Start Date</th>
                 <th className="px-4 py-2 text-left">Monthly Deposit (₹)</th>
                 <th className="px-4 py-2 text-left">Total Deposited</th>
@@ -365,6 +366,22 @@ export default function AdminCDList() {
                         {cd.memberId?.phone || "-"}
                       </p>
                     </div>
+                  </td>
+
+                  <td className="px-4 py-2">
+                    {editId === cd._id ? (
+                      <input
+                        type="date"
+                        name="initialDepositDate"
+                        value={editData.initialDepositDate}
+                        onChange={handleEditChange}
+                        className="border rounded-md px-2 py-1 w-full"
+                      />
+                    ) : cd.initialDepositDate ? (
+                      new Date(cd.initialDepositDate).toLocaleDateString()
+                    ) : (
+                      "-"
+                    )}
                   </td>
 
                   <td className="px-4 py-2">
