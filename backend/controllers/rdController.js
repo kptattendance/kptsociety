@@ -201,7 +201,7 @@ export const updateRD = async (req, res) => {
         return res.status(400).json({ error: "Account number already exists" });
     }
 
-    // Update allowed fields
+    // 🔹 Update allowed fields
     const allowedFields = [
       "accountNumber",
       "depositAmount",
@@ -210,12 +210,21 @@ export const updateRD = async (req, res) => {
       "startDate",
       "notes",
       "status",
+      "initialDeposit",
+      "initialDepositDate", // ✅ Added this line
     ];
+
     allowedFields.forEach((field) => {
-      if (updates[field] !== undefined) rd[field] = updates[field];
+      if (updates[field] !== undefined) {
+        if (field === "initialDepositDate") {
+          rd[field] = updates[field] ? new Date(updates[field]) : null;
+        } else {
+          rd[field] = updates[field];
+        }
+      }
     });
 
-    // Recalculate maturity only if relevant fields changed
+    // 🔹 Recalculate maturity if relevant fields changed
     if (
       updates.depositAmount ||
       updates.interestRate ||
@@ -227,10 +236,10 @@ export const updateRD = async (req, res) => {
       maturityDate.setMonth(maturityDate.getMonth() + Number(rd.tenureMonths));
 
       const P = Number(rd.depositAmount);
-      const r = Number(rd.interestRate) / 100; // annual rate in decimal
+      const r = Number(rd.interestRate) / 100; // annual rate
       const t = Number(rd.tenureMonths) / 12; // years
 
-      // ✅ Yearly compounding RD formula (same as createRD)
+      // Yearly compounding RD formula
       const maturityAmount =
         P * ((Math.pow(1 + r, t) - 1) / (1 - Math.pow(1 + r, -1 / 12)));
 
@@ -241,7 +250,7 @@ export const updateRD = async (req, res) => {
     await rd.save();
     res.json(rd);
   } catch (err) {
-    console.error(err);
+    console.error("updateRD error:", err);
     res.status(500).json({ error: err.message });
   }
 };
