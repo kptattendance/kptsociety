@@ -88,6 +88,10 @@ export default function AdminRDTable() {
       interestRate: rd.interestRate || "",
       tenureMonths: rd.tenureMonths || "",
       startDate: rd.startDate ? rd.startDate.slice(0, 10) : "",
+      initialDeposit: rd.initialDeposit || "", // ✅ add this
+      initialDepositDate: rd.initialDepositDate
+        ? rd.initialDepositDate.slice(0, 10)
+        : "", // ✅ add this
       dueDayOfMonth: rd.dueDayOfMonth || "",
       gracePeriodDays: rd.gracePeriodDays || "",
       lateFeePerInstallment: rd.lateFeePerInstallment || "",
@@ -293,6 +297,7 @@ export default function AdminRDTable() {
                 <th className="px-4 py-2 text-left">Available Balance (₹)</th>
                 <th className="px-4 py-2 text-left">Interest (%)</th>
                 <th className="px-4 py-2 text-left">Tenure (Months)</th>
+                <th className="px-4 py-2 text-left">Act Opening Date</th>
                 <th className="px-4 py-2 text-left">Start Date</th>
                 <th className="px-4 py-2 text-left">Maturity Date</th>
                 <th className="px-4 py-2 text-left">Maturity Amount</th>
@@ -439,7 +444,25 @@ export default function AdminRDTable() {
                         rd.tenureMonths
                       )}
                     </td>
-
+                    <td className="px-4 py-2 text-gray-600">
+                      {editingId === rd._id ? (
+                        <input
+                          type="date"
+                          value={editForm.initialDepositDate}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              initialDepositDate: e.target.value,
+                            })
+                          }
+                          className="border rounded-md px-2 py-1"
+                        />
+                      ) : (
+                        new Date(rd.initialDepositDate).toLocaleDateString(
+                          "en-GB"
+                        )
+                      )}
+                    </td>
                     <td className="px-4 py-2 text-gray-600">
                       {editingId === rd._id ? (
                         <input

@@ -192,7 +192,7 @@ export default function AdminRDForm() {
           {/* Initial Deposit Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Initial Deposit Date
+              Account Opening Date / Initial Deposit Date
             </label>
             <input
               type="date"
@@ -257,7 +257,7 @@ export default function AdminRDForm() {
           {/* Start Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Start Date
+              Start Date (Seen in paid or pending)
             </label>
             <input
               type="date"

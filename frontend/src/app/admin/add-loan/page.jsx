@@ -253,7 +253,7 @@ export default function AdminLoanApplicationForm() {
         {/* Start Date (manual input) */}
         <div className="flex flex-col">
           <label className="mb-1 font-medium text-gray-700">
-            Loan Start Date
+            Loan Start Date (seen in paid or pending)
           </label>
           <input
             type="date"
