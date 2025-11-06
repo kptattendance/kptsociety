@@ -117,7 +117,9 @@ export default function CDScheduleModal({ cdId, onClose }) {
               </p>
               <p className="text-gray-700">
                 <span className="font-semibold">💰 Balance:</span> ₹
-                {cd.balance.toFixed(2)}
+                {cd.balance.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                })}
               </p>
               <p className="text-gray-700">
                 <span className="font-semibold">📊 Status:</span>{" "}
@@ -223,8 +225,12 @@ export default function CDScheduleModal({ cdId, onClose }) {
                             </span>
                           )}
                         </td>
-
-                        <td className="px-3 py-2">₹{inst.amount}</td>
+                        <td className="px-3 py-2">
+                          ₹
+                          {Number(inst.amount).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </td>
 
                         <td className="px-3 py-2">
                           <select
@@ -438,7 +444,13 @@ export default function CDScheduleModal({ cdId, onClose }) {
                     <td className="px-3 py-2">
                       {(pageWithdrawals - 1) * itemsPerPage + idx + 1}
                     </td>
-                    <td className="px-3 py-2">₹{t.amount.toFixed(2)}</td>
+                    <td className="px-3 py-2">
+                      ₹
+                      {Number(t.amount).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </td>
+
                     <td className="px-3 py-2">{t.reason || "-"}</td>
                     <td className="px-3 py-2">{t.chequeNumber || "-"}</td>
                     <td className="px-3 py-2">
@@ -481,7 +493,12 @@ export default function CDScheduleModal({ cdId, onClose }) {
                     <td className="px-3 py-2">
                       {new Date(t.date).toLocaleDateString("en-GB")}
                     </td>
-                    <td className="px-3 py-2">₹{t.amount.toFixed(2)}</td>
+                    <td className="px-3 py-2">
+                      ₹
+                      {Number(t.amount).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -110,7 +110,7 @@ export default function RDScheduleModal({ rdId, onClose }) {
               💰 Total Deposited
             </h4>
             <p className="text-lg font-semibold text-emerald-700 mt-1">
-              ₹{rd.totalDeposited?.toFixed(2) || "0.00"}
+              ₹{Math.round(rd.totalDeposited || 0).toLocaleString("en-IN")}
             </p>
           </div>
 
@@ -119,7 +119,7 @@ export default function RDScheduleModal({ rdId, onClose }) {
               🏦 Maturity Amount
             </h4>
             <p className="text-lg font-semibold text-yellow-700 mt-1">
-              ₹{rd.maturityAmount?.toFixed(2) || "0.00"}
+              ₹{Math.round(rd.maturityAmount || 0).toLocaleString("en-IN")}
             </p>
           </div>
         </div>
@@ -211,7 +211,11 @@ export default function RDScheduleModal({ rdId, onClose }) {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2">₹{inst.amount}</td>
+                        <td className="px-3 py-2">
+                          ₹
+                          {Math.round(inst.amount || 0).toLocaleString("en-IN")}
+                        </td>
+
                         <td className="px-3 py-2">
                           <select
                             value={inst.status}
@@ -413,7 +417,10 @@ export default function RDScheduleModal({ rdId, onClose }) {
                       <td className="px-3 py-2">
                         {(pageWithdrawals - 1) * itemsPerPage + idx + 1}
                       </td>
-                      <td className="px-3 py-2">₹{w.amount.toFixed(2)}</td>
+                      <td className="px-3 py-2">
+                        ₹{Math.round(w.amount || 0).toLocaleString("en-IN")}
+                      </td>
+
                       <td className="px-3 py-2">{w.chequeNumber || "-"}</td>
                       <td className="px-3 py-2">
                         {w.chequeDate

@@ -1,10 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { Pencil, Trash2 } from "lucide-react";
 
 export default function ShareDetailsModal({ share, onClose, refreshShares }) {
   const { getToken } = useAuth();
@@ -19,11 +18,9 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
   const [saving, setSaving] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editData, setEditData] = useState({});
-  // 🟢 Local state for updated withdrawals
   const [localWithdrawals, setLocalWithdrawals] = useState(
     share.withdrawalHistory || []
   );
-  // Add this at the top
   const [localPurchases, setLocalPurchases] = useState(
     share.purchaseHistory || []
   );
@@ -74,6 +71,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
       setSaving(false);
     }
   };
+
   const handleEditClick = (p, index) => {
     setEditingIndex(index);
     setEditData(p);
@@ -95,13 +93,12 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
 
       toast.success("Purchase updated");
 
-      // Update local state immediately
       const updated = [...localPurchases];
       updated[editingIndex] = { ...editData };
       setLocalPurchases(updated);
 
       setEditingIndex(null);
-      refreshShares(); // optional — keeps backend in sync
+      refreshShares();
     } catch (err) {
       toast.error(err.response?.data?.error || "Update failed");
     }
@@ -119,10 +116,9 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
 
       toast.success("Purchase deleted");
 
-      // Update local list immediately
       setLocalPurchases((prev) => prev.filter((_, i) => i !== index));
 
-      refreshShares(); // optional — to sync parent data
+      refreshShares();
     } catch (err) {
       toast.error(err.response?.data?.error || "Delete failed");
     }
@@ -131,7 +127,6 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl shadow-2xl w-[90%] max-w-6xl p-6 relative overflow-y-auto max-h-[90vh] border border-indigo-100">
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute cursor-pointer top-3 right-3 text-gray-600 hover:text-red-600"
@@ -139,7 +134,6 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
           <X size={22} />
         </button>
 
-        {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
             Share Account Details
@@ -150,7 +144,6 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
           </p>
         </div>
 
-        {/* Member Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl p-4 shadow-inner mb-6">
           <p>
             <strong>📞 Phone:</strong> {share.memberId?.phone || "-"}
@@ -168,7 +161,8 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
             </span>
           </p>
           <p>
-            <strong>💰 Share Price:</strong> ₹{share.sharePrice}
+            <strong>💰 Share Price:</strong> ₹
+            {Math.round(share.sharePrice || 0).toLocaleString("en-IN")}
           </p>
         </div>
 
@@ -273,7 +267,12 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
                             : "-"}
                         </td>
                         <td className="px-3 py-2">{p.sharesBought}</td>
-                        <td className="px-3 py-2">₹{p.amountPaid}</td>
+                        <td className="px-3 py-2">
+                          ₹
+                          {Math.round(p.amountPaid || 0).toLocaleString(
+                            "en-IN"
+                          )}
+                        </td>
                         <td className="px-3 py-2">{p.paymentMode}</td>
                         <td className="px-3 py-2">{p.reference || "-"}</td>
                         <td className="px-3 py-2">{p.notes || "-"}</td>
@@ -323,10 +322,15 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
                 {localWithdrawals.map((w, i) => (
                   <tr key={i} className="hover:bg-red-50 transition-colors">
                     <td className="px-3 py-2">
-                      {new Date(w.date).toLocaleDateString("en-GB")}
+                      {w.date
+                        ? new Date(w.date).toLocaleDateString("en-GB")
+                        : "-"}
                     </td>
                     <td className="px-3 py-2">{w.sharesReturned}</td>
-                    <td className="px-3 py-2">₹{w.amountPaidOut}</td>
+                    <td className="px-3 py-2">
+                      ₹
+                      {Math.round(w.amountPaidOut || 0).toLocaleString("en-IN")}
+                    </td>
                     <td className="px-3 py-2">{w.paymentMode}</td>
                     <td className="px-3 py-2">{w.reference || "-"}</td>
                     <td className="px-3 py-2">{w.notes || "-"}</td>
