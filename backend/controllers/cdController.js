@@ -51,9 +51,9 @@ export const createCD = async (req, res) => {
     });
 
     const start = new Date(startDate || new Date());
+
     for (let i = 0; i < 12; i++) {
-      const due = new Date(start);
-      due.setMonth(start.getMonth() + i);
+      const due = addMonthsSafe(start, i);
 
       cd.installments.push({
         monthNo: i + 1,
@@ -114,6 +114,24 @@ export const getCDById = async (req, res) => {
   }
 };
 
+// 🔹 Helper: safely add months without skipping or duplicating
+function addMonthsSafe(baseDate, monthsToAdd) {
+  const date = new Date(baseDate);
+  const day = date.getDate();
+  const newMonth = date.getMonth() + monthsToAdd;
+  const newYear = date.getFullYear() + Math.floor(newMonth / 12);
+  const monthIndex = newMonth % 12;
+
+  // Set date to 1 first (avoid overflow)
+  const newDate = new Date(newYear, monthIndex, 1);
+
+  // Then set back to same day, or last valid day of target month
+  const daysInTargetMonth = new Date(newYear, monthIndex + 1, 0).getDate();
+  newDate.setDate(Math.min(day, daysInTargetMonth));
+
+  return newDate;
+}
+
 // ------------------- Mark Installment Paid/Pending -------------------
 export const updateInstallment = async (req, res) => {
   try {
@@ -153,6 +171,10 @@ export const updateInstallment = async (req, res) => {
         cd.initialDepositDate = null;
       }
 
+      // prevent negatives
+      cd.balance = Math.max(0, cd.balance);
+      cd.totalDeposited = Math.max(0, cd.totalDeposited);
+
       await cd.save();
       return res.json(cd);
     }
@@ -163,18 +185,16 @@ export const updateInstallment = async (req, res) => {
     );
     if (!inst) return res.status(404).json({ error: "Installment not found" });
 
-    // Update status, paidAt, and due date
-    if (status) {
-      inst.status = status;
-      inst.paidAt = status === "Paid" ? new Date() : null;
-    }
-
+    // Update fields
     if (dueDate) inst.dueDate = new Date(dueDate);
     if (amount) inst.amount = Number(amount);
     if (clerkId) inst.clerkId = clerkId;
 
-    // 🔹 Handle Paid → adds balance
-    if (status === "Paid") {
+    // 🔹 Handle Paid
+    if (status === "Paid" && inst.status !== "Paid") {
+      inst.status = "Paid";
+      inst.paidAt = new Date();
+
       cd.totalDeposited += inst.amount;
       cd.balance += inst.amount;
 
@@ -187,18 +207,18 @@ export const updateInstallment = async (req, res) => {
       });
     }
 
-    // 🔹 Handle Paid → Pending → reverses balance
-    else if (status === "Pending") {
-      // Reverse only if it was previously paid
-      if (inst.paidAt || inst.status === "Pending") {
-        cd.totalDeposited -= inst.amount;
-        cd.balance -= inst.amount;
+    // 🔹 Handle Reversal: Paid → Pending
+    else if (status === "Pending" && inst.status === "Paid") {
+      inst.status = "Pending";
+      inst.paidAt = null;
 
-        // Remove transaction related to this installment
-        cd.transactions = cd.transactions.filter(
-          (t) => t.notes !== `Installment #${inst.monthNo}`
-        );
-      }
+      cd.totalDeposited -= inst.amount;
+      cd.balance -= inst.amount;
+
+      // Remove related transaction
+      cd.transactions = cd.transactions.filter(
+        (t) => t.notes !== `Installment #${inst.monthNo}`
+      );
     }
 
     // 🔹 Auto-generate next 12 months after last paid
@@ -207,9 +227,10 @@ export const updateInstallment = async (req, res) => {
       status === "Paid"
     ) {
       const lastDue = new Date(inst.dueDate);
+
       for (let i = 1; i <= 12; i++) {
-        const nextDue = new Date(lastDue);
-        nextDue.setMonth(nextDue.getMonth() + i);
+        const nextDue = addMonthsSafe(lastDue, i);
+
         cd.installments.push({
           monthNo: cd.installments.length + 1,
           dueDate: nextDue,
@@ -218,6 +239,10 @@ export const updateInstallment = async (req, res) => {
         });
       }
     }
+
+    // Prevent any negative rounding errors
+    cd.balance = Math.max(0, cd.balance);
+    cd.totalDeposited = Math.max(0, cd.totalDeposited);
 
     await cd.save();
     res.json(cd);
@@ -378,9 +403,9 @@ export const updateCDAccount = async (req, res) => {
     if (startDate) {
       cd.installments = [];
       const start = new Date(startDate);
+
       for (let i = 0; i < 12; i++) {
-        const due = new Date(start);
-        due.setMonth(start.getMonth() + i);
+        const due = addMonthsSafe(start, i); // ✅ Safe month increment
 
         cd.installments.push({
           monthNo: i + 1,
