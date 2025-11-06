@@ -10,13 +10,12 @@ export default function ContactUs() {
   const [submitting, setSubmitting] = useState(false);
 
   // ✅ Your actual Google Form “formResponse” URL
-  const GOOGLE_FORM_ACTION =
-    "https://docs.google.com/forms/u/0/d/e/1FAIpQLSdjfko13cKc0KNcJMWNFXjwHVZcY0-IkwvzD2h2VjfLR1A1pA/formResponse";
+  const GOOGLE_FORM_ACTION = "https://forms.gle/F7CisDwK7uHpYLN76";
 
   // ✅ Replace these entry IDs with your actual Google Form field IDs
-  const ENTRY_NAME = "entry.1327807063";
-  const ENTRY_EMAIL = "entry.603544502";
-  const ENTRY_MESSAGE = "entry.1056241350";
+  const ENTRY_NAME = "entry.51162402";
+  const ENTRY_EMAIL = "entry.872119969";
+  const ENTRY_MESSAGE = "entry.1208811262";
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
