@@ -194,7 +194,7 @@ export default function AdminCDForm() {
           {/* Initial Deposit Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Initial Deposit Date
+              Account Opening Date
             </label>
             <input
               type="date"
