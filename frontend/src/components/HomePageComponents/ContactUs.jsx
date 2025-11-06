@@ -10,7 +10,8 @@ export default function ContactUs() {
   const [submitting, setSubmitting] = useState(false);
 
   // ✅ Your actual Google Form “formResponse” URL
-  const GOOGLE_FORM_ACTION = "https://forms.gle/F7CisDwK7uHpYLN76";
+  const GOOGLE_FORM_ACTION =
+    "https://docs.google.com/forms/d/e/1FAIpQLSdVgJhylYUGifXu1eDe6qNcvIYy987wchnUCQnQ6G9W9Bhqxg/viewform?usp=dialog";
 
   // ✅ Replace these entry IDs with your actual Google Form field IDs
   const ENTRY_NAME = "entry.51162402";
