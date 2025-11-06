@@ -1,6 +1,63 @@
 "use client";
+import React, { useState } from "react";
 
 export default function ContactUs() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  // ✅ Your actual Google Form “formResponse” URL
+  const GOOGLE_FORM_ACTION =
+    "https://docs.google.com/forms/u/0/d/e/1FAIpQLSdjfko13cKc0KNcJMWNFXjwHVZcY0-IkwvzD2h2VjfLR1A1pA/formResponse";
+
+  // ✅ Replace these entry IDs with your actual Google Form field IDs
+  const ENTRY_NAME = "entry.1327807063";
+  const ENTRY_EMAIL = "entry.603544502";
+  const ENTRY_MESSAGE = "entry.1056241350";
+
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.message.trim()
+    ) {
+      alert("⚠ Please fill all fields before submitting.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    const form = new FormData();
+    form.append(ENTRY_NAME, formData.name);
+    form.append(ENTRY_EMAIL, formData.email);
+    form.append(ENTRY_MESSAGE, formData.message);
+
+    try {
+      await fetch(GOOGLE_FORM_ACTION, {
+        method: "POST",
+        mode: "no-cors",
+        body: form,
+      });
+
+      alert("✅ Message sent successfully! Thank you for your feedback 🙏");
+
+      setFormData({ name: "", email: "", message: "" });
+    } catch (err) {
+      alert("❌ Something went wrong! Please try again later.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <section className="text-gray-600 body-font relative">
       <div className="container px-5 py-24 mx-auto flex sm:flex-nowrap flex-wrap">
@@ -36,7 +93,7 @@ export default function ContactUs() {
                 EMAIL
               </h2>
               <a
-                href="mailto:society@kpt.edu"
+                href="mailto:kptsociety@gmail.com"
                 className="text-indigo-500 leading-relaxed"
               >
                 kptsociety@gmail.com
@@ -50,7 +107,10 @@ export default function ContactUs() {
         </div>
 
         {/* 📨 Feedback Form */}
-        <div className="lg:w-1/3 md:w-1/2 bg-white flex flex-col md:ml-auto w-full md:py-8 mt-8 md:mt-0">
+        <form
+          onSubmit={handleSubmit}
+          className="lg:w-1/3 md:w-1/2 bg-white flex flex-col md:ml-auto w-full md:py-8 mt-8 md:mt-0"
+        >
           <h2 className="text-gray-900 text-lg mb-1 font-medium title-font">
             Feedback
           </h2>
@@ -66,7 +126,9 @@ export default function ContactUs() {
             <input
               type="text"
               id="name"
-              name="name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              required
               className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
             />
           </div>
@@ -78,7 +140,9 @@ export default function ContactUs() {
             <input
               type="email"
               id="email"
-              name="email"
+              value={formData.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              required
               className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
             />
           </div>
@@ -92,19 +156,25 @@ export default function ContactUs() {
             </label>
             <textarea
               id="message"
-              name="message"
+              value={formData.message}
+              onChange={(e) => handleChange("message", e.target.value)}
+              required
               className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 h-32 text-base outline-none text-gray-700 py-1 px-3 resize-none leading-6 transition-colors duration-200 ease-in-out"
             ></textarea>
           </div>
 
-          <button className="text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg">
-            Send Message
+          <button
+            type="submit"
+            disabled={submitting}
+            className="text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg"
+          >
+            {submitting ? "Sending..." : "Send Message"}
           </button>
 
           <p className="text-xs text-gray-500 mt-3">
             Thank you for connecting with KPT Co-operative Society.
           </p>
-        </div>
+        </form>
       </div>
     </section>
   );
