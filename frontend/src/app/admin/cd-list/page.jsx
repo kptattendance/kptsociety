@@ -368,36 +368,18 @@ export default function AdminCDList() {
                     </div>
                   </td>
 
-                  <td className="px-4 py-2">
-                    {editId === cd._id ? (
-                      <input
-                        type="date"
-                        name="initialDepositDate"
-                        value={editData.initialDepositDate}
-                        onChange={handleEditChange}
-                        className="border rounded-md px-2 py-1 w-full"
-                      />
-                    ) : cd.initialDepositDate ? (
-                      new Date(cd.initialDepositDate).toLocaleDateString()
-                    ) : (
-                      "-"
-                    )}
+                  <td className="px-4 py-2 text-gray-600">
+                    {cd.initialDepositDate
+                      ? new Date(cd.initialDepositDate).toLocaleDateString(
+                          "en-GB"
+                        )
+                      : "-"}
                   </td>
 
-                  <td className="px-4 py-2">
-                    {editId === cd._id ? (
-                      <input
-                        type="date"
-                        name="startDate"
-                        value={editData.startDate}
-                        onChange={handleEditChange}
-                        className="border rounded-md px-2 py-1 w-full"
-                      />
-                    ) : cd.startDate ? (
-                      new Date(cd.startDate).toLocaleDateString()
-                    ) : (
-                      "-"
-                    )}
+                  <td className="px-4 py-2 text-gray-600">
+                    {cd.startDate
+                      ? new Date(cd.startDate).toLocaleDateString("en-GB")
+                      : "-"}
                   </td>
 
                   <td className="px-4 py-2">

@@ -297,7 +297,7 @@ export default function AdminRDTable() {
                 <th className="px-4 py-2 text-left">Available Balance (₹)</th>
                 <th className="px-4 py-2 text-left">Interest (%)</th>
                 <th className="px-4 py-2 text-left">Tenure (Months)</th>
-                <th className="px-4 py-2 text-left">Act Opening Date</th>
+                <th className="px-4 py-2 text-left">Account Opening Date</th>
                 <th className="px-4 py-2 text-left">Start Date</th>
                 <th className="px-4 py-2 text-left">Maturity Date</th>
                 <th className="px-4 py-2 text-left">Maturity Amount</th>
@@ -445,40 +445,17 @@ export default function AdminRDTable() {
                       )}
                     </td>
                     <td className="px-4 py-2 text-gray-600">
-                      {editingId === rd._id ? (
-                        <input
-                          type="date"
-                          value={editForm.initialDepositDate}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              initialDepositDate: e.target.value,
-                            })
-                          }
-                          className="border rounded-md px-2 py-1"
-                        />
-                      ) : (
-                        new Date(rd.initialDepositDate).toLocaleDateString(
-                          "en-GB"
-                        )
-                      )}
+                      {rd.initialDepositDate
+                        ? new Date(rd.initialDepositDate).toLocaleDateString(
+                            "en-GB"
+                          )
+                        : "-"}
                     </td>
+
                     <td className="px-4 py-2 text-gray-600">
-                      {editingId === rd._id ? (
-                        <input
-                          type="date"
-                          value={editForm.startDate}
-                          onChange={(e) =>
-                            setEditForm({
-                              ...editForm,
-                              startDate: e.target.value,
-                            })
-                          }
-                          className="border rounded-md px-2 py-1"
-                        />
-                      ) : (
-                        new Date(rd.startDate).toLocaleDateString("en-GB")
-                      )}
+                      {rd.startDate
+                        ? new Date(rd.startDate).toLocaleDateString("en-GB")
+                        : "-"}
                     </td>
 
                     <td className="px-4 py-2 text-gray-600">
