@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import LoadOverlay from "../LoadOverlay";
+import LoadOverlay from "../../../components/LoadOverlay"
 
 export default function LoanRepaymentModal({ loanId, onClose }) {
   const { getToken } = useAuth();

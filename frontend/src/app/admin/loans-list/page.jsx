@@ -547,7 +547,10 @@ export default function AdminLoanList() {
                       {selectedLoanId === loan._id && (
                         <LoanRepaymentModal
                           loanId={loan._id}
-                          onClose={() => setSelectedLoanId(null)}
+                          onClose={() => {
+                            setSelectedLoanId(null);
+                            fetchLoans();
+                          }}
                         />
                       )}
                     </td>
