@@ -5,7 +5,7 @@ import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { Trash2, Edit, Check, X, ChevronUp, ChevronDown } from "lucide-react";
 import Swal from "sweetalert2";
-import LoanRepaymentModal from "../../../components/AdminPageComponents/LoanRepaymentModal";
+import LoanRepaymentModal from "./LoanRepaymentModal";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
 import * as XLSX from "xlsx";
