@@ -59,21 +59,25 @@ export default function CDScheduleModal({ cdId, onClose }) {
   }, [cdId]);
 
   // Update Installment Paid/Pending
+  // Update Installment Paid/Pending
   const updateInstallment = async (installmentNo, status) => {
     try {
-      setProcessing(true); // 🔹 Show overlay
+      setProcessing(true);
       const token = await getToken();
 
-      const installment = cd.installments.find(
-        (inst) => inst.monthNo === installmentNo
-      );
+      const inst = cd.installments.find((i) => i.monthNo === installmentNo);
 
-      const updatedDate =
-        installment?.tempDueDate || installment?.dueDate || new Date();
+      // decide which date to send
+      const finalDueDate = inst.tempDueDate || inst.dueDate;
 
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/cd/installment/${cdId}/${installmentNo}`,
-        { status, dueDate: updatedDate },
+        {
+          status,
+          dueDate: finalDueDate,
+          amount: inst.amount,
+          clerkId: cd.memberId?.clerkId, // send clerkId!
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -83,7 +87,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
       console.error(err);
       toast.error("Failed to update installment");
     } finally {
-      setProcessing(false); // 🔹 Hide overlay
+      setProcessing(false);
     }
   };
 
@@ -243,7 +247,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
                           <select
                             value={inst.status}
                             onChange={(e) =>
-                              updateInstallment(globalIndex, e.target.value)
+                              updateInstallment(inst.monthNo, e.target.value)
                             }
                             className={`border rounded px-2 py-1 ${
                               inst.status === "Paid"
