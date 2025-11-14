@@ -165,30 +165,31 @@ export default function CDScheduleModal({ cdId, onClose }) {
               <tbody>
                 {paginate(cd.installments, pageInstallments).map(
                   (inst, idx) => {
+                    // Correct 0-based global index
                     const globalIndex =
-                      (pageInstallments - 1) * itemsPerPage + idx + 1;
+                      (pageInstallments - 1) * itemsPerPage + idx;
 
                     return (
                       <tr
-                        key={idx}
+                        key={globalIndex}
                         className={`border-b text-center ${
                           idx % 2 === 0 ? "bg-teal-50/60" : "bg-white"
                         }`}
                       >
-                        <td className="px-3 py-2">{globalIndex}</td>
+                        {/* Serial Number (human readable 1-based) */}
+                        <td className="px-3 py-2">{globalIndex + 1}</td>
 
                         {/* 🗓️ Editable Month (Full Date) */}
-
                         <td
                           className="p-2 cursor-pointer"
                           onClick={() => {
-                            setEditingMonthIndex(idx);
+                            setEditingMonthIndex(globalIndex);
                             setEditMonth(
                               formatDateLocal(inst.tempDueDate || inst.dueDate)
                             );
                           }}
                         >
-                          {editingMonthIndex === idx ? (
+                          {editingMonthIndex === globalIndex ? (
                             <input
                               key={
                                 idx + (inst.tempDueDate || inst.dueDate || "")
@@ -203,8 +204,9 @@ export default function CDScheduleModal({ cdId, onClose }) {
                               onChange={(e) => {
                                 const newVal = e.target.value;
                                 setEditMonth(newVal);
+
                                 const updated = [...cd.installments];
-                                updated[idx].tempDueDate = newVal;
+                                updated[globalIndex].tempDueDate = newVal;
                                 setCD({ ...cd, installments: updated });
                               }}
                               onBlur={() => setEditingMonthIndex(null)}
@@ -227,6 +229,8 @@ export default function CDScheduleModal({ cdId, onClose }) {
                             </span>
                           )}
                         </td>
+
+                        {/* Amount */}
                         <td className="px-3 py-2">
                           ₹
                           {Number(inst.amount).toLocaleString("en-IN", {
@@ -234,6 +238,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
                           })}
                         </td>
 
+                        {/* Status Dropdown */}
                         <td className="px-3 py-2">
                           <select
                             value={inst.status}
@@ -254,14 +259,21 @@ export default function CDScheduleModal({ cdId, onClose }) {
                         {/* Paid At Date Inline Edit */}
                         <td
                           className="px-3 py-2 cursor-pointer"
-                          onClick={() => setEditingDateIndex(globalIndex - 1)}
+                          onClick={() => {
+                            setEditingDateIndex(globalIndex);
+                            setEditDate(formatDateLocal(inst.paidAt));
+                          }}
                         >
-                          {editingDateIndex === globalIndex - 1 ? (
+                          {editingDateIndex === globalIndex ? (
                             <input
                               type="date"
                               value={editDate || formatDateLocal(inst.paidAt)}
                               onChange={(e) => setEditDate(e.target.value)}
                               onBlur={() => {
+                                const updated = [...cd.installments];
+                                updated[globalIndex].paidAt = editDate;
+
+                                setCD({ ...cd, installments: updated });
                                 setEditingDateIndex(null);
                                 toast.info(`Saved date ${editDate}`);
                               }}
