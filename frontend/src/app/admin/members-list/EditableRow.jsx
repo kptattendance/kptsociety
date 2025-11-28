@@ -54,8 +54,17 @@ export default function EditableRow({
         />
       </td>
 
-      {/* Email (read-only) */}
-      <td className="px-3 py-2 text-gray-500 italic">{member.email}</td>
+      {/* Email (editable) */}
+      <td className="px-3 py-2">
+        <input
+          type="email"
+          name="email"
+          value={editData.email || member.email || ""}
+          onChange={handleEditChange}
+          className="border rounded px-2 py-1 w-full"
+          placeholder="Enter email"
+        />
+      </td>
 
       {/* Phone */}
       <td className="px-3 py-2">

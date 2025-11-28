@@ -149,10 +149,10 @@ export const getMember = async (req, res) => {
   }
 };
 
-// -------------------- UPDATE MEMBER --------------------
 export const updateMember = async (req, res) => {
   try {
     const { id } = req.params;
+
     const {
       email,
       role,
@@ -164,10 +164,51 @@ export const updateMember = async (req, res) => {
       ...rest
     } = req.body;
 
-    let member = await findMemberByIdOrClerk(id);
-    if (!member) return res.status(404).json({ message: "Member not found" });
+    const member = await findMemberByIdOrClerk(id);
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
 
-    // Handle photo update
+    const userId = member.clerkId;
+
+    // -------------------- EMAIL UPDATE -------------------- //
+    if (email && email !== member.email) {
+      // 1. Add new email (auto verified)
+      const newEmailObj = await clerkClient.emailAddresses.createEmailAddress({
+        userId,
+        emailAddress: email,
+        verified: true,
+        primary: true,
+      });
+
+      // 2. Delete old email
+      const clerkUser = await clerkClient.users.getUser(userId);
+      const oldEmailObj = clerkUser.emailAddresses.find(
+        (e) => e.emailAddress === member.email
+      );
+
+      if (oldEmailObj) {
+        await clerkClient.emailAddresses.deleteEmailAddress(oldEmailObj.id);
+      }
+
+      member.email = email;
+    }
+
+    // -------------------- ROLE UPDATE -------------------- //
+    if (role && role !== member.role) {
+      const allowedRoles = ["member", "secretary", "treasurer", "admin"];
+      if (!allowedRoles.includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      await clerkClient.users.updateUser(userId, {
+        publicMetadata: { role },
+      });
+
+      member.role = role;
+    }
+
+    // -------------------- PHOTO UPDATE -------------------- //
     if (req.file?.cloudinaryUrl) {
       if (member.photo) {
         const publicId = member.photo.split("/").pop().split(".")[0];
@@ -176,17 +217,7 @@ export const updateMember = async (req, res) => {
       member.photo = req.file.cloudinaryUrl;
     }
 
-    // Sync Clerk user if email/role updated
-    if (email || role) {
-      await clerkClient.users.updateUser(member.clerkId, {
-        emailAddress: email ? [email] : undefined,
-        publicMetadata: role ? { role } : undefined,
-      });
-      member.email = email || member.email;
-      member.role = role || member.role;
-    }
-
-    // Assign new fields
+    // -------------------- OTHER FIELDS -------------------- //
     if (memberType) member.memberType = memberType;
     if (joiningDate) member.joiningDate = joiningDate;
     if (societyNumber) member.societyNumber = societyNumber;
@@ -201,7 +232,10 @@ export const updateMember = async (req, res) => {
     Object.assign(member, rest);
     await member.save();
 
-    res.json(member);
+    res.json({
+      message: "Member updated successfully",
+      member,
+    });
   } catch (error) {
     console.error("Update Member Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
