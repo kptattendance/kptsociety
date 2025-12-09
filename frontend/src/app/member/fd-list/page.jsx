@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
-import { Calendar, IndianRupee, Clock, Info } from "lucide-react";
 
 const MemberFD = () => {
   const { getToken } = useAuth();
@@ -94,15 +93,9 @@ const MemberFD = () => {
               <th className="p-3">Maturity</th>
               <th className="p-3">Interest</th>
               <th className="p-3">Tenure</th>
-              <th className="p-3">Start</th>
+              <th className="p-3">Start Date</th>
               <th className="p-3">Maturity Date</th>
               <th className="p-3">Remaining</th>
-              <th className="p-3">Compounding</th>
-              <th className="p-3">Payout</th>
-              <th className="p-3">Auto Renew</th>
-              <th className="p-3">Preclosure</th>
-              <th className="p-3">Penalty</th>
-              <th className="p-3">Notes</th>
             </tr>
           </thead>
 
@@ -116,7 +109,13 @@ const MemberFD = () => {
               return (
                 <tr
                   key={fd._id}
-                  className="border-b hover:bg-gray-50 transition"
+                  className={`border-b transition ${
+                    fd.status === "Active"
+                      ? "bg-green-50 hover:bg-green-100"
+                      : fd.status === "Closed"
+                      ? "bg-red-50 hover:bg-red-100"
+                      : "bg-yellow-50 hover:bg-yellow-100"
+                  }`}
                 >
                   <td className="p-3 font-semibold">{fd.accountNumber}</td>
 
@@ -142,7 +141,7 @@ const MemberFD = () => {
                   </td>
 
                   <td className="p-3">{fd.interestRate}%</td>
-                  <td className="p-3">{fd.tenureMonths}m</td>
+                  <td className="p-3">{fd.tenureMonths} months</td>
 
                   <td className="p-3">
                     {new Date(fd.startDate).toLocaleDateString("en-IN")}
@@ -161,22 +160,7 @@ const MemberFD = () => {
                         : "text-green-700"
                     }`}
                   >
-                    {remainingMonths} m
-                  </td>
-
-                  <td className="p-3">{fd.compoundingFrequency}</td>
-                  <td className="p-3">{fd.payoutFrequency}</td>
-                  <td className="p-3">{fd.autoRenew ? "Yes" : "No"}</td>
-                  <td className="p-3">
-                    {fd.preclosureAllowed ? "Allowed" : "Not Allowed"}
-                  </td>
-                  <td className="p-3">
-                    {fd.preclosureAllowed
-                      ? `${fd.preclosurePenaltyPercent}%`
-                      : "-"}
-                  </td>
-                  <td className="p-3 max-w-[170px] truncate">
-                    {fd.notes || "-"}
+                    {remainingMonths} months
                   </td>
                 </tr>
               );
