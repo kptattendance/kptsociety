@@ -83,19 +83,37 @@ const MemberFD = () => {
         💰 My Fixed Deposit Accounts
       </h2>
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow border">
+      <div className="overflow-x-auto bg-white rounded-xl shadow-xl border border-gray-200">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-100 text-gray-700">
+          <thead className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 text-white shadow-md">
             <tr>
-              <th className="p-3 text-left">FD No</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Principal</th>
-              <th className="p-3">Maturity</th>
-              <th className="p-3">Interest</th>
-              <th className="p-3">Tenure</th>
-              <th className="p-3">Start Date</th>
-              <th className="p-3">Maturity Date</th>
-              <th className="p-3">Remaining</th>
+              <th className="p-4 text-left tracking-wide font-semibold">
+                FD No
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Status
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Principal
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Maturity
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Interest
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Tenure
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Start Date
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Maturity Date
+              </th>
+              <th className="p-4 tracking-wide font-semibold text-center">
+                Remaining
+              </th>
             </tr>
           </thead>
 
@@ -117,7 +135,7 @@ const MemberFD = () => {
                       : "bg-yellow-50 hover:bg-yellow-100"
                   }`}
                 >
-                  <td className="p-3 font-semibold">{fd.accountNumber}</td>
+                  <td className="p-3 font-semibold">{fd.fdNumber}</td>
 
                   <td className="p-3">
                     <span
