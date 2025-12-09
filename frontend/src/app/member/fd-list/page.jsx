@@ -62,111 +62,98 @@ const MemberFD = () => {
   const member = fds[0]?.memberId;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-8 bg-gradient-to-b from-green-50 to-white min-h-screen">
-      {/* ✅ Member Info */}
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 bg-gray-50 min-h-screen">
       {member && (
-        <div className="flex flex-col sm:flex-row items-center gap-5 bg-white rounded-2xl shadow-lg p-6 border border-green-100 hover:shadow-xl transition">
+        <div className="flex items-center gap-5 bg-white rounded-xl shadow p-5 border">
           <img
             src={member.photo}
             alt="Member"
-            className="w-24 h-24 rounded-full border-4 border-green-300 object-cover shadow-sm"
+            className="w-20 h-20 rounded-full border object-cover"
           />
-          <div className="text-center sm:text-left">
-            <h3 className="text-2xl font-semibold text-green-700 tracking-wide">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-800">
               {member.name}
             </h3>
-            <div className="mt-1 space-y-1 text-gray-600 text-sm sm:text-base">
-              <p>📞 {member.phone || "Not Available"}</p>
-              <p>📧 {member.email}</p>
-            </div>
+            <p className="text-gray-600">📞 {member.phone || "N/A"}</p>
+            <p className="text-gray-600">📧 {member.email}</p>
           </div>
         </div>
       )}
 
-      {/* ✅ FD Section Header */}
-      <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mt-6">
+      <h2 className="text-2xl font-bold text-center text-gray-800">
         💰 My Fixed Deposit Accounts
       </h2>
 
-      {/* ✅ FD Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-        {fds.map((fd) => {
-          const remainingMonths = getRemainingMonths(
-            fd.startDate,
-            fd.maturityDate
-          );
+      <div className="overflow-x-auto bg-white rounded-xl shadow border">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-100 text-gray-700">
+            <tr>
+              <th className="p-3 text-left">FD No</th>
+              <th className="p-3">Status</th>
+              <th className="p-3">Principal</th>
+              <th className="p-3">Maturity</th>
+              <th className="p-3">Interest</th>
+              <th className="p-3">Tenure</th>
+              <th className="p-3">Start</th>
+              <th className="p-3">Maturity Date</th>
+              <th className="p-3">Remaining</th>
+              <th className="p-3">Compounding</th>
+              <th className="p-3">Payout</th>
+              <th className="p-3">Auto Renew</th>
+              <th className="p-3">Preclosure</th>
+              <th className="p-3">Penalty</th>
+              <th className="p-3">Notes</th>
+            </tr>
+          </thead>
 
-          return (
-            <div
-              key={fd._id}
-              className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition duration-200 overflow-hidden"
-            >
-              {/* FD Header */}
-              <div className="bg-gradient-to-r from-green-600 to-emerald-400 text-white p-4 flex justify-between items-center">
-                <h3 className="text-lg font-semibold">
-                  FD #{fd.accountNumber}
-                </h3>
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full ${
-                    fd.status === "Active"
-                      ? "bg-white/20"
-                      : fd.status === "Closed"
-                      ? "bg-gray-300 text-gray-800"
-                      : "bg-yellow-300 text-yellow-900"
-                  }`}
+          <tbody>
+            {fds.map((fd) => {
+              const remainingMonths = getRemainingMonths(
+                fd.startDate,
+                fd.maturityDate
+              );
+
+              return (
+                <tr
+                  key={fd._id}
+                  className="border-b hover:bg-gray-50 transition"
                 >
-                  {fd.status}
-                </span>
-              </div>
+                  <td className="p-3 font-semibold">{fd.accountNumber}</td>
 
-              {/* FD Summary */}
-              <div className="p-5 space-y-3 text-sm sm:text-base">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-gray-500">Principal</p>
-                    <p className="font-semibold flex items-center gap-1">
-                      <IndianRupee className="w-4 h-4" />
-                      {Math.round(fd.principal || 0).toLocaleString("en-IN")}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Maturity Amount</p>
-                    <p className="font-semibold text-green-700 flex items-center gap-1">
-                      <IndianRupee className="w-4 h-4" />
-                      {Math.round(fd.maturityAmount || 0).toLocaleString(
-                        "en-IN"
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Interest Rate</p>
-                    <p className="font-semibold">{fd.interestRate}%</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Tenure</p>
-                    <p className="font-semibold">{fd.tenureMonths} months</p>
-                  </div>
-                </div>
+                  <td className="p-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        fd.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {fd.status}
+                    </span>
+                  </td>
 
-                {/* Dates */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-gray-600">
-                  <p className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-green-600" />
-                    <strong>Start:</strong>{" "}
+                  <td className="p-3 font-medium">
+                    ₹{Math.round(fd.principal || 0).toLocaleString("en-IN")}
+                  </td>
+
+                  <td className="p-3 font-medium text-green-700">
+                    ₹
+                    {Math.round(fd.maturityAmount || 0).toLocaleString("en-IN")}
+                  </td>
+
+                  <td className="p-3">{fd.interestRate}%</td>
+                  <td className="p-3">{fd.tenureMonths}m</td>
+
+                  <td className="p-3">
                     {new Date(fd.startDate).toLocaleDateString("en-IN")}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-red-600" />
-                    <strong>Maturity:</strong>{" "}
-                    {new Date(fd.maturityDate).toLocaleDateString("en-IN")}
-                  </p>
-                </div>
+                  </td>
 
-                {/* Remaining Months */}
-                <div className="mt-2 flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-gray-600" />
-                  <span
-                    className={`font-semibold ${
+                  <td className="p-3">
+                    {new Date(fd.maturityDate).toLocaleDateString("en-IN")}
+                  </td>
+
+                  <td
+                    className={`p-3 font-semibold ${
                       remainingMonths <= 3
                         ? "text-red-600"
                         : remainingMonths <= 12
@@ -174,43 +161,28 @@ const MemberFD = () => {
                         : "text-green-700"
                     }`}
                   >
-                    {remainingMonths} months remaining
-                  </span>
-                </div>
+                    {remainingMonths} m
+                  </td>
 
-                {/* FD Details */}
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg text-gray-700 text-sm space-y-1 border border-gray-100">
-                  <p>
-                    <strong>Compounding:</strong> {fd.compoundingFrequency}
-                  </p>
-                  <p>
-                    <strong>Payout:</strong> {fd.payoutFrequency}
-                  </p>
-                  <p>
-                    <strong>Auto Renew:</strong> {fd.autoRenew ? "Yes" : "No"}
-                  </p>
-                  <p>
-                    <strong>Preclosure:</strong>{" "}
+                  <td className="p-3">{fd.compoundingFrequency}</td>
+                  <td className="p-3">{fd.payoutFrequency}</td>
+                  <td className="p-3">{fd.autoRenew ? "Yes" : "No"}</td>
+                  <td className="p-3">
                     {fd.preclosureAllowed ? "Allowed" : "Not Allowed"}
-                  </p>
-                  {fd.preclosureAllowed && (
-                    <p>
-                      <strong>Penalty:</strong> {fd.preclosurePenaltyPercent}%
-                    </p>
-                  )}
-                  {fd.notes && (
-                    <p className="flex items-start gap-1 mt-2">
-                      <Info className="w-4 h-4 text-blue-600 mt-0.5" />
-                      <span>
-                        <strong>Notes:</strong> {fd.notes}
-                      </span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                  </td>
+                  <td className="p-3">
+                    {fd.preclosureAllowed
+                      ? `${fd.preclosurePenaltyPercent}%`
+                      : "-"}
+                  </td>
+                  <td className="p-3 max-w-[170px] truncate">
+                    {fd.notes || "-"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
