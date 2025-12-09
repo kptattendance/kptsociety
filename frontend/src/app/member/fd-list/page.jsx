@@ -112,7 +112,7 @@ const MemberFD = () => {
                 Maturity Date
               </th>
               <th className="p-4 tracking-wide font-semibold text-center">
-                Remaining
+                Remaining Installments
               </th>
             </tr>
           </thead>
