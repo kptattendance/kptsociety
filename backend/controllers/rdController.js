@@ -23,7 +23,9 @@ export const createRD = async (req, res) => {
     const member = await Member.findById(memberId);
     if (!member) return res.status(404).json({ error: "Member not found" });
 
-    const start = startDate ? new Date(startDate) : new Date();
+    const start = initialDepositDate
+      ? new Date(initialDepositDate)
+      : new Date();
     const maturityDate = new Date(start);
     maturityDate.setMonth(maturityDate.getMonth() + Number(tenureMonths));
 
