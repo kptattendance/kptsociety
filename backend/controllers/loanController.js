@@ -130,21 +130,31 @@ export const getLoans = async (req, res) => {
 // -------------------- GET SINGLE LOAN --------------------
 export const getLoan = async (req, res) => {
   try {
-    const { id } = req.params; // clerkId or Mongo _id
-    let loan;
+    const { id } = req.params;
 
-    loan = await Loan.findOne({ clerkId: id }).populate("memberId");
-    if (!loan)
-      loan = await Loan.findById(id).populate(
-        "memberId",
-        "name email photo phone"
-      );
+    // If clerkId → return ALL loans
+    const loans = await Loan.find({ clerkId: id }).populate(
+      "memberId",
+      "name email photo phone"
+    );
 
-    if (!loan) return res.status(404).json({ message: "Loan not found" });
+    if (loans.length > 0) {
+      return res.json(loans);
+    }
 
-    res.json(loan);
+    // Else treat as Mongo _id (single loan view)
+    const loan = await Loan.findById(id).populate(
+      "memberId",
+      "name email photo phone"
+    );
+
+    if (!loan) {
+      return res.status(404).json({ message: "Loan not found" });
+    }
+
+    return res.json([loan]); // always return array
   } catch (error) {
-    console.error(error);
+    console.error("Get Loan Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
