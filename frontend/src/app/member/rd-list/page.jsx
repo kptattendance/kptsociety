@@ -26,7 +26,7 @@ const MemberRD = () => {
       );
 
       const rdArray = Array.isArray(res.data) ? res.data : [res.data];
-
+      console.log(rdArray);
       // ✅ Compute available balance for each RD (same logic as AdminRDTable)
       const updatedRDs = rdArray.map((rd) => {
         const totalWithdrawn =
