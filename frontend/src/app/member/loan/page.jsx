@@ -24,7 +24,6 @@ const MemberLoan = () => {
 
       const loansArray = Array.isArray(res.data) ? res.data : [res.data];
       setLoans(loansArray);
-console.log(loansArray)
       const pages = {};
       loansArray.forEach((loan) => (pages[loan._id] = 1));
       setCurrentPage(pages);
