@@ -29,7 +29,7 @@ export const createRD = async (req, res) => {
 
     const start = startDate ? new Date(startDate) : openingDate;
 
-    const maturityDate = new Date(start);
+    const maturityDate = new Date(openingDate);
     maturityDate.setMonth(maturityDate.getMonth() + Number(tenureMonths));
 
     const years = tenureMonths / 12;
