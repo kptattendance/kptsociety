@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import LoadOverlay from "../../../components/LoadOverlay"
+import LoadOverlay from "../../../components/LoadOverlay";
 
 export default function LoanRepaymentModal({ loanId, onClose }) {
   const { getToken } = useAuth();
@@ -22,8 +22,8 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
       setLoading(true);
       const token = await getToken();
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}/repay`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setLoan(res.data);
     } catch (err) {
@@ -48,7 +48,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
           status,
           dueDate: updatedDate, // send date when marking paid
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       toast.success(`Installment #${installmentNo} marked as ${status}`);
@@ -76,7 +76,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
           mode: prepayMode,
           installment: installmentNo,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       console.log(res);
       toast.success("Prepayment applied successfully");
@@ -169,7 +169,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                     ) : (
                       <span className="hover:underline text-blue-700">
                         {new Date(
-                          r.tempDueDate || r.dueDate
+                          r.tempDueDate || r.dueDate,
                         ).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",

@@ -7,6 +7,7 @@ import {
   markRepaymentPaid,
   updateLoan,
   recalculatedSchedule,
+  repaygetLoan,
 } from "../controllers/loanController.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -20,6 +21,11 @@ router.get("/", requireAuthWithRole(["admin"]), getLoans);
 
 // Get single loan (admin or member)
 router.get("/:id", requireAuthWithRole(["admin", "member"]), getLoan);
+router.get(
+  "/:id/repay",
+  requireAuthWithRole(["admin", "member"]),
+  repaygetLoan,
+);
 
 // Update loan (admin only)
 router.put("/:id", requireAuthWithRole(["admin"]), updateLoan);
@@ -30,12 +36,12 @@ router.delete("/:id", requireAuthWithRole(["admin"]), deleteLoan);
 router.patch(
   "/repay/:loanId/:installmentNo",
   requireAuthWithRole(["admin"]),
-  markRepaymentPaid
+  markRepaymentPaid,
 );
 router.patch(
   "/prepay/:loanId",
   requireAuthWithRole(["admin"]),
-  recalculatedSchedule
+  recalculatedSchedule,
 );
 
 export default router;

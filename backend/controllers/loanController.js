@@ -35,7 +35,7 @@ export const createLoan = async (req, res) => {
       loanAmount,
       interestRate,
       tenure,
-      new Date(startDate)
+      new Date(startDate),
     );
 
     const loan = new Loan({
@@ -87,7 +87,7 @@ export const updateLoan = async (req, res) => {
       "startDate",
     ];
     const shouldRegenerateSchedule = fieldsAffectSchedule.some(
-      (f) => updates[f] !== undefined
+      (f) => updates[f] !== undefined,
     );
 
     if (shouldRegenerateSchedule) {
@@ -101,7 +101,7 @@ export const updateLoan = async (req, res) => {
         loanAmount,
         interestRate,
         tenure,
-        startDate
+        startDate,
       );
     }
 
@@ -135,7 +135,7 @@ export const getLoan = async (req, res) => {
     // If clerkId → return ALL loans
     const loans = await Loan.find({ clerkId: id }).populate(
       "memberId",
-      "name email photo phone"
+      "name email photo phone",
     );
 
     if (loans.length > 0) {
@@ -145,7 +145,7 @@ export const getLoan = async (req, res) => {
     // Else treat as Mongo _id (single loan view)
     const loan = await Loan.findById(id).populate(
       "memberId",
-      "name email photo phone"
+      "name email photo phone",
     );
 
     if (!loan) {
@@ -155,6 +155,25 @@ export const getLoan = async (req, res) => {
     return res.json([loan]); // always return array
   } catch (error) {
     console.error("Get Loan Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+export const repaygetLoan = async (req, res) => {
+  try {
+    const { id } = req.params; // clerkId or Mongo _id
+    let loan;
+
+    loan = await Loan.findOne({ clerkId: id }).populate("memberId");
+    if (!loan)
+      loan = await Loan.findById(id).populate(
+        "memberId",
+        "name email photo phone",
+      );
+    if (!loan) return res.status(404).json({ message: "Loan not found" });
+    res.json(loan);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -232,7 +251,7 @@ export const generateRepaymentSchedule = (
   loanAmount,
   interestRate,
   tenureMonths,
-  startDate
+  startDate,
 ) => {
   const monthlyRate = interestRate / 12 / 100; // Monthly interest rate
   const emi =
@@ -270,7 +289,7 @@ export function recalculateScheduleWithPrepayment(
   loan,
   amount,
   mode,
-  installment
+  installment,
 ) {
   const repayments = loan.repayments;
   const monthlyRate = loan.interestRate / 12 / 100;
@@ -391,7 +410,7 @@ export const recalculatedSchedule = async (req, res) => {
       loan,
       amount,
       mode,
-      installment
+      installment,
     );
 
     if (!updated?.repayments)
