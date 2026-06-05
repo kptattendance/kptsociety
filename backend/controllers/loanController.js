@@ -442,3 +442,41 @@ export const recalculatedSchedule = async (req, res) => {
     });
   }
 };
+
+export const closeLoan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { closedAt, reason } = req.body;
+
+    console.log("Loan ID:", id);
+    console.log("Closed Date:", closedAt);
+    console.log("Reason:", reason);
+
+    const loan = await Loan.findById(id);
+
+    if (!loan) {
+      return res.status(404).json({
+        message: "Loan not found",
+      });
+    }
+
+    loan.loanStatus = "Closed";
+    loan.closedAt = closedAt;
+    loan.closureReason = reason;
+
+    await loan.save();
+
+    console.log("Loan closed successfully");
+
+    res.json({
+      message: "Loan closed successfully",
+      loan,
+    });
+  } catch (error) {
+    console.error("Close Loan Error:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};

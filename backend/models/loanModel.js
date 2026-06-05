@@ -55,8 +55,16 @@ const loanSchema = new mongoose.Schema(
     chequeDetails: ChequeDetailsSchema,
 
     status: { type: String, default: "Pending" },
+
+    loanStatus: {
+      type: String,
+      enum: ["Active", "Closed"],
+      default: "Active",
+    },
+    closedAt: Date,
+    closureReason: String,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Loan", loanSchema);

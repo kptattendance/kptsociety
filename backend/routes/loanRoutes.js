@@ -8,6 +8,7 @@ import {
   updateLoan,
   recalculatedSchedule,
   repaygetLoan,
+  closeLoan,
 } from "../controllers/loanController.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -26,6 +27,7 @@ router.get(
   requireAuthWithRole(["admin", "member"]),
   repaygetLoan,
 );
+router.patch("/:id/close", requireAuthWithRole(["admin"]), closeLoan);
 
 // Update loan (admin only)
 router.put("/:id", requireAuthWithRole(["admin"]), updateLoan);

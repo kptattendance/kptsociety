@@ -19,7 +19,7 @@ const MemberLoan = () => {
       const token = await getToken();
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const loansArray = Array.isArray(res.data) ? res.data : [res.data];
@@ -67,7 +67,7 @@ const MemberLoan = () => {
 
       {loans.map((loan) => {
         const pendingInstallments = loan.repayments.filter(
-          (r) => r.status === "Pending"
+          (r) => r.status === "Pending",
         ).length;
         const pendingPrincipal = loan.repayments
           .filter((r) => r.status === "Pending")
@@ -77,7 +77,7 @@ const MemberLoan = () => {
         const startIndex = (page - 1) * ITEMS_PER_PAGE;
         const paginatedRepayments = loan.repayments.slice(
           startIndex,
-          startIndex + ITEMS_PER_PAGE
+          startIndex + ITEMS_PER_PAGE,
         );
         const totalPages = Math.ceil(loan.repayments.length / ITEMS_PER_PAGE);
 
@@ -86,7 +86,11 @@ const MemberLoan = () => {
         return (
           <div
             key={loan._id}
-            className="mb-8 sm:mb-12 bg-white/60 backdrop-blur-md p-4 rounded-xl shadow-md"
+            className={`mb-8 sm:mb-12 p-4 rounded-xl shadow-md border-2 ${
+              loan.loanStatus === "Closed"
+                ? "bg-red-50 border-red-300"
+                : "bg-green-50 border-green-300"
+            }`}
           >
             {/* Loan Details */}
             <div className="overflow-x-auto">
@@ -107,6 +111,7 @@ const MemberLoan = () => {
                     </th>
                     <th className="px-3 py-2 text-center">Pending Inst.</th>
                     <th className="px-3 py-2 text-right">Pending ₹</th>
+                    <th className="px-3 py-2 text-center">Loan Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -145,8 +150,8 @@ const MemberLoan = () => {
                           loan.status === "Approved"
                             ? "bg-green-100 text-green-700"
                             : loan.status === "Rejected"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
                         }`}
                       >
                         {loan.status}
@@ -166,13 +171,43 @@ const MemberLoan = () => {
                     <td className="px-3 py-2 text-right">
                       ₹
                       {Math.round(pendingPrincipal || 0).toLocaleString(
-                        "en-IN"
+                        "en-IN",
                       )}
+                    </td>
+
+                    <td className="px-3 py-2 text-center">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          loan.loanStatus === "Closed"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {loan.loanStatus || "Active"}
+                      </span>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+
+            {loan.loanStatus === "Closed" && (
+              <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
+                <p className="font-semibold text-red-700">Loan Closed</p>
+
+                <p>
+                  Closed Date:
+                  {loan.closedAt
+                    ? new Date(loan.closedAt).toLocaleDateString("en-IN")
+                    : "-"}
+                </p>
+
+                <p>
+                  Reason:
+                  {loan.closureReason || "-"}
+                </p>
+              </div>
+            )}
 
             {/* Lumpsum Payments */}
             {loan.lumpSumPayments?.length > 0 && (
@@ -208,7 +243,7 @@ const MemberLoan = () => {
                           <td className="px-2 py-1 text-right">
                             ₹
                             {Math.round(lump.amount || 0).toLocaleString(
-                              "en-IN"
+                              "en-IN",
                             )}
                           </td>
                           <td className="px-2 py-1 text-right">{lump.mode}</td>
@@ -258,25 +293,25 @@ const MemberLoan = () => {
                         <td className="px-2 py-1 text-right">
                           ₹
                           {Math.round(repay.principal || 0).toLocaleString(
-                            "en-IN"
+                            "en-IN",
                           )}
                         </td>
                         <td className="px-2 py-1 text-right">
                           ₹
                           {Math.round(repay.interest || 0).toLocaleString(
-                            "en-IN"
+                            "en-IN",
                           )}
                         </td>
                         <td className="px-2 py-1 text-right">
                           ₹
                           {Math.round(repay.totalEMI || 0).toLocaleString(
-                            "en-IN"
+                            "en-IN",
                           )}
                         </td>
                         <td className="px-2 py-1 text-right text-blue-700 font-medium">
                           ₹
                           {Math.round(repay.scheduleOS || 0).toLocaleString(
-                            "en-IN"
+                            "en-IN",
                           )}
                         </td>
                         <td className="px-2 py-1 text-center">

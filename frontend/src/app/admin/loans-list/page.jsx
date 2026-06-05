@@ -24,6 +24,34 @@ export default function AdminLoanList() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const itemsPerPage = 6;
 
+  const closeLoan = async (loanId) => {
+    const result = await showConfirm(
+      "Close Loan?",
+      "Are you sure you want to close this loan?",
+    );
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const token = await getToken();
+
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}/close`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      toast.success("Loan closed successfully");
+      fetchLoans();
+    } catch (err) {
+      toast.error("Failed to close loan");
+    }
+  };
+
   // ✅ Fetch loans
   const fetchLoans = async () => {
     try {
@@ -31,7 +59,7 @@ export default function AdminLoanList() {
       const token = await getToken();
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const loansWithMember = await Promise.all(
@@ -41,7 +69,7 @@ export default function AdminLoanList() {
             try {
               const memberRes = await axios.get(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/members/${loan.memberId._id}`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` } },
               );
               memberData = memberRes.data;
             } catch (err) {
@@ -53,7 +81,7 @@ export default function AdminLoanList() {
           let pendingInstallments = 0;
           if (loan.repayments?.length) {
             pendingInstallments = loan.repayments.filter(
-              (r) => r.status !== "Paid"
+              (r) => r.status !== "Paid",
             ).length;
 
             pendingAmount = loan.repayments
@@ -67,7 +95,7 @@ export default function AdminLoanList() {
             pendingAmount,
             pendingInstallments,
           };
-        })
+        }),
       );
       setLoans(loansWithMember);
     } catch (err) {
@@ -85,23 +113,57 @@ export default function AdminLoanList() {
   // ✅ Confirm dialog
   const showConfirm = async (title, text) => {
     const result = await Swal.fire({
-      title,
-      text,
-      icon: "warning",
+      title: "Close Loan",
+      html: `
+    <div style="text-align:left">
+      <label>Loan Closure Date</label>
+      <input
+        id="closedAt"
+        type="date"
+        class="swal2-input"
+      />
+
+      <label>Closure Reason</label>
+      <textarea
+        id="reason"
+        class="swal2-textarea"
+        placeholder="Enter closure reason"
+      ></textarea>
+    </div>
+  `,
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
+      confirmButtonText: "Close Loan",
+      cancelButtonText: "Cancel",
+
+      preConfirm: () => {
+        const closedAt = document.getElementById("closedAt").value;
+        const reason = document.getElementById("reason").value;
+
+        if (!closedAt) {
+          Swal.showValidationMessage("Please select a closure date");
+          return false;
+        }
+
+        if (!reason.trim()) {
+          Swal.showValidationMessage("Please enter closure reason");
+          return false;
+        }
+
+        return {
+          closedAt,
+          reason,
+        };
+      },
     });
-    return result.isConfirmed;
+
+    return result;
   };
 
   // ✅ Delete loan
   const handleDelete = async (id) => {
     const confirmed = await showConfirm(
       "Delete Loan?",
-      "This cannot be undone!"
+      "This cannot be undone!",
     );
     if (!confirmed) return;
     try {
@@ -150,7 +212,7 @@ export default function AdminLoanList() {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${loanId}`,
         editForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       toast.success("✅ Loan updated successfully");
       setEditingLoanId(null);
@@ -198,7 +260,7 @@ export default function AdminLoanList() {
   const totalPages = Math.ceil(filteredLoans.length / itemsPerPage);
   const currentLoans = filteredLoans.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const goToPage = (page) => {
@@ -229,7 +291,7 @@ export default function AdminLoanList() {
       "Interest (%)": loan.interestRate || "-",
       Tenure: loan.tenure || "-",
       "Pending Amount (₹)": Math.round(loan.pendingAmount || 0).toLocaleString(
-        "en-IN"
+        "en-IN",
       ),
 
       "Pending Inst.": loan.pendingInstallments || 0,
@@ -347,7 +409,7 @@ export default function AdminLoanList() {
                 <th className="py-2 px-3 text-center">Actions</th>
                 <th className="py-2 px-3 text-right">Pending Amt</th>
                 <th className="py-2 px-3 text-right">Pending Inst.</th>
-                <th className="py-2 px-3 text-left">Status</th>
+                <th className="py-2 px-3 text-left">Loan Status</th>
                 <th className="py-2 px-3 text-center">Repayment Schedule</th>
               </tr>
             </thead>
@@ -358,7 +420,11 @@ export default function AdminLoanList() {
                 return (
                   <tr
                     key={loan._id}
-                    className="border-b even:bg-gray-50 hover:bg-indigo-50 transition"
+                    className={`border-b transition ${
+                      loan.loanStatus === "Closed"
+                        ? "bg-red-200 text-gray-500"
+                        : "even:bg-gray-50 hover:bg-indigo-50"
+                    }`}
                   >
                     <td className="px-4 py-2 text-gray-600">
                       {(currentPage - 1) * itemsPerPage + index + 1}
@@ -410,7 +476,7 @@ export default function AdminLoanList() {
                         key={idx}
                         className={`py-3 px-4 ${
                           ["loanAmount", "interestRate", "tenure"].includes(
-                            field
+                            field,
                           )
                             ? "text-right"
                             : "text-left"
@@ -459,8 +525,8 @@ export default function AdminLoanList() {
                               loan.status === "Approved"
                                 ? "bg-green-100 text-green-700"
                                 : loan.status === "Rejected"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
                             }`}
                           >
                             {loan.status}
@@ -476,7 +542,7 @@ export default function AdminLoanList() {
                         ) : field === "loanAmount" ? (
                           `₹${
                             Math.round(loan.loanAmount || 0).toLocaleString(
-                              "en-IN"
+                              "en-IN",
                             ) || "-"
                           }`
                         ) : (
@@ -534,16 +600,33 @@ export default function AdminLoanList() {
 
                     {/* Repayment Modal */}
                     <td className="text-center">
-                      <button
-                        onClick={() =>
-                          setSelectedLoanId(
-                            selectedLoanId === loan._id ? null : loan._id
-                          )
-                        }
-                        className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm shadow cursor-pointer"
-                      >
-                        View
-                      </button>
+                      <div className="flex flex-col gap-2 items-center">
+                        <button
+                          onClick={() =>
+                            setSelectedLoanId(
+                              selectedLoanId === loan._id ? null : loan._id,
+                            )
+                          }
+                          className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm shadow cursor-pointer"
+                        >
+                          View
+                        </button>
+
+                        <button
+                          onClick={() => closeLoan(loan._id)}
+                          disabled={loan.loanStatus === "Closed"}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium shadow transition cursor-pointer ${
+                            loan.loanStatus === "Closed"
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : "bg-gray-600 hover:bg-gray-700 text-white"
+                          }`}
+                        >
+                          {loan.loanStatus === "Closed"
+                            ? "Closed"
+                            : "Close Loan"}
+                        </button>
+                      </div>
+
                       {selectedLoanId === loan._id && (
                         <LoanRepaymentModal
                           loanId={loan._id}
