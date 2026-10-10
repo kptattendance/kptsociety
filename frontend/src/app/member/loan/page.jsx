@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { getLoanSummary, inr } from "../../../utils/loanSummary";
 import axios from "axios";
 
 const ITEMS_PER_PAGE = 10;
@@ -66,12 +67,9 @@ const MemberLoan = () => {
       </h2>
 
       {loans.map((loan) => {
-        const pendingInstallments = loan.repayments.filter(
-          (r) => r.status === "Pending",
-        ).length;
-        const pendingPrincipal = loan.repayments
-          .filter((r) => r.status === "Pending")
-          .reduce((acc, r) => acc + r.principal, 0);
+        const summary = getLoanSummary(loan);
+        const pendingInstallments = summary.pendingCount;
+        const pendingPrincipal = summary.outstanding;
 
         const page = currentPage[loan._id] || 1;
         const startIndex = (page - 1) * ITEMS_PER_PAGE;
@@ -222,8 +220,10 @@ const MemberLoan = () => {
                         <th className="px-2 py-2">#</th>
                         <th className="px-2 py-2">Date</th>
                         <th className="px-2 py-2 text-right">Amount</th>
-                        <th className="px-2 py-2 text-right">Mode</th>
-                        <th className="px-2 py-2 text-right">Installment</th>
+                        <th className="px-2 py-2 text-left">Option</th>
+                        <th className="px-2 py-2 text-right">After inst.</th>
+                        <th className="px-2 py-2 text-right">Balance</th>
+                        <th className="px-2 py-2 text-right">EMI</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -246,9 +246,23 @@ const MemberLoan = () => {
                               "en-IN",
                             )}
                           </td>
-                          <td className="px-2 py-1 text-right">{lump.mode}</td>
+                          <td className="px-2 py-1">
+                            {lump.mode === "reduceTenure"
+                              ? "Reduce tenure"
+                              : "Reduce EMI"}
+                          </td>
                           <td className="px-2 py-1 text-right">
-                            {lump.installment}
+                            {lump.installment ? `#${lump.installment}` : "Start"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {lump.outstandingBefore != null
+                              ? `${inr(lump.outstandingBefore, 0)} → ${inr(lump.outstandingAfter, 0)}`
+                              : "-"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {lump.emiBefore != null
+                              ? `${inr(lump.emiBefore, 0)} → ${inr(lump.emiAfter, 0)}`
+                              : "-"}
                           </td>
                         </tr>
                       ))}

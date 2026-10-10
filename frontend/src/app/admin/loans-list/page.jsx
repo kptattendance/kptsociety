@@ -9,6 +9,7 @@ import LoanRepaymentModal from "./LoanRepaymentModal";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
 import * as XLSX from "xlsx";
+import { getLoanSummary } from "../../../utils/loanSummary";
 import { saveAs } from "file-saver";
 
 export default function AdminLoanList() {
@@ -77,17 +78,9 @@ export default function AdminLoanList() {
             }
           }
 
-          let pendingAmount = 0;
-          let pendingInstallments = 0;
-          if (loan.repayments?.length) {
-            pendingInstallments = loan.repayments.filter(
-              (r) => r.status !== "Paid",
-            ).length;
-
-            pendingAmount = loan.repayments
-              .filter((r) => r.status !== "Paid")
-              .reduce((sum, r) => sum + r.principal, 0);
-          }
+          const summary = getLoanSummary(loan);
+          const pendingAmount = summary.outstanding;
+          const pendingInstallments = summary.pendingCount;
 
           return {
             ...loan,

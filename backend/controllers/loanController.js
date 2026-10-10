@@ -95,7 +95,7 @@ export const updateLoan = async (req, res) => {
       const interestRate = updates.interestRate || loan.interestRate;
       const tenure = updates.tenure || loan.tenure;
       const startDate =
-        updates.startDate || (loan.repayments[0]?.dueDate ?? new Date());
+        updates.startDate || loan.startDate || new Date();
 
       loan.repayments = generateRepaymentSchedule(
         loanAmount,
@@ -182,7 +182,9 @@ export const repaygetLoan = async (req, res) => {
 export const markRepaymentPaid = async (req, res) => {
   try {
     const { loanId, installmentNo } = req.params;
-    const { dueDate } = req.body; // ✅ get optional dueDate
+    const { dueDate, status = "Paid" } = req.body;
+    if (!["Paid", "Pending"].includes(status))
+      return res.status(400).json({ message: "Invalid status" });
 
     const loan = await Loan.findById(loanId);
     if (!loan) return res.status(404).json({ message: "Loan not found" });
@@ -196,12 +198,11 @@ export const markRepaymentPaid = async (req, res) => {
       loan.repayments[index].dueDate = new Date(dueDate);
     }
 
-    // ✅ Mark as paid
-    loan.repayments[index].status = "Paid";
+    loan.repayments[index].status = status;
     await loan.save();
 
     res.json({
-      message: `Installment #${installmentNo} marked as Paid`,
+      message: `Installment #${installmentNo} marked as ${status}`,
       repayment: loan.repayments[index],
     });
   } catch (error) {
@@ -228,10 +229,7 @@ export const deleteLoan = async (req, res) => {
   }
 };
 
-function safeNumber(val) {
-  const num = Number(val);
-  return isNaN(num) || !isFinite(num) ? 0 : Number(num.toFixed(2));
-}
+const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 // ✅ Safe Month Addition Helper
 function addMonths(date, count) {
@@ -246,6 +244,48 @@ function addMonths(date, count) {
   return d;
 }
 
+// EMI for a balance over N months
+function calcEMI(principal, monthlyRate, months) {
+  if (months <= 0) return principal;
+  if (monthlyRate === 0) return principal / months;
+  return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
+}
+
+/**
+ * Builds installments from a starting balance.
+ * - If `months` is given, the schedule runs exactly that many months.
+ * - Otherwise it runs until the balance is cleared at the given EMI.
+ * The last installment always absorbs rounding so the balance ends at exactly 0.
+ */
+function buildInstallments({ balance, monthlyRate, emi, months, baseDate }) {
+  const rows = [];
+  let outstanding = round2(balance);
+  const MAX_ROWS = 1200; // safety guard against an endless loop
+
+  for (let k = 1; outstanding > 0 && rows.length < MAX_ROWS; k++) {
+    const interest = round2(outstanding * monthlyRate);
+    let principal = round2(emi - interest);
+
+    const isLast =
+      (months && k >= months) || principal >= outstanding || principal <= 0;
+    if (isLast) principal = outstanding;
+
+    outstanding = round2(outstanding - principal);
+
+    rows.push({
+      dueDate: addMonths(baseDate, k),
+      principal,
+      interest,
+      totalEMI: round2(principal + interest),
+      scheduleOS: outstanding,
+      status: "Pending",
+    });
+
+    if (isLast) break;
+  }
+  return rows;
+}
+
 // -------------------- GENERATE REPAYMENT SCHEDULE --------------------
 export const generateRepaymentSchedule = (
   loanAmount,
@@ -253,185 +293,165 @@ export const generateRepaymentSchedule = (
   tenureMonths,
   startDate,
 ) => {
-  const monthlyRate = interestRate / 12 / 100; // Monthly interest rate
-  const emi =
-    (loanAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -tenureMonths));
-
-  let outstanding = loanAmount;
-  const schedule = [];
-  const start = new Date(startDate);
-
-  for (let i = 0; i < tenureMonths; i++) {
-    const interest = outstanding * monthlyRate;
-    const principal = emi - interest;
-    outstanding -= principal;
-
-    // Clamp for floating precision issues
-    outstanding = Math.max(0, Number(outstanding.toFixed(2)));
-
-    // Use safe date addition
-    const dueDate = addMonths(start, i + 1);
-
-    schedule.push({
-      dueDate,
-      principal: Number(principal.toFixed(2)),
-      interest: Number(interest.toFixed(2)),
-      totalEMI: Number(emi.toFixed(2)),
-      scheduleOS: Number(outstanding.toFixed(2)),
-      status: "Pending",
-    });
-  }
-
-  return schedule;
+  const monthlyRate = Number(interestRate) / 12 / 100;
+  const months = Number(tenureMonths);
+  const emi = round2(calcEMI(Number(loanAmount), monthlyRate, months));
+  return buildInstallments({
+    balance: Number(loanAmount),
+    monthlyRate,
+    emi,
+    months,
+    baseDate: new Date(startDate),
+  });
 };
 
-export function recalculateScheduleWithPrepayment(
-  loan,
-  amount,
-  mode,
-  installment,
-) {
-  const repayments = loan.repayments;
-  const monthlyRate = loan.interestRate / 12 / 100;
-  const currentInstallment = Number(installment);
+/**
+ * Where the loan stands right now.
+ * Paid installments must be continuous from #1 – the prepayment is applied
+ * right after the last paid installment.
+ */
+export function getLoanPosition(loan) {
+  const reps = loan.repayments || [];
+  let lastPaid = 0;
+  while (lastPaid < reps.length && reps[lastPaid].status === "Paid") lastPaid++;
 
-  if (!repayments[currentInstallment - 1]) {
-    throw new Error("Invalid installment selected for prepayment");
-  }
+  const paidLater = reps.slice(lastPaid).some((r) => r.status === "Paid");
 
-  // Outstanding after the selected installment
-  let outstanding =
-    repayments[currentInstallment - 1].scheduleOS - Number(amount);
-  outstanding = Math.max(0, Number(outstanding.toFixed(2)));
-
-  const baseDate = repayments[currentInstallment - 1].dueDate;
-
-  // --- CASE 1: Reduce Tenure (keep EMI constant) ---
-  if (mode === "reduceTenure") {
-    // Use current EMI (not recalculated from loanAmount)
-    const emi = repayments[0].totalEMI;
-    const newRepayments = [];
-    let i = currentInstallment;
-
-    while (outstanding > 0) {
-      const interest = outstanding * monthlyRate;
-      let principal = emi - interest;
-      if (principal > outstanding) principal = outstanding;
-
-      outstanding -= principal;
-      outstanding = Math.max(0, Number(outstanding.toFixed(2)));
-
-      newRepayments.push({
-        installmentNo: i + 1,
-        dueDate: addMonths(new Date(baseDate), i - currentInstallment + 1),
-        principal: Number(principal.toFixed(2)),
-        interest: Number(interest.toFixed(2)),
-        totalEMI: Number((principal + interest).toFixed(2)),
-        scheduleOS: Number(outstanding.toFixed(2)),
-        status: "Pending",
-      });
-
-      i++;
-    }
-
-    return {
-      repayments: [
-        ...repayments.slice(0, currentInstallment),
-        ...newRepayments,
-      ],
-    };
-  }
-
-  // --- CASE 2: Reduce EMI (keep tenure constant) ---
-  if (mode === "reduceEMI") {
-    const remainingTenure = loan.tenure - currentInstallment;
-    if (remainingTenure <= 0) return { repayments };
-
-    // Recalculate EMI for remaining tenure
-    const emi =
-      (outstanding * monthlyRate) /
-      (1 - Math.pow(1 + monthlyRate, -remainingTenure));
-
-    const newRepayments = [];
-    let i = currentInstallment;
-
-    while (outstanding > 0 && i < loan.tenure) {
-      const interest = outstanding * monthlyRate;
-      let principal = emi - interest;
-      if (principal > outstanding) principal = outstanding;
-
-      outstanding -= principal;
-      outstanding = Math.max(0, Number(outstanding.toFixed(2)));
-
-      newRepayments.push({
-        installmentNo: i + 1,
-        dueDate: addMonths(new Date(baseDate), i - currentInstallment + 1),
-        principal: Number(principal.toFixed(2)),
-        interest: Number(interest.toFixed(2)),
-        totalEMI: Number((principal + interest).toFixed(2)),
-        scheduleOS: Number(outstanding.toFixed(2)),
-        status: "Pending",
-      });
-
-      i++;
-    }
-
-    return {
-      repayments: [
-        ...repayments.slice(0, currentInstallment),
-        ...newRepayments,
-      ],
-    };
-  }
-
-  throw new Error("Invalid prepayment mode");
+  // Opening balance of the next pending installment = its principal + balance after it.
+  // This already includes every lump sum paid so far (even several after the same EMI).
+  const next = reps[lastPaid];
+  const outstanding = next
+    ? Number(next.principal) + Number(next.scheduleOS)
+    : 0;
+  return {
+    lastPaid, // number of installments paid (0 = none yet)
+    paidLater, // true if there's a gap (e.g. #3 paid but #2 pending)
+    outstanding: round2(outstanding),
+    currentEMI: next ? next.totalEMI : 0,
+    installmentsLeft: reps.length - lastPaid,
+    baseDate: lastPaid === 0 ? new Date(loan.startDate) : reps[lastPaid - 1].dueDate,
+  };
 }
 
+export function recalculateScheduleWithPrepayment(loan, amount, mode) {
+  const reps = loan.repayments;
+  const monthlyRate = Number(loan.interestRate) / 12 / 100;
+  const pos = getLoanPosition(loan);
+  const amt = round2(amount);
+
+  if (pos.paidLater) {
+    throw new Error(
+      "Installments are marked Paid out of order. Mark all earlier installments Paid first.",
+    );
+  }
+  if (pos.outstanding <= 0) throw new Error("This loan has no outstanding balance.");
+  if (amt > pos.outstanding) {
+    throw new Error(
+      `Amount ₹${amt} is more than the outstanding balance ₹${pos.outstanding}.`,
+    );
+  }
+
+  const newBalance = round2(pos.outstanding - amt);
+  const kept = reps.slice(0, pos.lastPaid);
+
+  let futureRows = [];
+  if (newBalance > 0) {
+    if (mode === "reduceTenure") {
+      // Same EMI as now, fewer months
+      futureRows = buildInstallments({
+        balance: newBalance,
+        monthlyRate,
+        emi: pos.currentEMI,
+        baseDate: pos.baseDate,
+      });
+    } else if (mode === "reduceEMI") {
+      // Same number of months left, smaller EMI
+      const months = pos.installmentsLeft;
+      futureRows = buildInstallments({
+        balance: newBalance,
+        monthlyRate,
+        emi: round2(calcEMI(newBalance, monthlyRate, months)),
+        months,
+        baseDate: pos.baseDate,
+      });
+    } else {
+      throw new Error("Invalid prepayment mode");
+    }
+  }
+
+  return {
+    repayments: [...kept, ...futureRows],
+    summary: {
+      afterInstallment: pos.lastPaid,
+      outstandingBefore: pos.outstanding,
+      outstandingAfter: newBalance,
+      emiBefore: pos.currentEMI,
+      emiAfter: futureRows[0]?.totalEMI ?? 0,
+      installmentsLeftBefore: pos.installmentsLeft,
+      installmentsLeftAfter: futureRows.length,
+      closesLoan: newBalance === 0,
+    },
+  };
+}
+
+// -------------------- LUMP-SUM / PARTIAL PREPAYMENT --------------------
+// Body: { amount, mode, paidAt?, note?, preview? }
+// preview=true returns the new schedule without saving.
 export const recalculatedSchedule = async (req, res) => {
   try {
     const { loanId } = req.params;
-    const { amount, mode, installment } = req.body;
+    const { amount, mode, paidAt, note, preview } = req.body;
 
-    // Input validations
-    if (!loanId)
-      return res.status(400).json({ message: "Loan ID is required" });
-    if (!amount || amount <= 0)
+    if (!amount || Number(amount) <= 0)
       return res.status(400).json({ message: "Prepayment amount must be > 0" });
     if (!["reduceTenure", "reduceEMI"].includes(mode))
       return res.status(400).json({ message: "Invalid prepayment mode" });
 
     const loan = await Loan.findById(loanId);
     if (!loan) return res.status(404).json({ message: "Loan not found" });
-    if (!installment || installment < 1 || installment > loan.repayments.length)
-      return res.status(400).json({ message: "Invalid installment number" });
+    if (loan.loanStatus === "Closed")
+      return res.status(400).json({ message: "Loan is already closed" });
 
-    // Recalculate schedule
-    const updated = recalculateScheduleWithPrepayment(
-      loan,
-      amount,
-      mode,
-      installment,
-    );
+    let updated;
+    try {
+      updated = recalculateScheduleWithPrepayment(loan, amount, mode);
+    } catch (e) {
+      return res.status(400).json({ message: e.message });
+    }
 
-    if (!updated?.repayments)
-      return res
-        .status(500)
-        .json({ message: "Failed to recalculate schedule" });
+    if (preview) {
+      return res.json({ preview: true, ...updated });
+    }
 
-    // ✅ Save updated repayments
     loan.repayments = updated.repayments;
-
-    // ✅ Record lump-sum prepayment history
+    const s = updated.summary;
     loan.lumpSumPayments.push({
-      amount: Number(amount),
-      installment: Number(installment),
+      amount: round2(amount),
+      installment: s.afterInstallment,
       mode,
+      paidAt: paidAt ? new Date(paidAt) : new Date(),
+      outstandingBefore: s.outstandingBefore,
+      outstandingAfter: s.outstandingAfter,
+      emiBefore: s.emiBefore,
+      emiAfter: s.emiAfter,
+      installmentsLeftBefore: s.installmentsLeftBefore,
+      installmentsLeftAfter: s.installmentsLeftAfter,
+      note,
     });
+
+    if (s.closesLoan) {
+      loan.loanStatus = "Closed";
+      loan.closedAt = paidAt ? new Date(paidAt) : new Date();
+      loan.closureReason = "Fully repaid by lump-sum payment";
+    }
 
     await loan.save();
 
     return res.json({
-      message: "Prepayment applied successfully",
+      message: s.closesLoan
+        ? "Payment applied – loan fully repaid and closed"
+        : "Prepayment applied successfully",
+      summary: s,
       loan,
     });
   } catch (error) {

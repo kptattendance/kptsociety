@@ -5,6 +5,14 @@ const LumpSumSchema = new mongoose.Schema({
   installment: { type: Number, required: true },
   mode: { type: String, enum: ["reduceTenure", "reduceEMI"], required: true },
   paidAt: { type: Date, default: Date.now },
+  // Snapshot of the loan before/after this payment (for a clear history)
+  outstandingBefore: Number,
+  outstandingAfter: Number,
+  emiBefore: Number,
+  emiAfter: Number,
+  installmentsLeftBefore: Number,
+  installmentsLeftAfter: Number,
+  note: String,
 });
 
 const RepaymentSchema = new mongoose.Schema({
