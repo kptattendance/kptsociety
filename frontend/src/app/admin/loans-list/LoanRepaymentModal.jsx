@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -27,9 +27,11 @@ import {
 const today = () => new Date().toISOString().split("T")[0];
 const toInputDate = (d) => new Date(d).toISOString().split("T")[0];
 
-export default function LoanRepaymentModal({ loanId, onClose }) {
+export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
   const { getToken } = useAuth();
-  const [loan, setLoan] = useState(null);
+  // Show the loan from the list right away; fresh data loads in the background
+  const [loan, setLoan] = useState(initialLoan || null);
+  const changed = useRef(false);
   const [loading, setLoading] = useState(false);
 
   // Paid-date chosen for the next installment (defaults to its due date)
@@ -54,16 +56,22 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
 
   const fetchLoan = async () => {
     try {
-      setLoading(true);
       const res = await api("get", `/api/loans/${loanId}/repay`);
       setLoan(res.data);
-      setPaidDate("");
     } catch {
       toast.error("Failed to load loan");
-    } finally {
-      setLoading(false);
     }
   };
+
+  // Use the loan returned by a save instead of downloading it again
+  const applySaved = (saved) => {
+    changed.current = true;
+    setPaidDate("");
+    if (saved) setLoan((prev) => ({ ...saved, memberId: prev?.memberId }));
+    else return fetchLoan();
+  };
+
+  const close = () => onClose(changed.current);
 
   useEffect(() => {
     fetchLoan();
@@ -82,12 +90,13 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
   const setStatus = async (installmentNo, status, dueDate) => {
     try {
       setLoading(true);
-      await api("patch", `/api/loans/repay/${loanId}/${installmentNo}`, {
-        status,
-        ...(dueDate ? { dueDate } : {}),
-      });
+      const res = await api(
+        "patch",
+        `/api/loans/repay/${loanId}/${installmentNo}`,
+        { status, ...(dueDate ? { dueDate } : {}) },
+      );
       toast.success(`Installment #${installmentNo} marked ${status}`);
-      await fetchLoan();
+      await applySaved(res.data.loan);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update");
     } finally {
@@ -118,7 +127,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
         setAmount("");
         setNote("");
         setPreview(null);
-        await fetchLoan();
+        await applySaved(res.data.loan);
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to apply payment");
@@ -143,7 +152,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
       const res = await api("delete", `/api/loans/prepay/${loanId}/${p._id}`);
       toast.success(res.data.message);
       setPreview(null);
-      await fetchLoan();
+      await applySaved(res.data.loan);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to delete part payment");
     } finally {
@@ -174,7 +183,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
               </p>
             </div>
             <button
-              onClick={onClose}
+              onClick={close}
               className="text-gray-500 hover:text-red-500 cursor-pointer"
               aria-label="Close"
             >
@@ -528,7 +537,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
 
             <div className="flex justify-end">
               <button
-                onClick={onClose}
+                onClick={close}
                 className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 cursor-pointer"
               >
                 Close

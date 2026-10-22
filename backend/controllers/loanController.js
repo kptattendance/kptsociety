@@ -119,7 +119,9 @@ export const updateLoan = async (req, res) => {
 // -------------------- GET ALL LOANS --------------------
 export const getLoans = async (req, res) => {
   try {
-    const loans = await Loan.find().populate("memberId", "name email role");
+    const loans = await Loan.find()
+      .populate("memberId", "name email role phone photo")
+      .lean();
     res.json(loans);
   } catch (error) {
     console.error("Get Loans Error:", error);
@@ -162,14 +164,15 @@ export const getLoan = async (req, res) => {
 export const repaygetLoan = async (req, res) => {
   try {
     const { id } = req.params; // clerkId or Mongo _id
-    let loan;
-
-    loan = await Loan.findOne({ clerkId: id }).populate("memberId");
+    // The admin screen sends the loan _id – look that up first
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+    let loan = isObjectId
+      ? await Loan.findById(id).populate("memberId", "name email photo phone").lean()
+      : null;
     if (!loan)
-      loan = await Loan.findById(id).populate(
-        "memberId",
-        "name email photo phone",
-      );
+      loan = await Loan.findOne({ clerkId: id })
+        .populate("memberId", "name email photo phone")
+        .lean();
     if (!loan) return res.status(404).json({ message: "Loan not found" });
     res.json(loan);
   } catch (error) {
@@ -214,6 +217,7 @@ export const markRepaymentPaid = async (req, res) => {
     res.json({
       message: `Installment #${installmentNo} marked as ${status}`,
       repayment: loan.repayments[index],
+      loan,
     });
   } catch (error) {
     console.error(error);

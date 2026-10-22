@@ -41,23 +41,14 @@ export default function AdminFDTable() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const fdsData = await Promise.all(
-        res.data.map(async (fd) => {
-          try {
-            const wRes = await axios.get(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/fd/${fd._id}/withdrawals`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            const totalWithdrawn = wRes.data.reduce(
-              (sum, w) => sum + (Number(w.amount) || 0),
-              0
-            );
-            return { ...fd, totalWithdrawn };
-          } catch {
-            return { ...fd, totalWithdrawn: 0 };
-          }
-        })
-      );
+      // Withdrawals are already included in each FD
+      const fdsData = res.data.map((fd) => ({
+        ...fd,
+        totalWithdrawn: (fd.withdrawals || []).reduce(
+          (sum, w) => sum + (Number(w.amount) || 0),
+          0
+        ),
+      }));
       setFDs(fdsData);
     } catch (error) {
       toast.error("❌ Failed to load FDs");

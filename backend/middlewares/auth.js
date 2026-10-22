@@ -1,5 +1,16 @@
 import { requireAuth, clerkClient } from "@clerk/express";
 
+// userId -> { user, at }. A role change in Clerk takes effect within 5 minutes.
+const userCache = new Map();
+const USER_CACHE_MS = 5 * 60 * 1000;
+
+const getCachedUser = (userId) => {
+  const hit = userCache.get(userId);
+  if (hit && Date.now() - hit.at < USER_CACHE_MS) return hit.user;
+  userCache.delete(userId);
+  return null;
+};
+
 export const requireAuthWithRole = (allowedRoles = []) => {
   return [
     requireAuth(), // ensures user is logged in
@@ -17,18 +28,27 @@ export const requireAuthWithRole = (allowedRoles = []) => {
             .json({ error: "Unauthorized. No userId found." });
         }
 
-        // Fetch full user info from Clerk
-        let user;
-        try {
-          user = await clerkClient.users.getUser(userId);
-        } catch (fetchErr) {
-          console.error("Failed to fetch user from Clerk:", fetchErr);
-          return res
-            .status(500)
-            .json({ error: "Failed to fetch user info from Clerk" });
+        // Fetch user info from Clerk (cached briefly – calling Clerk on
+        // every request made every page slow)
+        let user = getCachedUser(userId);
+        if (!user) {
+          try {
+            const full = await clerkClient.users.getUser(userId);
+            user = {
+              id: full.id,
+              email: full.emailAddresses?.[0]?.emailAddress || null,
+              role: full?.publicMetadata?.role || null,
+            };
+            userCache.set(userId, { user, at: Date.now() });
+          } catch (fetchErr) {
+            console.error("Failed to fetch user from Clerk:", fetchErr);
+            return res
+              .status(500)
+              .json({ error: "Failed to fetch user info from Clerk" });
+          }
         }
 
-        const role = user?.publicMetadata?.role || null;
+        const role = user.role;
 
         // Check role
         if (allowedRoles.length && !allowedRoles.includes(role)) {
@@ -39,11 +59,7 @@ export const requireAuthWithRole = (allowedRoles = []) => {
         }
 
         // Attach user to request
-        req.user = {
-          id: user.id,
-          email: user.emailAddresses?.[0]?.emailAddress || null,
-          role,
-        };
+        req.user = user;
 
         next();
       } catch (err) {

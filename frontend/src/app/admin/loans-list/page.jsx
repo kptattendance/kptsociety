@@ -63,33 +63,15 @@ export default function AdminLoanList() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const loansWithMember = await Promise.all(
-        res.data.map(async (loan) => {
-          let memberData = loan.memberId;
-          if (loan.memberId?._id) {
-            try {
-              const memberRes = await axios.get(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/members/${loan.memberId._id}`,
-                { headers: { Authorization: `Bearer ${token}` } },
-              );
-              memberData = memberRes.data;
-            } catch (err) {
-              console.error("Error fetching member info:", err);
-            }
-          }
-
-          const summary = getLoanSummary(loan);
-          const pendingAmount = summary.outstanding;
-          const pendingInstallments = summary.pendingCount;
-
-          return {
-            ...loan,
-            memberId: memberData,
-            pendingAmount,
-            pendingInstallments,
-          };
-        }),
-      );
+      // Member name/phone/photo come populated with the loans
+      const loansWithMember = res.data.map((loan) => {
+        const summary = getLoanSummary(loan);
+        return {
+          ...loan,
+          pendingAmount: summary.outstanding,
+          pendingInstallments: summary.pendingCount,
+        };
+      });
       setLoans(loansWithMember);
     } catch (err) {
       console.error(err);
@@ -623,9 +605,10 @@ export default function AdminLoanList() {
                       {selectedLoanId === loan._id && (
                         <LoanRepaymentModal
                           loanId={loan._id}
-                          onClose={() => {
+                          initialLoan={loan}
+                          onClose={(changed) => {
                             setSelectedLoanId(null);
-                            fetchLoans();
+                            if (changed) fetchLoans();
                           }}
                         />
                       )}

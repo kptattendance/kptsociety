@@ -43,7 +43,7 @@ const loanSchema = new mongoose.Schema(
     },
     accountNumber: { type: String, unique: true, required: true },
 
-    clerkId: { type: String, required: true },
+    clerkId: { type: String, required: true, index: true },
     loanType: { type: String, required: true },
     loanAmount: { type: Number, required: true },
     interestRate: { type: Number, required: true },
