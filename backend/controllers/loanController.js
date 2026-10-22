@@ -463,6 +463,84 @@ export const recalculatedSchedule = async (req, res) => {
   }
 };
 
+// -------------------- DELETE (UNDO) A LUMP-SUM PAYMENT --------------------
+// Only the latest lump sum can be removed, and only while no installment has
+// been marked Paid after it. The schedule is rebuilt from the snapshot saved
+// with the payment, so it returns to exactly what it was before.
+export const deleteLumpSum = async (req, res) => {
+  try {
+    const { loanId, paymentId } = req.params;
+
+    const loan = await Loan.findById(loanId);
+    if (!loan) return res.status(404).json({ message: "Loan not found" });
+
+    const payments = loan.lumpSumPayments || [];
+    const index = payments.findIndex((p) => String(p._id) === paymentId);
+    if (index === -1)
+      return res.status(404).json({ message: "Part payment not found" });
+    if (index !== payments.length - 1)
+      return res.status(400).json({
+        message:
+          "Only the latest part payment can be deleted. Delete the newer ones first.",
+      });
+
+    const payment = payments[index];
+    if (
+      payment.outstandingBefore == null ||
+      payment.emiBefore == null ||
+      payment.installmentsLeftBefore == null
+    )
+      return res.status(400).json({
+        message:
+          "This part payment was saved without a schedule snapshot and cannot be undone automatically.",
+      });
+
+    const closedByThisPayment =
+      loan.loanStatus === "Closed" &&
+      loan.closureReason === "Fully repaid by lump-sum payment";
+    if (loan.loanStatus === "Closed" && !closedByThisPayment)
+      return res
+        .status(400)
+        .json({ message: "Loan is closed. Reopen it before deleting a part payment." });
+
+    const pos = getLoanPosition(loan);
+    if (pos.paidLater || pos.lastPaid !== Number(payment.installment))
+      return res.status(400).json({
+        message: `Installments were marked Paid after this part payment. Undo them first (${
+          Number(payment.installment)
+            ? `keep only up to #${payment.installment} Paid`
+            : "no installment should be Paid"
+        }).`,
+      });
+
+    // Rebuild the pending schedule as it stood before the payment
+    const monthlyRate = Number(loan.interestRate) / 12 / 100;
+    const futureRows = buildInstallments({
+      balance: payment.outstandingBefore,
+      monthlyRate,
+      emi: payment.emiBefore,
+      months: payment.installmentsLeftBefore,
+      baseDate: pos.baseDate,
+    });
+
+    loan.repayments = [...loan.repayments.slice(0, pos.lastPaid), ...futureRows];
+    loan.lumpSumPayments.splice(index, 1);
+
+    if (closedByThisPayment) {
+      loan.loanStatus = "Active";
+      loan.closedAt = undefined;
+      loan.closureReason = undefined;
+    }
+
+    await loan.save();
+
+    return res.json({ message: "Part payment deleted and schedule restored", loan });
+  } catch (error) {
+    console.error("Delete Lump Sum Error:", error);
+    return res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 export const closeLoan = async (req, res) => {
   try {
     const { id } = req.params;

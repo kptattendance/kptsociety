@@ -6,15 +6,15 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-red-50 py-12">
       <div className="w-full max-w-3xl px-6  ">
-        <div className="rounded-2xl bg-white/80 backdrop-blur-md shadow-2xl border border-gray-100 overflow-hidden">
+        <div className="rounded-2xl bg-white/80 backdrop-blur-md shadow-soft border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-4 p-8">
+          <div className="flex items-center gap-4 p-4 sm:p-8">
             <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
               <Cog className="w-10 h-10 text-indigo-600" />
             </div>
 
             <div>
-              <h1 className="text-3xl font-semibold text-gray-900">Settings</h1>
+              <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">Settings</h1>
               <p className="mt-1 text-sm text-gray-500">
                 Manage your account preferences and personal settings.
               </p>
@@ -22,8 +22,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Content */}
-          <div className="px-8 pb-10 ">
-            <div className="rounded-lg border border-dashed bg-gradient-to-r from-indigo-100 to-pink-200  border-gray-200 p-8 text-center">
+          <div className="px-4 sm:px-8 pb-10 ">
+            <div className="rounded-lg border border-dashed bg-gradient-to-r from-indigo-100 to-pink-200  border-gray-200 p-4 sm:p-8 text-center">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 User-level settings and preferences coming soon...
               </h2>

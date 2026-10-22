@@ -243,9 +243,9 @@ export default function AdminShareTable() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-yellow-50 to-teal-100 p-6">
+    <div className="min-h-screen bg-gradient-to-r from-yellow-50 to-teal-100 p-3 sm:p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
-      <div className="bg-white shadow-xl rounded-2xl p-6">
+      <div className="bg-white shadow-soft rounded-2xl p-4 sm:p-6">
         <div className="flex flex-col md:flex-row justify-center items-center mb-6">
           <h2 className="text-2xl font-bold text-indigo-700">
             🪙 Share Accounts
@@ -547,7 +547,7 @@ export default function AdminShareTable() {
 
           {/* Pagination */}
           {/* {sortedFiltered.length > rowsPerPage && (
-            <div className="flex justify-between items-center mt-4 text-sm">
+            <div className="flex justify-between items-center mt-4 text-sm flex-wrap gap-3">
               <p className="text-gray-600">
                 Page {currentPage} of {totalPages}
               </p>

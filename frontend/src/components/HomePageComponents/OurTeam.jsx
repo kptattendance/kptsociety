@@ -109,34 +109,70 @@ export default function OurTeam() {
     },
   ];
 
-  return (
-    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 sm:p-6">
-      <div className="mx-auto bg-white/70 backdrop-blur-sm shadow-xl rounded-2xl p-4 sm:p-6 max-w-7xl">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
-          OUR TEAM
-        </h1>
+  const leaders = members.slice(0, 4);
+  const directors = members.slice(4);
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-3 sm:gap-4">
-          {members.map((member) => (
+  return (
+    <section className="px-4 sm:px-6 py-16 sm:py-24 bg-gradient-to-b from-transparent via-purple-50/70 to-transparent">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-600">
+            Leadership
+          </p>
+          <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-gray-900">
+            Our Team
+          </h2>
+          <p className="mt-3 text-gray-600">
+            The board guiding the society on behalf of its members.
+          </p>
+        </div>
+
+        {/* Office bearers */}
+        <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          {leaders.map((member) => (
             <div
               key={member.id}
-              className="flex flex-col items-center text-center bg-white/60 backdrop-blur-md rounded-lg p-2 sm:p-3 shadow-sm hover:shadow-md transition-shadow duration-300"
+              className="flex flex-col items-center text-center rounded-3xl bg-white p-4 sm:p-6 shadow-soft ring-1 ring-gray-100"
+            >
+              <div className="p-1 rounded-full brand-gradient">
+                <img
+                  src={member.image}
+                  alt={member.name}
+                  className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-full ring-4 ring-white bg-purple-50"
+                />
+              </div>
+              <h3 className="mt-4 text-xs sm:text-sm font-bold text-gray-900 leading-tight">
+                {member.name}
+              </h3>
+              <p className="mt-1.5 inline-block rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold text-purple-700">
+                {member.role}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Directors */}
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+          {directors.map((member) => (
+            <div
+              key={member.id}
+              className="flex flex-col items-center text-center rounded-2xl bg-white/80 p-3 sm:p-4 ring-1 ring-gray-100 hover:ring-pink-200 hover:shadow-soft transition"
             >
               <img
                 src={member.image}
                 alt={member.name}
-                className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full shadow mb-2 border border-indigo-200"
+                className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-full ring-2 ring-pink-200 bg-pink-50"
               />
-              <h2 className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-800 leading-tight uppercase">
+              <h3 className="mt-3 text-[11px] sm:text-xs font-semibold text-gray-800 leading-tight">
                 {member.name}
-              </h2>
-              <p className="text-[8px] sm:text-[10px] md:text-xs text-gray-600">
+              </h3>
+              <p className="mt-1 text-[10px] sm:text-xs text-gray-500">
                 {member.role}
               </p>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

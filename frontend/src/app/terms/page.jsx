@@ -10,7 +10,7 @@ export default function TermsAndConditions() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-400">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-400">
               Terms & Conditions
             </h1>
             <p className="text-gray-300">

@@ -11,7 +11,9 @@ import {
   CalendarClock,
   ListChecks,
   IndianRupee,
+  Trash2,
 } from "lucide-react";
+import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadOverlay from "../../../components/LoadOverlay";
@@ -125,6 +127,30 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
     }
   };
 
+  const deleteLumpSum = async (p) => {
+    const result = await Swal.fire({
+      title: "Delete part payment?",
+      html: `${inr(p.amount)} paid on ${shortDate(p.paidAt)} will be removed and the schedule restored to what it was before this payment.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      confirmButtonColor: "#dc2626",
+      cancelButtonText: "Cancel",
+    });
+    if (!result.isConfirmed) return;
+    try {
+      setLoading(true);
+      const res = await api("delete", `/api/loans/prepay/${loanId}/${p._id}`);
+      toast.success(res.data.message);
+      setPreview(null);
+      await fetchLoan();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete part payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const LumpRow = ({ p }) => (
     <tr className="bg-violet-50 text-violet-900 text-sm">
       <td colSpan={7} className="px-3 py-2">
@@ -147,7 +173,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
       <LoadOverlay show={loading} />
 
       <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-2 sm:p-4">
-        <div className="bg-white rounded-xl w-full max-w-6xl max-h-[92vh] overflow-auto shadow-xl relative">
+        <div className="bg-white rounded-xl w-full max-w-6xl max-h-[92vh] overflow-auto shadow-soft relative">
           {/* Header */}
           <div className="sticky top-0 z-10 bg-white border-b px-4 sm:px-6 py-4 flex items-start justify-between gap-4">
             <div>
@@ -460,6 +486,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                         <th className="p-2 text-right">Balance</th>
                         <th className="p-2 text-right">EMI</th>
                         <th className="p-2 text-left">Note</th>
+                        <th className="p-2 text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -488,6 +515,24 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                               : "-"}
                           </td>
                           <td className="p-2">{p.note || "-"}</td>
+                          <td className="p-2 text-center">
+                            {i === loan.lumpSumPayments.length - 1 ? (
+                              <button
+                                onClick={() => deleteLumpSum(p)}
+                                title="Delete this part payment"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </button>
+                            ) : (
+                              <span
+                                className="text-xs text-gray-400"
+                                title="Delete the newer part payments first"
+                              >
+                                -
+                              </span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

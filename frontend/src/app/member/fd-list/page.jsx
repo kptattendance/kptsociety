@@ -35,14 +35,14 @@ const MemberFD = () => {
 
   if (loading)
     return (
-      <p className="p-6 text-center text-gray-500 animate-pulse">
+      <p className="p-4 sm:p-6 text-center text-gray-500 animate-pulse">
         Loading FD accounts...
       </p>
     );
 
   if (!fds.length)
     return (
-      <p className="p-6 text-center text-gray-500">No FD accounts found.</p>
+      <p className="p-4 sm:p-6 text-center text-gray-500">No FD accounts found.</p>
     );
 
   const getRemainingMonths = (start, end) => {
@@ -83,7 +83,7 @@ const MemberFD = () => {
         💰 My Fixed Deposit Accounts
       </h2>
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow-xl border border-gray-200">
+      <div className="overflow-x-auto bg-white rounded-xl shadow-soft border border-gray-200">
         <table className="min-w-full text-sm">
           <thead className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 text-white shadow-md">
             <tr>

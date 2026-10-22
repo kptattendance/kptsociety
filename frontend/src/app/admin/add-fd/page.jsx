@@ -101,10 +101,10 @@ export default function AdminFDForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-purple-100 to-indigo-200 p-6">
+    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-purple-100 to-indigo-200 p-3 sm:p-6">
       <LoadOverlay show={loading} />
 
-      <div className="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl p-8 w-full max-w-5xl mx-auto">
+      <div className="bg-white/80 backdrop-blur-lg shadow-soft rounded-2xl p-4 sm:p-8 w-full max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold text-center text-indigo-700 mb-8">
           🏦 Create New Fixed Deposit
         </h1>

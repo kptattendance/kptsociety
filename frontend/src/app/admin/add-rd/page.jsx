@@ -83,10 +83,10 @@ export default function AdminRDForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-pink-100 to-purple-200 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-pink-100 to-purple-200 p-4 sm:p-8">
       <LoadOverlay show={loading} />
 
-      <div className="bg-white/70 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-4xl mx-auto border border-white/40">
+      <div className="bg-white/70 backdrop-blur-2xl shadow-soft rounded-3xl p-5 sm:p-10 w-full max-w-4xl mx-auto border border-white/40">
         <h1 className="text-2xl font-bold text-green-700 mb-6 text-center">
           🏦 Create New Recurring Deposit
         </h1>
@@ -288,7 +288,7 @@ export default function AdminRDForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto bg-gradient-to-r from-teal-500 via-purple-500 to-pink-500 text-white font-semibold py-3 px-8 rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg disabled:opacity-50"
+              className="w-full sm:w-auto bg-gradient-to-r from-teal-500 via-purple-500 to-pink-500 text-white font-semibold py-3 px-4 sm:px-8 rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg disabled:opacity-50"
             >
               {loading ? "Creating..." : "✨ Create RD Account"}
             </button>

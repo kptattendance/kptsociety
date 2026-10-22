@@ -1,20 +1,25 @@
 //layout.js
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { ToastContainer } from "react-toastify";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const clerkAppearance = {
+  variables: {
+    colorPrimary: "#2a74bb",
+    colorText: "#2f2a3e",
+    borderRadius: "0.75rem",
+    fontFamily: "var(--font-jakarta), system-ui, sans-serif",
+  },
+};
 
 export const metadata = {
   title:
@@ -87,7 +92,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={clerkAppearance}>
       <html lang="en">
         <head>
           {/* ✅ Google Search Console Verification */}
@@ -150,12 +155,12 @@ export default function RootLayout({ children }) {
         </head>
 
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+          className={`${jakarta.variable} font-sans antialiased min-h-screen flex flex-col`}
         >
           <Navbar />
-          <main className="flex-grow overflow-hidden">
+          <main className="flex-grow overflow-x-hidden">
             {children}
-            <ToastContainer position="top-right" autoClose={3000} />
+            <ToastContainer position="top-right" autoClose={3000} newestOnTop />
           </main>
         </body>
       </html>

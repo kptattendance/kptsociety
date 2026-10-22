@@ -125,8 +125,8 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl shadow-2xl w-[90%] max-w-6xl p-6 relative overflow-y-auto max-h-[90vh] border border-indigo-100">
+    <div className="fixed inset-0 p-3 sm:p-4 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl shadow-soft w-full max-w-6xl p-4 sm:p-6 relative overflow-y-auto max-h-[90vh] border border-indigo-100">
         <button
           onClick={onClose}
           className="absolute cursor-pointer top-3 right-3 text-gray-600 hover:text-red-600"
@@ -135,7 +135,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
         </button>
 
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
+          <h2 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
             Share Account Details
           </h2>
           <p className="text-gray-600 mt-1">
@@ -167,7 +167,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
         </div>
 
         {/* Purchase History */}
-        <div className="mb-8 bg-white/80 rounded-xl shadow-md p-4 border border-indigo-100">
+        <div className="mb-8 bg-white/80 rounded-xl shadow-md p-4 border border-indigo-100 overflow-x-auto">
           <h3 className="font-semibold text-lg mb-3 text-indigo-700 flex items-center gap-2">
             🟢 Purchase History
           </h3>
@@ -300,7 +300,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
         </div>
 
         {/* Withdrawal History */}
-        <div className="mb-8 bg-white/80 rounded-xl shadow-md p-4 border border-red-100">
+        <div className="mb-8 bg-white/80 rounded-xl shadow-md p-4 border border-red-100 overflow-x-auto">
           <h3 className="font-semibold text-lg mb-3 text-red-700 flex items-center gap-2">
             🔴 Withdrawal History
           </h3>

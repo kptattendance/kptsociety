@@ -258,7 +258,7 @@ export default function MembersList() {
 
   // ---------- Render ----------
   return (
-    <div className="min-h-screen bg-gradient-to-r from-violet-50 to-violet-100 p-6">
+    <div className="min-h-screen bg-gradient-to-r from-violet-50 to-violet-100 p-3 sm:p-6">
       <div className="p-4 sm:p-6 max-w-8xl mx-auto bg-gradient-to-br from-gray-50 via-white to-gray-100 rounded-xl shadow-inner">
         <LoadOverlay show={loading} message={loadingMessage} />
 

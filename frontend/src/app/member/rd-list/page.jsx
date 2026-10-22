@@ -56,12 +56,12 @@ const MemberRD = () => {
 
   if (loading)
     return (
-      <p className="p-6 text-center text-gray-500">Loading RD accounts...</p>
+      <p className="p-4 sm:p-6 text-center text-gray-500">Loading RD accounts...</p>
     );
 
   if (!rds.length)
     return (
-      <p className="p-6 text-center text-gray-500">No RD accounts found.</p>
+      <p className="p-4 sm:p-6 text-center text-gray-500">No RD accounts found.</p>
     );
 
   const paginate = (rdId, direction) => {
@@ -171,7 +171,7 @@ const MemberRD = () => {
             <h3 className="text-lg sm:text-xl font-semibold mb-2 text-indigo-700">
               Installment Schedule
             </h3>
-            <div className="bg-gradient-to-r from-pink-200 to-teal-100 p-6">
+            <div className="bg-gradient-to-r from-pink-200 to-teal-100 p-4 sm:p-6">
               <div className="overflow-x-auto mb-2">
                 <table
                   className="min-w-full text-sm sm:text-base rounded-lg overflow-hidden shadow-lg"

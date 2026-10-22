@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation"; // 👈 import for active route detection
@@ -11,7 +11,7 @@ import {
   SignInButton,
   UserButton,
 } from "@clerk/nextjs";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   CreditCard,
@@ -22,144 +22,347 @@ import {
   Settings,
   Briefcase,
   Shapes,
+  LayoutDashboard,
+  Users,
+  ChevronDown,
 } from "lucide-react";
+
+// ✅ Admin links, grouped so they fit on one bar
+const adminGroups = [
+  {
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    links: [{ href: "/admin", label: "Dashboard" }],
+  },
+  {
+    label: "Members",
+    icon: Users,
+    links: [
+      { href: "/admin/add-member", label: "Add Member" },
+      { href: "/admin/members-list", label: "Members" },
+    ],
+  },
+  {
+    label: "Loans",
+    icon: Wallet,
+    links: [
+      { href: "/admin/add-loan", label: "Add Loan" },
+      { href: "/admin/loans-list", label: "Loan Accounts" },
+    ],
+  },
+  {
+    label: "FD",
+    icon: Briefcase,
+    links: [
+      { href: "/admin/add-fd", label: "Add FD" },
+      { href: "/admin/fd-list", label: "FD Accounts" },
+    ],
+  },
+  {
+    label: "RD",
+    icon: PiggyBank,
+    links: [
+      { href: "/admin/add-rd", label: "Add RD" },
+      { href: "/admin/rd-list", label: "RD Accounts" },
+    ],
+  },
+  {
+    label: "CD",
+    icon: CreditCard,
+    links: [
+      { href: "/admin/add-cd", label: "Add CD" },
+      { href: "/admin/cd-list", label: "CD Accounts" },
+    ],
+  },
+  {
+    label: "Shares",
+    icon: Shapes,
+    links: [
+      { href: "/admin/add-share", label: "Add Share" },
+      { href: "/admin/share-list", label: "Shares" },
+    ],
+  },
+];
+
+// ✅ Member links
+const memberLinks = [
+  { href: "/member/profile", label: "Profile", icon: User },
+  { href: "/member/loan", label: "Loans", icon: Wallet },
+  { href: "/member/rd-list", label: "RD", icon: PiggyBank },
+  { href: "/member/fd-list", label: "FD", icon: Briefcase },
+  { href: "/member/cd-list", label: "CD", icon: CreditCard },
+  { href: "/member/shares", label: "Shares", icon: Shapes },
+  { href: "/member/settings", label: "Settings", icon: Settings },
+];
+
+function AdminDropdown({ group, pathname, openGroup, setOpenGroup }) {
+  const Icon = group.icon;
+  const isActive = group.links.some((l) => l.href === pathname);
+  const isOpen = openGroup === group.label;
+  const pillClass = `flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+    isActive
+      ? "bg-white text-purple-700 shadow-sm ring-1 ring-purple-200"
+      : "text-gray-600 hover:text-gray-900 hover:bg-white/70"
+  }`;
+
+  // Single-link groups render as a plain link
+  if (group.links.length === 1) {
+    return (
+      <Link href={group.links[0].href} className={pillClass}>
+        <Icon className="w-4 h-4" /> {group.label}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setOpenGroup(group.label)}
+      onMouseLeave={() => setOpenGroup(null)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpenGroup(isOpen ? null : group.label)}
+        className={pillClass}
+        aria-expanded={isOpen}
+      >
+        <Icon className="w-4 h-4" /> {group.label}
+        <ChevronDown
+          className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 top-full pt-2 min-w-[190px]"
+          >
+            <div className="bg-white rounded-2xl shadow-soft ring-1 ring-gray-200/70 p-1.5">
+              {group.links.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setOpenGroup(null)}
+                  className={`block px-3 py-2 rounded-xl text-sm transition-colors ${
+                    pathname === href
+                      ? "bg-blue-50 text-blue-700 font-semibold"
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function Navbar() {
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState(null);
   const pathname = usePathname(); // 👈 current route
   const role = user?.publicMetadata?.role || null;
+  const isAdmin = role === "admin";
 
-  // ✅ Admin links
-  const adminLinks = [
-    { href: "/admin", label: "Dashboard" },
-    { href: "/admin/add-member", label: "Add Member" },
-    { href: "/admin/members-list", label: "Members" },
-    { href: "/admin/add-loan", label: "Add Loan" },
-    { href: "/admin/loans-list", label: "Loan Accounts" },
-    { href: "/admin/add-fd", label: "Add FD" },
-    { href: "/admin/fd-list", label: "FD Accounts" },
-    { href: "/admin/add-rd", label: "Add RD" },
-    { href: "/admin/rd-list", label: "RD Accounts" },
-    { href: "/admin/add-cd", label: "Add CD" },
-    { href: "/admin/cd-list", label: "CD Accounts" },
-    { href: "/admin/add-share", label: "Add Share" },
-    { href: "/admin/share-list", label: "Shares" },
-  ];
+  // Close menus on route change
+  useEffect(() => {
+    setIsOpen(false);
+    setOpenGroup(null);
+  }, [pathname]);
 
-  // ✅ Member links
-  const memberLinks = [
-    { href: "/member/profile", label: "Profile", icon: User },
-    { href: "/member/loan", label: "Loan Accounts", icon: Wallet },
-    { href: "/member/rd-list", label: "RD Accounts", icon: PiggyBank },
-    { href: "/member/fd-list", label: "FD Accounts", icon: Briefcase },
-    { href: "/member/cd-list", label: "CD Accounts", icon: CreditCard },
-    { href: "/member/shares", label: "Shares", icon: Shapes },
-    { href: "/member/settings", label: "Settings", icon: Settings },
-  ];
-
-  const links = role === "admin" ? adminLinks : memberLinks;
+  // Lock page scroll while the mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   return (
     <motion.nav
-      initial={{ y: -50, opacity: 0 }}
+      initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex justify-between items-center px-4 md:px-6 py-3 bg-gradient-to-r from-gray-50 to-gray-100 text-black shadow-md sticky top-0 z-50"
+      className="sticky top-0 z-50 bg-white/75 backdrop-blur-xl border-b border-purple-100/80"
     >
-      {/* Left: Logo */}
-      <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-        <Image src="/logo1.png" alt="KPT Society Logo" width={32} height={32} />
-        <span className="hidden sm:inline">KPT Society</span>
-      </Link>
+      <div className="h-[3px] brand-gradient" />
+      <div className="max-w-7xl mx-auto flex justify-between items-center gap-3 px-4 sm:px-6 h-16">
+        {/* Left: Logo */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <span className="grid place-items-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 ring-1 ring-purple-200/60">
+            <Image src="/logo1.png" alt="KPT Society Logo" width={28} height={28} />
+          </span>
+          <span className="leading-tight">
+            <span className="block text-base font-extrabold text-gray-900">
+              KPT Society
+            </span>
+            <span className="hidden sm:block text-[11px] font-medium text-gray-500">
+              Co-operative Society, Mangalore
+            </span>
+          </span>
+        </Link>
 
-      {/* Middle: Links (Desktop) */}
-      <SignedIn>
-        <div className="hidden md:flex gap-6">
-          {links.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href; // 👈 check if current route matches link
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-1 text-sm font-medium transition-colors relative ${
-                  isActive
-                    ? "text-blue-600 font-semibold"
-                    : "text-gray-700 hover:text-blue-500"
-                }`}
-              >
-                {Icon && <Icon className="w-4 h-4" />} {label}
-                {isActive && (
-                  <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-blue-600 rounded"></span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </SignedIn>
+        {/* Middle: Links (Desktop) */}
+        <SignedIn>
+          <div className="hidden lg:flex items-center gap-1 bg-gray-100/70 rounded-full p-1">
+            {isAdmin
+              ? adminGroups.map((group) => (
+                  <AdminDropdown
+                    key={group.label}
+                    group={group}
+                    pathname={pathname}
+                    openGroup={openGroup}
+                    setOpenGroup={setOpenGroup}
+                  />
+                ))
+              : memberLinks.map(({ href, label, icon: Icon }) => {
+                  const isActive = pathname === href; // 👈 check if current route matches link
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-white text-purple-700 shadow-sm ring-1 ring-purple-200"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-white/70"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" /> {label}
+                    </Link>
+                  );
+                })}
+          </div>
+        </SignedIn>
 
-      {/* Right: Buttons */}
-      <div className="flex items-center gap-3">
-        {/* Desktop Auth */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Right: Buttons */}
+        <div className="flex items-center gap-2">
           <SignedOut>
             <SignInButton>
-              <button className="bg-blue-600 text-white font-medium text-sm px-4 py-1.5 rounded-full shadow hover:bg-indigo-500 transition cursor-pointer">
+              <button className="hidden sm:inline-flex items-center gap-2 bg-gray-900 text-white font-semibold text-sm px-5 py-2.5 rounded-full shadow-sm hover:bg-purple-700 transition-colors">
                 Sign In
               </button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <button
-          className="md:hidden p-2 rounded hover:bg-gray-200 transition"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      {/* Mobile Dropdown */}
-      {isOpen && (
-        <div className="absolute top-14 left-0 w-full bg-white text-gray-800 shadow-md flex flex-col items-start px-6 py-4 gap-4 md:hidden">
-          <SignedIn>
-            {links.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-2 font-medium w-full ${
-                    isActive
-                      ? "text-blue-600 font-semibold"
-                      : "text-gray-700 hover:text-blue-600"
-                  }`}
-                >
-                  {Icon && <Icon className="w-4 h-4" />} {label}
-                </Link>
-              );
-            })}
-            <div className="border-t pt-3 w-full flex justify-start">
+            <div className="hidden lg:flex items-center">
               <UserButton afterSignOutUrl="/" />
             </div>
           </SignedIn>
 
-          <SignedOut>
-            <div className="flex flex-col gap-2 w-full">
-              <SignInButton>
-                <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow">
-                  Sign In
-                </button>
-              </SignInButton>
-            </div>
-          </SignedOut>
+          {/* Mobile Menu Toggle */}
+          <button
+            className="lg:hidden grid place-items-center w-10 h-10 rounded-xl text-gray-700 hover:bg-purple-50 transition"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="lg:hidden absolute inset-x-0 top-full h-[100dvh] bg-gray-900/20"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden absolute inset-x-0 top-full bg-white border-b border-purple-100 shadow-soft max-h-[calc(100dvh-67px)] overflow-y-auto"
+            >
+              <div className="px-4 sm:px-6 py-4 space-y-4">
+                <SignedIn>
+                  {isAdmin ? (
+                    <div className="space-y-4">
+                      {adminGroups.map((group) => {
+                        const Icon = group.icon;
+                        return (
+                          <div key={group.label}>
+                            <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                              <Icon className="w-3.5 h-3.5" /> {group.label}
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {group.links.map(({ href, label }) => (
+                                <Link
+                                  key={href}
+                                  href={href}
+                                  onClick={() => setIsOpen(false)}
+                                  className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                    pathname === href
+                                      ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 ring-1 ring-purple-200"
+                                      : "bg-gray-50 text-gray-700 hover:bg-purple-50"
+                                  }`}
+                                >
+                                  {label}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {memberLinks.map(({ href, label, icon: Icon }) => {
+                        const isActive = pathname === href;
+                        return (
+                          <Link
+                            key={href}
+                            href={href}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                              isActive
+                                ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 ring-1 ring-purple-200"
+                                : "bg-gray-50 text-gray-700 hover:bg-purple-50"
+                            }`}
+                          >
+                            <Icon className="w-4 h-4" /> {label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="border-t border-gray-100 pt-4 flex items-center gap-3">
+                    <UserButton afterSignOutUrl="/" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">
+                        {user?.fullName || "My Account"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user?.primaryEmailAddress?.emailAddress}
+                      </p>
+                    </div>
+                  </div>
+                </SignedIn>
+
+                <SignedOut>
+                  <SignInButton>
+                    <button className="w-full bg-gray-900 hover:bg-purple-700 text-white font-semibold text-sm px-4 py-3 rounded-xl shadow-sm transition-colors">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                </SignedOut>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }

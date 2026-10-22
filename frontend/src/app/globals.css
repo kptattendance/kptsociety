@@ -1,6 +1,333 @@
 @import "tailwindcss";
 
-html, body {
-  /* height: 100%; */
-  /* overflow: hidden; */
+/*
+  KPT Society theme
+  Palette: lavender #CDB4DB · light pink #FFC8DD · pink #FFAFCC · light blue #BDE0FE · sky blue #A2D2FF
+
+  Tailwind's built-in color scales are remapped onto this palette so every page
+  picks up the theme automatically:
+    indigo / blue / sky / cyan / teal  -> sky-blue scale (primary)
+    purple / violet                     -> lavender scale
+    pink / rose / fuchsia               -> pink scale
+    gray / slate                        -> soft lavender-tinted neutrals
+  The 200/300 steps are the exact palette swatches; deeper steps are darkened
+  versions used for text and buttons so contrast stays readable.
+  green / red / yellow / amber / orange stay as status colors.
+*/
+
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand tokens */
+  --color-lavender: #cdb4db;
+  --color-blush: #ffc8dd;
+  --color-rose-pink: #ffafcc;
+  --color-baby-blue: #bde0fe;
+  --color-sky-blue: #a2d2ff;
+  --color-ink: #2b2540;
+
+  /* Sky blue (primary) */
+  --color-blue-50: #f3f9ff;
+  --color-blue-100: #e4f2ff;
+  --color-blue-200: #bde0fe;
+  --color-blue-300: #a2d2ff;
+  --color-blue-400: #70b6f2;
+  --color-blue-500: #4796df;
+  --color-blue-600: #2a74bb;
+  --color-blue-700: #235f9a;
+  --color-blue-800: #1f4f7f;
+  --color-blue-900: #1b4167;
+  --color-blue-950: #122a44;
+
+  --color-indigo-50: var(--color-blue-50);
+  --color-indigo-100: var(--color-blue-100);
+  --color-indigo-200: var(--color-blue-200);
+  --color-indigo-300: var(--color-blue-300);
+  --color-indigo-400: var(--color-blue-400);
+  --color-indigo-500: var(--color-blue-500);
+  --color-indigo-600: var(--color-blue-600);
+  --color-indigo-700: var(--color-blue-700);
+  --color-indigo-800: var(--color-blue-800);
+  --color-indigo-900: var(--color-blue-900);
+  --color-indigo-950: var(--color-blue-950);
+
+  --color-sky-50: var(--color-blue-50);
+  --color-sky-100: var(--color-blue-100);
+  --color-sky-200: var(--color-blue-200);
+  --color-sky-300: var(--color-blue-300);
+  --color-sky-400: var(--color-blue-400);
+  --color-sky-500: var(--color-blue-500);
+  --color-sky-600: var(--color-blue-600);
+  --color-sky-700: var(--color-blue-700);
+  --color-sky-800: var(--color-blue-800);
+  --color-sky-900: var(--color-blue-900);
+
+  --color-cyan-50: var(--color-blue-50);
+  --color-cyan-100: var(--color-blue-100);
+  --color-cyan-200: var(--color-blue-200);
+  --color-cyan-300: var(--color-blue-300);
+  --color-cyan-400: var(--color-blue-400);
+  --color-cyan-500: var(--color-blue-500);
+  --color-cyan-600: var(--color-blue-600);
+  --color-cyan-700: var(--color-blue-700);
+  --color-cyan-800: var(--color-blue-800);
+  --color-cyan-900: var(--color-blue-900);
+
+  --color-teal-50: var(--color-blue-50);
+  --color-teal-100: var(--color-blue-100);
+  --color-teal-200: var(--color-blue-200);
+  --color-teal-300: var(--color-blue-300);
+  --color-teal-400: var(--color-blue-400);
+  --color-teal-500: var(--color-blue-500);
+  --color-teal-600: var(--color-blue-600);
+  --color-teal-700: var(--color-blue-700);
+  --color-teal-800: var(--color-blue-800);
+  --color-teal-900: var(--color-blue-900);
+
+  /* Lavender */
+  --color-purple-50: #faf6fc;
+  --color-purple-100: #f3ebf8;
+  --color-purple-200: #e5d6ee;
+  --color-purple-300: #cdb4db;
+  --color-purple-400: #b494c8;
+  --color-purple-500: #9a74b2;
+  --color-purple-600: #7f5a98;
+  --color-purple-700: #6a4a80;
+  --color-purple-800: #573e69;
+  --color-purple-900: #483656;
+  --color-purple-950: #2d1f37;
+
+  --color-violet-50: var(--color-purple-50);
+  --color-violet-100: var(--color-purple-100);
+  --color-violet-200: var(--color-purple-200);
+  --color-violet-300: var(--color-purple-300);
+  --color-violet-400: var(--color-purple-400);
+  --color-violet-500: var(--color-purple-500);
+  --color-violet-600: var(--color-purple-600);
+  --color-violet-700: var(--color-purple-700);
+  --color-violet-800: var(--color-purple-800);
+  --color-violet-900: var(--color-purple-900);
+
+  /* Pink */
+  --color-pink-50: #fff5f9;
+  --color-pink-100: #ffe7f0;
+  --color-pink-200: #ffc8dd;
+  --color-pink-300: #ffafcc;
+  --color-pink-400: #f989b2;
+  --color-pink-500: #ec5f92;
+  --color-pink-600: #cc3a6c;
+  --color-pink-700: #ab2e5a;
+  --color-pink-800: #8c284c;
+  --color-pink-900: #742442;
+  --color-pink-950: #470f24;
+
+  --color-rose-50: var(--color-pink-50);
+  --color-rose-100: var(--color-pink-100);
+  --color-rose-200: var(--color-pink-200);
+  --color-rose-300: var(--color-pink-300);
+  --color-rose-400: var(--color-pink-400);
+  --color-rose-500: var(--color-pink-500);
+  --color-rose-600: var(--color-pink-600);
+  --color-rose-700: var(--color-pink-700);
+  --color-rose-800: var(--color-pink-800);
+  --color-rose-900: var(--color-pink-900);
+
+  --color-fuchsia-50: var(--color-pink-50);
+  --color-fuchsia-100: var(--color-pink-100);
+  --color-fuchsia-200: var(--color-pink-200);
+  --color-fuchsia-300: var(--color-pink-300);
+  --color-fuchsia-400: var(--color-pink-400);
+  --color-fuchsia-500: var(--color-pink-500);
+  --color-fuchsia-600: var(--color-pink-600);
+  --color-fuchsia-700: var(--color-pink-700);
+  --color-fuchsia-800: var(--color-pink-800);
+  --color-fuchsia-900: var(--color-pink-900);
+
+  /* Neutrals with a hint of lavender */
+  --color-gray-50: #faf9fc;
+  --color-gray-100: #f3f1f7;
+  --color-gray-200: #e7e4ee;
+  --color-gray-300: #d3cfdd;
+  --color-gray-400: #a29db1;
+  --color-gray-500: #77718b;
+  --color-gray-600: #5a546d;
+  --color-gray-700: #453f57;
+  --color-gray-800: #2f2a3e;
+  --color-gray-900: #1f1b2c;
+  --color-gray-950: #13101c;
+
+  --color-slate-50: var(--color-gray-50);
+  --color-slate-100: var(--color-gray-100);
+  --color-slate-200: var(--color-gray-200);
+  --color-slate-300: var(--color-gray-300);
+  --color-slate-400: var(--color-gray-400);
+  --color-slate-500: var(--color-gray-500);
+  --color-slate-600: var(--color-gray-600);
+  --color-slate-700: var(--color-gray-700);
+  --color-slate-800: var(--color-gray-800);
+  --color-slate-900: var(--color-gray-900);
+
+  --shadow-soft: 0 1px 2px rgb(43 37 64 / 0.04), 0 8px 24px -6px rgb(127 90 152 / 0.14);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    color: var(--color-gray-800);
+    background-color: #fcfaff;
+    background-image:
+      radial-gradient(60rem 30rem at 0% -10%, rgb(205 180 219 / 0.25), transparent 60%),
+      radial-gradient(50rem 30rem at 100% 0%, rgb(162 210 255 / 0.22), transparent 60%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.015em;
+  }
+
+  ::selection {
+    background: var(--color-pink-200);
+    color: var(--color-gray-900);
+  }
+
+  /* Form controls: rounded, soft, readable on phones (16px avoids iOS zoom) */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+  select,
+  textarea {
+    border-color: var(--color-gray-300);
+    background-color: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--color-blue-400);
+    box-shadow: 0 0 0 3px rgb(162 210 255 / 0.55);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--color-purple-600);
+  }
+
+  input[type="file"]::file-selector-button {
+    margin-right: 0.75rem;
+    border: 0;
+    border-radius: 9999px;
+    padding: 0.45rem 1rem;
+    background: var(--color-purple-100);
+    color: var(--color-purple-700);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  @media (max-width: 639px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Tables: modern header + gentle row hover */
+  table {
+    border-collapse: collapse;
+  }
+
+  thead th {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    transition: background-color 0.15s;
+  }
+
+  tbody tr:hover {
+    background-color: rgb(189 224 254 / 0.18);
+  }
+
+  /* Thin, themed scrollbars (tables and modals scroll horizontally on phones) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-purple-300) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-purple-300);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .brand-gradient {
+    background-image: linear-gradient(135deg, #cdb4db 0%, #ffafcc 50%, #a2d2ff 100%);
+  }
+
+  .brand-gradient-text {
+    background-image: linear-gradient(90deg, #7f5a98, #cc3a6c 55%, #2a74bb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* react-toastify */
+:root {
+  --toastify-color-info: #2a74bb;
+  --toastify-color-success: #16a34a;
+  --toastify-color-warning: #d97706;
+  --toastify-color-error: #dc2626;
+  --toastify-font-family: var(--font-jakarta), system-ui, sans-serif;
+  --toastify-color-progress-light: linear-gradient(90deg, #cdb4db, #ffafcc, #a2d2ff);
+}
+
+.Toastify__toast {
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* sweetalert2 */
+.swal2-popup {
+  border-radius: 1.25rem !important;
+  font-family: var(--font-jakarta), system-ui, sans-serif !important;
+}
+
+.swal2-styled.swal2-confirm {
+  border-radius: 9999px !important;
+}
+
+.swal2-styled.swal2-cancel {
+  border-radius: 9999px !important;
+}
+
+@media (max-width: 480px) {
+  .Toastify__toast-container {
+    padding: 0.5rem;
+  }
 }

@@ -114,7 +114,7 @@ export default function AdminLoanApplicationForm() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-gradient-to-b from-indigo-50 to-white rounded-xl shadow-lg border border-indigo-100">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 bg-gradient-to-b from-indigo-50 to-white rounded-xl shadow-lg border border-indigo-100">
       <LoadOverlay show={loading} />
 
       <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">
@@ -395,7 +395,7 @@ export default function AdminLoanApplicationForm() {
         <div className="md:col-span-2 flex justify-center mt-4">
           <button
             type="submit"
-            className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white font-semibold px-8 py-2 rounded-lg shadow-md transition-all"
+            className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white font-semibold px-4 sm:px-8 py-2 rounded-lg shadow-md transition-all"
             disabled={loading}
           >
             {loading ? "Submitting..." : "Submit Loan"}

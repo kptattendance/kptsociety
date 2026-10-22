@@ -88,9 +88,11 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <p className="text-gray-500 text-center mt-8 animate-pulse">
-        Loading dashboard...
-      </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-28 sm:h-36 rounded-3xl bg-purple-100/60 animate-pulse" />
+        ))}
+      </div>
     );
   }
 
@@ -106,80 +108,85 @@ export default function AdminDashboard() {
       label: "Active Members",
       value: stats.members,
       icon: Users,
-      gradient: "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600",
+      gradient: "bg-gradient-to-br from-blue-200 to-blue-100",
+      iconBg: "bg-blue-600",
     },
     {
       id: "rd",
       label: "RD Accounts",
       value: stats.rds,
       icon: PiggyBank,
-      gradient: "bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600",
+      gradient: "bg-gradient-to-br from-pink-200 to-pink-100",
+      iconBg: "bg-pink-600",
     },
     {
       id: "fd",
       label: "FD Accounts",
       value: stats.fds,
       icon: Wallet,
-      gradient: "bg-gradient-to-br from-fuchsia-400 via-pink-500 to-rose-500",
+      gradient: "bg-gradient-to-br from-purple-300 to-purple-100",
+      iconBg: "bg-purple-600",
     },
     {
       id: "loan",
       label: "Loan Accounts",
       value: stats.loans,
       icon: CreditCard,
-      gradient: "bg-gradient-to-br from-amber-400 via-orange-500 to-red-500",
+      gradient: "bg-gradient-to-br from-pink-300 to-pink-100",
+      iconBg: "bg-pink-700",
     },
     {
       id: "cd",
       label: "CD Accounts",
       value: stats.cds, // ✅ New
       icon: Wallet,
-      gradient: "bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500",
+      gradient: "bg-gradient-to-br from-blue-300 to-blue-100",
+      iconBg: "bg-blue-700",
     },
     {
       id: "shares",
       label: "Shares",
       value: stats.shares, // ✅ New
       icon: PiggyBank,
-      gradient: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500",
+      gradient: "bg-gradient-to-br from-purple-200 to-purple-50",
+      iconBg: "bg-purple-700",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-4 sm:p-6 md:p-8">
-      <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6 text-center">
-        📊 Admin Dashboard
-      </h1>
+    <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <div className="mb-6 sm:mb-8">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-600">
+          Overview
+        </p>
+        <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold text-gray-900">
+          Admin Dashboard
+        </h1>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
         {dashboardCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.id}
-              className={`relative overflow-hidden rounded-2xl shadow-lg transform hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 ${stat.gradient} text-white`}
+              className={`relative overflow-hidden rounded-3xl p-4 sm:p-6 ring-1 ring-white/70 shadow-soft hover:-translate-y-0.5 transition-transform duration-300 ${stat.gradient}`}
             >
-              {/* glossy overlay */}
-              <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-
-              {/* main content */}
-              <div className="relative p-5 sm:p-6 flex items-center justify-between">
+              <div className="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/40"></div>
+              <div className="relative flex flex-col-reverse sm:flex-row sm:items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm sm:text-base font-medium opacity-90">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-700">
                     {stat.label}
                   </h3>
-                  <p className="text-3xl sm:text-4xl font-bold mt-2 drop-shadow-md">
+                  <p className="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-1 sm:mt-2">
                     {stat.value}
                   </p>
                 </div>
 
-                <div className="p-3 sm:p-4 bg-white/20 rounded-full shadow-md backdrop-blur-sm">
-                  <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+                <div className={`grid place-items-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl text-white shadow-md ${stat.iconBg}`}>
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
               </div>
-
-              {/* bottom glossy reflection */}
-              <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-white/10 rounded-t-[100%] blur-2xl"></div>
             </div>
           );
         })}

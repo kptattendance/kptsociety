@@ -48,12 +48,12 @@ const MemberCD = () => {
 
   if (loading)
     return (
-      <p className="p-6 text-center text-gray-500">Loading CD accounts...</p>
+      <p className="p-4 sm:p-6 text-center text-gray-500">Loading CD accounts...</p>
     );
 
   if (!cds.length)
     return (
-      <p className="p-6 text-center text-gray-500">No CD accounts found.</p>
+      <p className="p-4 sm:p-6 text-center text-gray-500">No CD accounts found.</p>
     );
 
   const paginate = (cdId, type, direction) => {

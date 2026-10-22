@@ -41,14 +41,14 @@ const MemberLoan = () => {
 
   if (loading)
     return (
-      <p className="p-6 text-center text-gray-500 text-sm sm:text-base">
+      <p className="p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base">
         Loading loan schedule...
       </p>
     );
 
   if (!loans.length)
     return (
-      <p className="p-6 text-center text-gray-500 text-sm sm:text-base">
+      <p className="p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base">
         No loans found.
       </p>
     );

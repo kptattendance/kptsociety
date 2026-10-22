@@ -9,6 +9,7 @@ import {
   recalculatedSchedule,
   repaygetLoan,
   closeLoan,
+  deleteLumpSum,
 } from "../controllers/loanController.js";
 import { requireAuthWithRole } from "../middlewares/auth.js";
 
@@ -44,6 +45,11 @@ router.patch(
   "/prepay/:loanId",
   requireAuthWithRole(["admin"]),
   recalculatedSchedule,
+);
+router.delete(
+  "/prepay/:loanId/:paymentId",
+  requireAuthWithRole(["admin"]),
+  deleteLumpSum,
 );
 
 export default router;

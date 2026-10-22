@@ -60,7 +60,7 @@ export default function MemberProfileModal({ memberId, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3">
-      <div className="bg-gradient-to-br from-indigo-50 via-white to-pink-50 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto relative border border-indigo-100">
+      <div className="bg-gradient-to-br from-indigo-50 via-white to-pink-50 rounded-2xl shadow-soft max-w-5xl w-full max-h-[90vh] overflow-y-auto relative border border-indigo-100">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -74,9 +74,9 @@ export default function MemberProfileModal({ memberId, onClose }) {
         ) : !profile ? (
           <p className="text-center py-10 text-red-500">Member not found</p>
         ) : (
-          <div className="p-6 md:p-10 space-y-8">
+          <div className="p-4 sm:p-6 md:p-10 space-y-8">
             {/* Profile Header */}
-            <div className="flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-indigo-100 to-blue-50 rounded-2xl p-6 shadow-lg">
+            <div className="flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-indigo-100 to-blue-50 rounded-2xl p-4 sm:p-6 shadow-lg">
               {/* Animated Glow Container */}
               <div className="relative">
                 {/* Shimmering Gradient Ring */}
@@ -94,7 +94,7 @@ export default function MemberProfileModal({ memberId, onClose }) {
               </div>
 
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-3xl font-bold text-indigo-700">
+                <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700">
                   {profile.name}
                 </h2>
                 <p className="text-gray-600 font-medium mt-1">
@@ -115,7 +115,7 @@ export default function MemberProfileModal({ memberId, onClose }) {
             {/* Info Sections */}
             <div className="grid md:grid-cols-2 gap-8">
               {/* Personal Info */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-6 border border-indigo-100 hover:shadow-lg transition-all">
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6 border border-indigo-100 hover:shadow-lg transition-all">
                 <h3 className="text-lg font-semibold text-indigo-600 border-b pb-2 mb-4">
                   Personal Information
                 </h3>
@@ -140,7 +140,7 @@ export default function MemberProfileModal({ memberId, onClose }) {
               </div>
 
               {/* Employment Info */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-6 border border-pink-100 hover:shadow-lg transition-all">
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6 border border-pink-100 hover:shadow-lg transition-all">
                 <h3 className="text-lg font-semibold text-pink-600 border-b pb-2 mb-4">
                   Employment Details
                 </h3>
@@ -177,7 +177,7 @@ export default function MemberProfileModal({ memberId, onClose }) {
 
             {/* Address Section */}
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-6 border border-blue-100 hover:shadow-lg transition-all">
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6 border border-blue-100 hover:shadow-lg transition-all">
                 <h3 className="text-lg font-semibold text-blue-600 border-b pb-2 mb-4">
                   Current Address
                 </h3>
@@ -187,7 +187,7 @@ export default function MemberProfileModal({ memberId, onClose }) {
                   value={profile.currentAddress}
                 />
               </div>
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-6 border border-purple-100 hover:shadow-lg transition-all">
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6 border border-purple-100 hover:shadow-lg transition-all">
                 <h3 className="text-lg font-semibold text-purple-600 border-b pb-2 mb-4">
                   Permanent Address
                 </h3>

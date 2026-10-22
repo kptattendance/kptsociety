@@ -154,7 +154,7 @@ export default function AdminAddMember() {
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-10">
       {/* Bulk Upload Section */}
-      <div className="bg-gradient-to-r from-green-50 to-green-100 shadow-lg rounded-xl p-6 md:p-8 border border-green-200">
+      <div className="bg-gradient-to-r from-green-50 to-green-100 shadow-lg rounded-xl p-4 sm:p-6 md:p-8 border border-green-200">
         <h2 className="text-2xl md:text-3xl font-bold mb-6 text-green-900 flex items-center gap-2">
           📂 Bulk Upload Members{" "}
           <UploadCloud className="w-7 h-7 text-green-600" />
@@ -219,7 +219,7 @@ export default function AdminAddMember() {
       </div>
 
       {/* Single Member Section */}
-      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 shadow-lg rounded-xl p-6 md:p-8 border border-indigo-200">
+      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 shadow-lg rounded-xl p-4 sm:p-6 md:p-8 border border-indigo-200">
         <h2 className="text-2xl md:text-3xl font-bold mb-6 text-indigo-900 flex items-center gap-2">
           ➕ Add Single Member <UserPlus className="w-7 h-7 text-indigo-600" />
         </h2>

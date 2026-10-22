@@ -307,10 +307,10 @@ export default function AdminLoanList() {
   if (loading) return <LoadOverlay show={true} message={loadingMessage} />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-amber-50 to-orange-100 p-6">
+    <div className="min-h-screen bg-gradient-to-r from-amber-50 to-orange-100 p-3 sm:p-6">
       <div className="p-4 max-w-8xl mx-auto">
         <LoadOverlay show={loading} message={loadingMessage} />
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
           💰 Loan Applications
         </h2>
 
@@ -321,7 +321,7 @@ export default function AdminLoanList() {
             placeholder="🔍 Search by name or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-orange-400 outline-none"
+            className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-orange-400 outline-none"
           />
           <button
             onClick={handleDownloadExcel}

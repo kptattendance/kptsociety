@@ -50,7 +50,7 @@ export default function MemberSharePage() {
 
   if (!share)
     return (
-      <div className="p-6 text-center text-gray-600">
+      <div className="p-4 sm:p-6 text-center text-gray-600">
         <p className="italic">No Share Account Found.</p>
       </div>
     );
@@ -58,8 +58,8 @@ export default function MemberSharePage() {
   const member = share.memberId;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 p-6">
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 p-3 sm:p-6">
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6">
         <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
           🪙 My Share Account
         </h2>

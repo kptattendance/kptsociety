@@ -241,10 +241,10 @@ export default function AdminCDList() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-red-50 to-pink-100 p-6">
+    <div className="min-h-screen bg-gradient-to-r from-red-50 to-pink-100 p-3 sm:p-6">
       <LoadOverlay show={loading} message={loadingMessage} />{" "}
       <LoadOverlay show={scheduleLoading} message="Loading Schedule..." />
-      <div className="bg-white shadow-xl rounded-2xl p-6">
+      <div className="bg-white shadow-soft rounded-2xl p-4 sm:p-6">
         <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">
           💰 CD Accounts
         </h2>

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { MapPin, Mail, Phone, Send } from "lucide-react";
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({
@@ -65,122 +66,146 @@ const handleSubmit = async (e) => {
   };
 
   return (
-    <section className="text-gray-600 body-font relative">
-      <div className="container px-5 py-24 mx-auto flex sm:flex-nowrap flex-wrap">
-        {/* 📍 Google Map + Contact Info */}
-        <div className="lg:w-2/3 md:w-1/2 bg-gray-300 rounded-lg overflow-hidden sm:mr-10 p-10 flex items-end justify-start relative">
-          <iframe
-            width="100%"
-            height="100%"
-            className="absolute inset-0"
-            frameBorder="0"
-            title="KPT Co-operative Society Location"
-            marginHeight="0"
-            marginWidth="0"
-            scrolling="no"
-            src="https://maps.google.com/maps?width=100%25&height=600&hl=en&q=Karnataka%20(Govt.)%20Polytechnic%20Mangalore&ie=UTF8&t=&z=14&iwloc=B&output=embed"
-            style={{ filter: "grayscale(1) contrast(1.2) opacity(0.4)" }}
-          ></iframe>
-          <div className="bg-white relative flex flex-wrap py-6 rounded shadow-md">
-            <div className="lg:w-1/2 px-6">
-              <h2 className="title-font font-semibold text-gray-900 tracking-widest text-xs">
-                ADDRESS
-              </h2>
-              <p className="mt-1">
-                KPT Co-operative Society Office,
-                <br />
-                Karnataka (Govt.) Polytechnic,
-                <br />
-                Kadri Hills, Mangalore – 575004, Karnataka
-              </p>
-            </div>
-            <div className="lg:w-1/2 px-6 mt-4 lg:mt-0">
-              <h2 className="title-font font-semibold text-gray-900 tracking-widest text-xs">
-                EMAIL
-              </h2>
-              <a
-                href="mailto:kptsociety@gmail.com"
-                className="text-indigo-500 leading-relaxed"
-              >
-                kptsociety@gmail.com
-              </a>
-              <h2 className="title-font font-semibold text-gray-900 tracking-widest text-xs mt-4">
-                PHONE
-              </h2>
-              <p className="leading-relaxed">+91-9741127644 / +91-9742023708</p>
-            </div>
-          </div>
+    <section id="contact" className="px-4 sm:px-6 pb-16 sm:pb-24 scroll-mt-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+            Get in touch
+          </p>
+          <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-gray-900">
+            Contact Us
+          </h2>
         </div>
 
-        {/* 📨 Feedback Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="lg:w-1/3 md:w-1/2 bg-white flex flex-col md:ml-auto w-full md:py-8 mt-8 md:mt-0"
-        >
-          <h2 className="text-gray-900 text-lg mb-1 font-medium title-font">
-            Feedback
-          </h2>
-          <p className="leading-relaxed mb-5 text-gray-600">
-            We’d love to hear from you! Please share your feedback or
-            suggestions below.
-          </p>
-
-          <div className="relative mb-4">
-            <label htmlFor="name" className="leading-7 text-sm text-gray-600">
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              required
-              className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
-            />
+        <div className="mt-8 grid lg:grid-cols-5 gap-5 sm:gap-6">
+          {/* 📍 Google Map + Contact Info */}
+          <div className="lg:col-span-3 flex flex-col rounded-[28px] overflow-hidden bg-white shadow-soft ring-1 ring-gray-100">
+            <div className="relative h-64 sm:h-80 lg:flex-1 lg:min-h-[320px] bg-blue-50">
+              <iframe
+                width="100%"
+                height="100%"
+                className="absolute inset-0"
+                frameBorder="0"
+                title="KPT Co-operative Society Location"
+                marginHeight="0"
+                marginWidth="0"
+                scrolling="no"
+                loading="lazy"
+                src="https://maps.google.com/maps?width=100%25&height=600&hl=en&q=Karnataka%20(Govt.)%20Polytechnic%20Mangalore&ie=UTF8&t=&z=14&iwloc=B&output=embed"
+                style={{ filter: "saturate(0.6) hue-rotate(10deg)" }}
+              ></iframe>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-4 p-5 sm:p-6">
+              <div className="flex gap-3">
+                <span className="grid place-items-center shrink-0 w-10 h-10 rounded-xl bg-purple-100 text-purple-700">
+                  <MapPin className="w-5 h-5" />
+                </span>
+                <div className="text-sm">
+                  <h3 className="font-semibold text-gray-900">Address</h3>
+                  <p className="mt-0.5 text-gray-600 leading-relaxed">
+                    KPT Co-operative Society Office, Karnataka (Govt.)
+                    Polytechnic, Kadri Hills, Mangalore – 575004, Karnataka
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className="grid place-items-center shrink-0 w-10 h-10 rounded-xl bg-pink-100 text-pink-700">
+                  <Mail className="w-5 h-5" />
+                </span>
+                <div className="text-sm min-w-0">
+                  <h3 className="font-semibold text-gray-900">Email</h3>
+                  <a
+                    href="mailto:kptsociety@gmail.com"
+                    className="mt-0.5 block text-blue-700 hover:underline break-all"
+                  >
+                    kptsociety@gmail.com
+                  </a>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className="grid place-items-center shrink-0 w-10 h-10 rounded-xl bg-blue-100 text-blue-700">
+                  <Phone className="w-5 h-5" />
+                </span>
+                <div className="text-sm">
+                  <h3 className="font-semibold text-gray-900">Phone</h3>
+                  <p className="mt-0.5 text-gray-600 leading-relaxed">
+                    +91-9741127644
+                    <br />
+                    +91-9742023708
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="relative mb-4">
-            <label htmlFor="email" className="leading-7 text-sm text-gray-600">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              required
-              className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
-            />
-          </div>
-
-          <div className="relative mb-4">
-            <label
-              htmlFor="message"
-              className="leading-7 text-sm text-gray-600"
-            >
-              Message
-            </label>
-            <textarea
-              id="message"
-              value={formData.message}
-              onChange={(e) => handleChange("message", e.target.value)}
-              required
-              className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 h-32 text-base outline-none text-gray-700 py-1 px-3 resize-none leading-6 transition-colors duration-200 ease-in-out"
-            ></textarea>
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg"
+          {/* 📨 Feedback Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="lg:col-span-2 flex flex-col rounded-[28px] bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-6 sm:p-8 ring-1 ring-purple-100"
           >
-            {submitting ? "Sending..." : "Send Message"}
-          </button>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900">
+              Feedback
+            </h3>
+            <p className="mt-1 mb-6 text-sm sm:text-base text-gray-600 leading-relaxed">
+              We’d love to hear from you! Please share your feedback or
+              suggestions below.
+            </p>
 
-          <p className="text-xs text-gray-500 mt-3">
-            Thank you for connecting with KPT Co-operative Society.
-          </p>
-        </form>
+            <div className="mb-4">
+              <label htmlFor="name" className="block mb-1 text-sm font-medium text-gray-700">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border bg-white text-gray-800 text-base"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border bg-white text-gray-800 text-base"
+              />
+            </div>
+
+            <div className="mb-5">
+              <label htmlFor="message" className="block mb-1 text-sm font-medium text-gray-700">
+                Message
+              </label>
+              <textarea
+                id="message"
+                value={formData.message}
+                onChange={(e) => handleChange("message", e.target.value)}
+                required
+                className="w-full h-32 px-4 py-3 rounded-xl border bg-white text-gray-800 text-base resize-none"
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center justify-center gap-2 bg-gray-900 text-white py-3.5 px-6 rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-60"
+            >
+              <Send className="w-4 h-4" />
+              {submitting ? "Sending..." : "Send Message"}
+            </button>
+
+            <p className="text-xs text-gray-500 mt-3">
+              Thank you for connecting with KPT Co-operative Society.
+            </p>
+          </form>
+        </div>
       </div>
     </section>
   );

@@ -86,9 +86,9 @@ export default function AdminCDForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-100 via-purple-100 to-pink-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-teal-100 via-purple-100 to-pink-100 p-4 sm:p-8">
       <LoadOverlay show={loading} />
-      <div className="bg-white/70 backdrop-blur-2xl shadow-2xl rounded-3xl p-10 w-full max-w-5xl mx-auto border border-white/40">
+      <div className="bg-white/70 backdrop-blur-2xl shadow-soft rounded-3xl p-5 sm:p-10 w-full max-w-5xl mx-auto border border-white/40">
         <h1 className="text-2xl font-bold text-red-700 mb-6 text-center">
           💰 Compulsory Deposit (CD) Entry
         </h1>
@@ -243,7 +243,7 @@ export default function AdminCDForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto bg-gradient-to-r from-teal-500 via-purple-500 to-pink-500 text-white font-semibold py-3 px-8 rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg disabled:opacity-50"
+              className="w-full sm:w-auto bg-gradient-to-r from-teal-500 via-purple-500 to-pink-500 text-white font-semibold py-3 px-4 sm:px-8 rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg disabled:opacity-50"
             >
               {loading ? "Processing..." : "💳 Submit CD Deposit"}
             </button>

@@ -4,23 +4,28 @@ import { Twitter, Github, Linkedin, MapPin, Phone, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-gray-50 border-t border-gray-200">
-      <div className="px-6 md:px-16 lg:px-24 xl:px-32 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+    <footer className="w-full px-3 sm:px-6 pb-3 sm:pb-6">
+      <div className="max-w-7xl mx-auto rounded-[28px] sm:rounded-[36px] bg-gray-900 text-gray-300 overflow-hidden relative">
+      <div className="absolute -top-32 -left-20 w-80 h-80 rounded-full bg-purple-400/25 blur-3xl"></div>
+      <div className="absolute -bottom-32 -right-20 w-80 h-80 rounded-full bg-blue-400/20 blur-3xl"></div>
+      <div className="relative px-6 sm:px-10 lg:px-14 pt-12 pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Logo + About */}
           <div className="text-center md:text-left flex flex-col items-center md:items-start">
             <Link href="/" className="flex items-center gap-2">
+              <span className="grid place-items-center w-11 h-11 rounded-2xl bg-white">
               <Image
                 src="/logo1.png"
                 alt="KPT Society Logo"
-                width={40}
-                height={40}
+                width={30}
+                height={30}
               />
-              <span className="text-lg font-bold text-indigo-600">
+              </span>
+              <span className="text-lg font-extrabold text-white">
                 KPT Society
               </span>
             </Link>
-            <p className="mt-6 text-sm text-gray-600 leading-relaxed max-w-xs">
+            <p className="mt-6 text-sm text-gray-400 leading-relaxed max-w-xs">
               KPT Society is dedicated to helping members with savings, loans,
               and financial growth.
             </p>
@@ -29,7 +34,7 @@ export default function Footer() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-indigo-600 transition-colors"
+                className="grid place-items-center w-9 h-9 rounded-full bg-white/10 text-gray-300 hover:bg-pink-300 hover:text-gray-900 transition-colors"
               >
                 <Twitter className="w-5 h-5" />
               </a>
@@ -37,7 +42,7 @@ export default function Footer() {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-indigo-600 transition-colors"
+                className="grid place-items-center w-9 h-9 rounded-full bg-white/10 text-gray-300 hover:bg-pink-300 hover:text-gray-900 transition-colors"
               >
                 <Github className="w-5 h-5" />
               </a>
@@ -45,7 +50,7 @@ export default function Footer() {
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-indigo-600 transition-colors"
+                className="grid place-items-center w-9 h-9 rounded-full bg-white/10 text-gray-300 hover:bg-pink-300 hover:text-gray-900 transition-colors"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
@@ -54,14 +59,14 @@ export default function Footer() {
 
           {/* Resources */}
           <div className="text-center md:text-left">
-            <h2 className="font-semibold text-gray-900 mb-5">RESOURCES</h2>
-            <ul className="text-sm text-gray-600 space-y-2 list-none">
+            <h2 className="text-xs font-bold tracking-[0.2em] text-pink-200 mb-5">RESOURCES</h2>
+            <ul className="text-sm text-gray-300 space-y-2 list-none">
               <li>
                 <a
                   href="https://gpt.karnataka.gov.in/kptmangalore/public/en"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-indigo-600"
+                  className="hover:text-white"
                 >
                   KPT Website
                 </a>
@@ -71,7 +76,7 @@ export default function Footer() {
                   href="https://www.kptplacements.org/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-indigo-600"
+                  className="hover:text-white"
                 >
                   KPT Placements
                 </Link>
@@ -81,7 +86,7 @@ export default function Footer() {
                   href="https://kptblogs.vercel.app/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-indigo-600"
+                  className="hover:text-white"
                 >
                   KPT Blogs
                 </Link>
@@ -91,7 +96,7 @@ export default function Footer() {
                   href="https://www.kptsociety.in/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-indigo-600"
+                  className="hover:text-white"
                 >
                   KPT Alumni
                 </Link>
@@ -101,27 +106,27 @@ export default function Footer() {
 
           {/* Important Links */}
           <div className="text-center md:text-left">
-            <h2 className="font-semibold text-gray-900 mb-5">
+            <h2 className="text-xs font-bold tracking-[0.2em] text-pink-200 mb-5">
               IMPORTANT LINKS
             </h2>
-            <ul className="text-sm text-gray-600 space-y-2 list-none">
+            <ul className="text-sm text-gray-300 space-y-2 list-none">
               <li>
-                <Link href="/terms" className="hover:text-indigo-600">
+                <Link href="/terms" className="hover:text-white">
                   Terms and Conditions
                 </Link>
               </li>
               <li>
-                <Link href="/disclaimer" className="hover:text-indigo-600">
+                <Link href="/disclaimer" className="hover:text-white">
                   Disclaimer
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-indigo-600">
+                <Link href="/privacy" className="hover:text-white">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/faqs" className="hover:text-indigo-600">
+                <Link href="/faqs" className="hover:text-white">
                   FAQs
                 </Link>
               </li>
@@ -130,10 +135,10 @@ export default function Footer() {
 
           {/* Contact */}
           <div className="text-center md:text-left">
-            <h2 className="font-semibold text-gray-900 mb-5">CONTACT</h2>
-            <ul className="text-sm text-gray-600 space-y-3 list-none">
+            <h2 className="text-xs font-bold tracking-[0.2em] text-pink-200 mb-5">CONTACT</h2>
+            <ul className="text-sm text-gray-300 space-y-3 list-none">
               <li className="flex justify-center md:justify-start items-start gap-2">
-                <MapPin className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 text-blue-300 flex-shrink-0 mt-0.5" />
                 <span>
                   VVR3+MMP, Kadri Hills, Kadri,
                   <br />
@@ -141,16 +146,16 @@ export default function Footer() {
                 </span>
               </li>
               <li className="flex justify-center md:justify-start items-center gap-2">
-                <Phone className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                <a href="tel:+918123456789" className="hover:text-indigo-600">
+                <Phone className="w-5 h-5 text-blue-300 flex-shrink-0" />
+                <a href="tel:+918123456789" className="hover:text-white">
                   +91-9741127644 / +91-9742023708{" "}
                 </a>
               </li>
               <li className="flex justify-center md:justify-start items-center gap-2">
-                <Mail className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                <Mail className="w-5 h-5 text-blue-300 flex-shrink-0" />
                 <a
                   href="mailto:info@kptsociety.com"
-                  className="hover:text-indigo-600"
+                  className="hover:text-white"
                 >
                   kptsociety@gmail.com
                 </a>
@@ -161,13 +166,14 @@ export default function Footer() {
       </div>
 
       {/* Bottom */}
-      <div className="border-t border-gray-200 py-4 px-6 md:px-16 lg:px-24 xl:px-32 flex flex-col md:flex-row items-center justify-between gap-2 text-center md:text-left">
-        <p className="text-xs md:text-sm text-gray-500">
+      <div className="relative border-t border-white/10 py-5 px-6 sm:px-10 lg:px-14 flex flex-col md:flex-row items-center justify-between gap-2 text-center md:text-left">
+        <p className="text-xs md:text-sm text-gray-400">
           © {new Date().getFullYear()} KPT Society. All Rights Reserved.
         </p>
-        <p className="text-xs md:text-sm text-gray-500">
+        <p className="text-xs md:text-sm text-gray-400">
           Developed and maintained by KPT CSE Final Year Students.
         </p>
+      </div>
       </div>
     </footer>
   );

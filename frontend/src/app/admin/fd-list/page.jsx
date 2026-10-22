@@ -76,7 +76,7 @@ export default function AdminFDTable() {
       text,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
+      confirmButtonColor: "#2a74bb",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes",
       cancelButtonText: "No",
@@ -252,15 +252,15 @@ export default function AdminFDTable() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-indigo-50 to-blue-100 p-6">
+    <div className="min-h-screen bg-gradient-to-r from-indigo-50 to-blue-100 p-3 sm:p-6">
       <LoadOverlay show={loading} message={loadingMessage} />
 
-      <div className="bg-white shadow-xl rounded-2xl p-6">
+      <div className="bg-white shadow-soft rounded-2xl p-4 sm:p-6">
         <h2 className="text-2xl font-bold text-indigo-700 mb-6 text-center">
           💼 Fixed Deposit Records
         </h2>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
           <input
             type="text"
             placeholder="🔍 Search by name or phone..."
@@ -269,7 +269,7 @@ export default function AdminFDTable() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="border border-gray-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-indigo-400 outline-none"
+            className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-indigo-400 outline-none"
           />
           <button
             onClick={handleDownloadExcel}

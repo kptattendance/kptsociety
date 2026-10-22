@@ -9,27 +9,34 @@ export default function Gallery() {
   ];
 
   return (
-    <div className="h-full bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-8">
-      <div className=" mx-auto bg-white shadow-xl rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-          Gallery & Events
-        </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    <section className="px-4 sm:px-6 pb-16 sm:pb-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-600">
+            Moments
+          </p>
+          <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-gray-900">
+            Gallery & Events
+          </h2>
+        </div>
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {images.map((img, index) => (
-            <div
+            <figure
               key={index}
-              className="overflow-hidden rounded-xl shadow-lg hover:scale-105 transform transition"
+              className="group relative overflow-hidden rounded-3xl shadow-soft ring-1 ring-gray-100 bg-white"
             >
               <img
                 src={img.src}
                 alt={img.alt}
-                className="w-full h-56 object-cover"
+                className="w-full h-60 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <p className="text-center text-gray-700 py-2">{img.alt}</p>
-            </div>
+              <figcaption className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/85 backdrop-blur-md px-3 py-2 text-sm font-medium text-gray-800">
+                {img.alt}
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
