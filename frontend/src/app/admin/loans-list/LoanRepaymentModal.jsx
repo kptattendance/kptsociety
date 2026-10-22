@@ -130,7 +130,7 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
   const deleteLumpSum = async (p) => {
     const result = await Swal.fire({
       title: "Delete part payment?",
-      html: `${inr(p.amount)} paid on ${shortDate(p.paidAt)} will be removed and the schedule restored to what it was before this payment.`,
+      html: `${inr(p.amount)} paid on ${shortDate(p.paidAt)} will be removed and the schedule recalculated without it.`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -150,23 +150,6 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
       setLoading(false);
     }
   };
-
-  const LumpRow = ({ p }) => (
-    <tr className="bg-violet-50 text-violet-900 text-sm">
-      <td colSpan={7} className="px-3 py-2">
-        <span className="font-semibold">Part payment {inr(p.amount)}</span>
-        {" on "}
-        {shortDate(p.paidAt)} ·{" "}
-        {p.mode === "reduceTenure" ? "Reduced tenure" : "Reduced EMI"}
-        {p.outstandingBefore != null && (
-          <>
-            {" "}
-            · balance {inr(p.outstandingBefore)} → {inr(p.outstandingAfter)}
-          </>
-        )}
-      </td>
-    </tr>
-  );
 
   return (
     <>
@@ -246,10 +229,10 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                   Record a part payment
                 </h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  Extra money paid on top of the EMI. It is applied after the
-                  last paid installment (
-                  {s.lastPaid ? `#${s.lastPaid}` : "before the first EMI"}) and
-                  reduces the balance of {inr(s.outstanding)}.
+                  Extra money paid on top of the EMI. It is added to the
+                  installment that falls due on or after the payment date and
+                  reduced from the balance after that month&apos;s EMI. Payments
+                  can be entered in any order and deleted any time.
                 </p>
 
                 <div className="grid gap-3 md:grid-cols-3">
@@ -380,14 +363,12 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                       <th className="p-2 text-right">Principal</th>
                       <th className="p-2 text-right">Interest</th>
                       <th className="p-2 text-right">EMI</th>
-                      <th className="p-2 text-right">Balance after</th>
+                      <th className="p-2 text-right">Part payment</th>
+                      <th className="p-2 text-right">Balance</th>
                       <th className="p-2 text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(lumpMap[0] || []).map((p, k) => (
-                      <LumpRow key={`l0-${k}`} p={p} />
-                    ))}
                     {loan.repayments.map((r, i) => {
                       const no = i + 1;
                       const isPaid = r.status === "Paid";
@@ -427,6 +408,24 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                             <td className="p-2 text-right font-semibold">
                               {inr(r.totalEMI)}
                             </td>
+                            <td className="p-2 text-right">
+                              {(lumpMap[no] || []).length ? (
+                                (lumpMap[no] || []).map((p) => (
+                                  <div
+                                    key={p._id}
+                                    className="whitespace-nowrap font-semibold text-violet-700"
+                                    title={p.note || undefined}
+                                  >
+                                    {inr(p.amount)}
+                                    <span className="ml-1 text-xs font-normal text-gray-500">
+                                      ({shortDate(p.paidAt)})
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <span className="text-gray-300">-</span>
+                              )}
+                            </td>
                             <td className="p-2 text-right text-blue-700">
                               {inr(r.scheduleOS)}
                             </td>
@@ -458,9 +457,6 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                               )}
                             </td>
                           </tr>
-                          {(lumpMap[no] || []).map((p, k) => (
-                            <LumpRow key={`l${no}-${k}`} p={p} />
-                          ))}
                         </Fragment>
                       );
                     })}
@@ -481,7 +477,6 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                       <tr>
                         <th className="p-2 text-left">Date</th>
                         <th className="p-2 text-right">Amount</th>
-                        <th className="p-2 text-left">After inst.</th>
                         <th className="p-2 text-left">Option</th>
                         <th className="p-2 text-right">Balance</th>
                         <th className="p-2 text-right">EMI</th>
@@ -490,14 +485,13 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {loan.lumpSumPayments.map((p, i) => (
-                        <tr key={i} className="border-t">
+                      {[...loan.lumpSumPayments]
+                        .sort((a, b) => new Date(a.paidAt) - new Date(b.paidAt))
+                        .map((p) => (
+                        <tr key={p._id} className="border-t">
                           <td className="p-2">{shortDate(p.paidAt)}</td>
                           <td className="p-2 text-right font-semibold">
                             {inr(p.amount)}
-                          </td>
-                          <td className="p-2">
-                            {p.installment ? `#${p.installment}` : "Start"}
                           </td>
                           <td className="p-2">
                             {p.mode === "reduceTenure"
@@ -516,22 +510,13 @@ export default function LoanRepaymentModal({ loanId, onClose }) {
                           </td>
                           <td className="p-2">{p.note || "-"}</td>
                           <td className="p-2 text-center">
-                            {i === loan.lumpSumPayments.length - 1 ? (
-                              <button
-                                onClick={() => deleteLumpSum(p)}
-                                title="Delete this part payment"
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" /> Delete
-                              </button>
-                            ) : (
-                              <span
-                                className="text-xs text-gray-400"
-                                title="Delete the newer part payments first"
-                              >
-                                -
-                              </span>
-                            )}
+                            <button
+                              onClick={() => deleteLumpSum(p)}
+                              title="Delete this part payment"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Delete
+                            </button>
                           </td>
                         </tr>
                       ))}

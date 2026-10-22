@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const LumpSumSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
-  installment: { type: Number, required: true },
+  installment: Number, // row it falls in, worked out from paidAt
   mode: { type: String, enum: ["reduceTenure", "reduceEMI"], required: true },
   paidAt: { type: Date, default: Date.now },
   // Snapshot of the loan before/after this payment (for a clear history)

@@ -199,6 +199,16 @@ export const markRepaymentPaid = async (req, res) => {
     }
 
     loan.repayments[index].status = status;
+
+    // Part payments are placed by date, so a changed due date can move one
+    if (dueDate && loan.lumpSumPayments?.length) {
+      try {
+        applyRebuild(loan, loan.lumpSumPayments.map((p) => p.toObject()));
+      } catch (e) {
+        if (e.status) return res.status(400).json({ message: e.message });
+        throw e;
+      }
+    }
     await loan.save();
 
     res.json({
@@ -305,98 +315,182 @@ export const generateRepaymentSchedule = (
   });
 };
 
+// Day number (local date only) so a payment on the due date falls in that installment
+const dayOf = (d) => {
+  const x = new Date(d);
+  return Math.floor(
+    Date.UTC(x.getFullYear(), x.getMonth(), x.getDate()) / 86400000,
+  );
+};
+
+const fmtDate = (d) => new Date(d).toLocaleDateString("en-GB");
+
+// Months needed to clear `balance` at `emi`
+function monthsToClear(balance, monthlyRate, emi) {
+  let bal = round2(balance);
+  let n = 0;
+  while (bal > 0 && n < 1200) {
+    const principal = round2(emi - round2(bal * monthlyRate));
+    if (principal <= 0) return 1200;
+    bal = round2(bal - principal);
+    n++;
+  }
+  return n;
+}
+
 /**
- * Where the loan stands right now.
- * Paid installments must be continuous from #1 – the prepayment is applied
- * right after the last paid installment.
+ * Rebuilds the whole repayment schedule from the loan terms and the list of
+ * part payments, the same way the society's EMI sheet works:
+ *  - every row is one monthly installment; interest = opening balance × rate
+ *  - a part payment belongs to the first installment due on/after its date
+ *    and is deducted after that row's principal:
+ *      balance = opening − principal − part payments
+ *  - "reduceTenure" keeps the EMI (loan ends earlier),
+ *    "reduceEMI" keeps the end date (EMI is recalculated).
+ * Paid status and due dates of existing rows are kept by row number.
+ * Because everything is recomputed, any part payment can be added or deleted.
  */
-export function getLoanPosition(loan) {
-  const reps = loan.repayments || [];
-  let lastPaid = 0;
-  while (lastPaid < reps.length && reps[lastPaid].status === "Paid") lastPaid++;
-
-  const paidLater = reps.slice(lastPaid).some((r) => r.status === "Paid");
-
-  // Opening balance of the next pending installment = its principal + balance after it.
-  // This already includes every lump sum paid so far (even several after the same EMI).
-  const next = reps[lastPaid];
-  const outstanding = next
-    ? Number(next.principal) + Number(next.scheduleOS)
-    : 0;
-  return {
-    lastPaid, // number of installments paid (0 = none yet)
-    paidLater, // true if there's a gap (e.g. #3 paid but #2 pending)
-    outstanding: round2(outstanding),
-    currentEMI: next ? next.totalEMI : 0,
-    installmentsLeft: reps.length - lastPaid,
-    baseDate: lastPaid === 0 ? new Date(loan.startDate) : reps[lastPaid - 1].dueDate,
-  };
-}
-
-export function recalculateScheduleWithPrepayment(loan, amount, mode) {
-  const reps = loan.repayments;
+export function rebuildSchedule(loan, lumpSums = loan.lumpSumPayments || []) {
   const monthlyRate = Number(loan.interestRate) / 12 / 100;
-  const pos = getLoanPosition(loan);
-  const amt = round2(amount);
+  const tenure = Number(loan.tenure);
+  const existing = loan.repayments || [];
 
-  if (pos.paidLater) {
-    throw new Error(
-      "Installments are marked Paid out of order. Mark all earlier installments Paid first.",
-    );
-  }
-  if (pos.outstanding <= 0) throw new Error("This loan has no outstanding balance.");
-  if (amt > pos.outstanding) {
-    throw new Error(
-      `Amount ₹${amt} is more than the outstanding balance ₹${pos.outstanding}.`,
-    );
-  }
+  // Oldest payment first; same-day payments keep the order they were entered
+  const lumps = lumpSums
+    .map((p, i) => ({ p: p.toObject ? p.toObject() : { ...p }, i }))
+    .sort((a, b) => dayOf(a.p.paidAt) - dayOf(b.p.paidAt) || a.i - b.i)
+    .map((x) => x.p);
 
-  const newBalance = round2(pos.outstanding - amt);
-  const kept = reps.slice(0, pos.lastPaid);
+  let emi = round2(calcEMI(Number(loan.loanAmount), monthlyRate, tenure));
+  let plannedEnd = tenure; // null = run until cleared at the current EMI
+  let balance = round2(loan.loanAmount);
+  let prevDate = new Date(loan.startDate);
+  let li = 0;
+  let closedBy = null; // part payment that cleared the loan
+  const rows = [];
 
-  let futureRows = [];
-  if (newBalance > 0) {
-    if (mode === "reduceTenure") {
-      // Same EMI as now, fewer months
-      futureRows = buildInstallments({
-        balance: newBalance,
-        monthlyRate,
-        emi: pos.currentEMI,
-        baseDate: pos.baseDate,
+  const monthsLeft = (k, bal) =>
+    plannedEnd
+      ? Math.max(plannedEnd - k, 1)
+      : monthsToClear(bal, monthlyRate, emi);
+
+  for (let k = 1; balance > 0 && k <= 1200; k++) {
+    const old = existing[k - 1];
+    const dueDate = old?.dueDate
+      ? new Date(old.dueDate)
+      : addMonths(prevDate, 1);
+    prevDate = dueDate;
+
+    const opening = balance;
+    let interest = round2(opening * monthlyRate);
+    let principal = round2(emi - interest);
+    const isLast =
+      (plannedEnd && k >= plannedEnd) || principal >= opening || principal <= 0;
+    if (isLast) principal = opening;
+
+    let bal = round2(opening - principal);
+
+    // Part payments made up to this installment's due date
+    while (li < lumps.length && dayOf(lumps[li].paidAt) <= dayOf(dueDate)) {
+      const p = lumps[li++];
+      const amount = round2(p.amount);
+      const emiBefore = emi;
+      const before = bal; // balance after this row's EMI
+      const leftBefore = bal > 0 ? monthsLeft(k, bal) : 0;
+
+      if (amount > bal) {
+        // Settles the loan: the part payment also covers this row's principal
+        const excess = round2(amount - bal);
+        if (excess > principal + 0.005) {
+          const err = new Error(
+            `Part payment of ₹${amount} on ${fmtDate(p.paidAt)} is more than the balance ₹${round2(bal + principal)} at that time.`,
+          );
+          err.status = 400;
+          throw err;
+        }
+        principal = round2(principal - excess);
+        if (principal <= 0) {
+          principal = 0;
+          interest = 0; // settled before this EMI fell due
+        }
+        bal = 0;
+      } else {
+        bal = round2(bal - amount);
+      }
+
+      if (bal > 0) {
+        if (p.mode === "reduceEMI") {
+          emi = round2(calcEMI(bal, monthlyRate, leftBefore));
+          plannedEnd = k + leftBefore;
+        } else {
+          plannedEnd = null;
+        }
+      } else if (!closedBy) {
+        closedBy = p;
+      }
+
+      Object.assign(p, {
+        installment: k, // internal only: the row it falls in
+        outstandingBefore: amount > before ? round2(before + amount - bal) : before,
+        outstandingAfter: bal,
+        emiBefore,
+        emiAfter: bal > 0 ? emi : 0,
+        installmentsLeftBefore: leftBefore,
+        installmentsLeftAfter: bal > 0 ? monthsLeft(k, bal) : 0,
       });
-    } else if (mode === "reduceEMI") {
-      // Same number of months left, smaller EMI
-      const months = pos.installmentsLeft;
-      futureRows = buildInstallments({
-        balance: newBalance,
-        monthlyRate,
-        emi: round2(calcEMI(newBalance, monthlyRate, months)),
-        months,
-        baseDate: pos.baseDate,
-      });
-    } else {
-      throw new Error("Invalid prepayment mode");
     }
+
+    rows.push({
+      ...(old?._id ? { _id: old._id } : {}),
+      dueDate,
+      principal,
+      interest,
+      totalEMI: round2(principal + interest),
+      scheduleOS: bal,
+      status: old?.status || "Pending",
+    });
+    balance = bal;
   }
 
-  return {
-    repayments: [...kept, ...futureRows],
-    summary: {
-      afterInstallment: pos.lastPaid,
-      outstandingBefore: pos.outstanding,
-      outstandingAfter: newBalance,
-      emiBefore: pos.currentEMI,
-      emiAfter: futureRows[0]?.totalEMI ?? 0,
-      installmentsLeftBefore: pos.installmentsLeft,
-      installmentsLeftAfter: futureRows.length,
-      closesLoan: newBalance === 0,
-    },
-  };
+  if (li < lumps.length) {
+    const err = new Error(
+      `Part payment on ${fmtDate(lumps[li].paidAt)} is after the loan was already fully repaid.`,
+    );
+    err.status = 400;
+    throw err;
+  }
+
+  return { repayments: rows, lumpSumPayments: lumps, closedBy };
 }
+
+const LUMP_CLOSE_REASON = "Fully repaid by lump-sum payment";
+
+// Rebuilds the schedule onto the loan, closing / reopening it as needed
+function applyRebuild(loan, lumpSums) {
+  const result = rebuildSchedule(loan, lumpSums);
+  loan.repayments = result.repayments;
+  loan.lumpSumPayments = result.lumpSumPayments;
+
+  if (result.closedBy) {
+    loan.loanStatus = "Closed";
+    loan.closedAt = result.closedBy.paidAt;
+    loan.closureReason = LUMP_CLOSE_REASON;
+  } else if (
+    loan.loanStatus === "Closed" &&
+    loan.closureReason === LUMP_CLOSE_REASON
+  ) {
+    loan.loanStatus = "Active";
+    loan.closedAt = undefined;
+    loan.closureReason = undefined;
+  }
+  return result;
+}
+
+const pendingCount = (rows) => rows.filter((r) => r.status !== "Paid").length;
 
 // -------------------- LUMP-SUM / PARTIAL PREPAYMENT --------------------
 // Body: { amount, mode, paidAt?, note?, preview? }
-// preview=true returns the new schedule without saving.
+// preview=true returns the effect without saving.
 export const recalculatedSchedule = async (req, res) => {
   try {
     const { loanId } = req.params;
@@ -412,46 +506,45 @@ export const recalculatedSchedule = async (req, res) => {
     if (loan.loanStatus === "Closed")
       return res.status(400).json({ message: "Loan is already closed" });
 
-    let updated;
-    try {
-      updated = recalculateScheduleWithPrepayment(loan, amount, mode);
-    } catch (e) {
-      return res.status(400).json({ message: e.message });
-    }
-
-    if (preview) {
-      return res.json({ preview: true, ...updated });
-    }
-
-    loan.repayments = updated.repayments;
-    const s = updated.summary;
-    loan.lumpSumPayments.push({
+    const newLump = {
       amount: round2(amount),
-      installment: s.afterInstallment,
       mode,
       paidAt: paidAt ? new Date(paidAt) : new Date(),
-      outstandingBefore: s.outstandingBefore,
-      outstandingAfter: s.outstandingAfter,
-      emiBefore: s.emiBefore,
-      emiAfter: s.emiAfter,
-      installmentsLeftBefore: s.installmentsLeftBefore,
-      installmentsLeftAfter: s.installmentsLeftAfter,
       note,
-    });
+    };
+    const current = loan.lumpSumPayments.map((p) => p.toObject());
 
-    if (s.closesLoan) {
-      loan.loanStatus = "Closed";
-      loan.closedAt = paidAt ? new Date(paidAt) : new Date();
-      loan.closureReason = "Fully repaid by lump-sum payment";
+    let before, after;
+    try {
+      before = rebuildSchedule(loan, current);
+      after = rebuildSchedule(loan, [...current, newLump]);
+    } catch (e) {
+      if (e.status) return res.status(400).json({ message: e.message });
+      throw e;
     }
 
+    const added = after.lumpSumPayments.find((p) => !p._id);
+    const summary = {
+      afterInstallment: added.installment,
+      outstandingBefore: added.outstandingBefore,
+      outstandingAfter: added.outstandingAfter,
+      emiBefore: added.emiBefore,
+      emiAfter: added.emiAfter,
+      installmentsLeftBefore: pendingCount(before.repayments),
+      installmentsLeftAfter: pendingCount(after.repayments),
+      closesLoan: added.outstandingAfter === 0,
+    };
+
+    if (preview) return res.json({ preview: true, summary });
+
+    applyRebuild(loan, [...current, newLump]);
     await loan.save();
 
     return res.json({
-      message: s.closesLoan
+      message: summary.closesLoan
         ? "Payment applied – loan fully repaid and closed"
-        : "Prepayment applied successfully",
-      summary: s,
+        : "Part payment saved",
+      summary,
       loan,
     });
   } catch (error) {
@@ -463,10 +556,8 @@ export const recalculatedSchedule = async (req, res) => {
   }
 };
 
-// -------------------- DELETE (UNDO) A LUMP-SUM PAYMENT --------------------
-// Only the latest lump sum can be removed, and only while no installment has
-// been marked Paid after it. The schedule is rebuilt from the snapshot saved
-// with the payment, so it returns to exactly what it was before.
+// -------------------- DELETE A LUMP-SUM PAYMENT --------------------
+// Any part payment can be deleted; the schedule is rebuilt without it.
 export const deleteLumpSum = async (req, res) => {
   try {
     const { loanId, paymentId } = req.params;
@@ -474,70 +565,29 @@ export const deleteLumpSum = async (req, res) => {
     const loan = await Loan.findById(loanId);
     if (!loan) return res.status(404).json({ message: "Loan not found" });
 
-    const payments = loan.lumpSumPayments || [];
-    const index = payments.findIndex((p) => String(p._id) === paymentId);
-    if (index === -1)
+    const remaining = loan.lumpSumPayments
+      .filter((p) => String(p._id) !== paymentId)
+      .map((p) => p.toObject());
+    if (remaining.length === loan.lumpSumPayments.length)
       return res.status(404).json({ message: "Part payment not found" });
-    if (index !== payments.length - 1)
-      return res.status(400).json({
-        message:
-          "Only the latest part payment can be deleted. Delete the newer ones first.",
-      });
 
-    const payment = payments[index];
-    if (
-      payment.outstandingBefore == null ||
-      payment.emiBefore == null ||
-      payment.installmentsLeftBefore == null
-    )
-      return res.status(400).json({
-        message:
-          "This part payment was saved without a schedule snapshot and cannot be undone automatically.",
-      });
-
-    const closedByThisPayment =
-      loan.loanStatus === "Closed" &&
-      loan.closureReason === "Fully repaid by lump-sum payment";
-    if (loan.loanStatus === "Closed" && !closedByThisPayment)
-      return res
-        .status(400)
-        .json({ message: "Loan is closed. Reopen it before deleting a part payment." });
-
-    const pos = getLoanPosition(loan);
-    if (pos.paidLater || pos.lastPaid !== Number(payment.installment))
-      return res.status(400).json({
-        message: `Installments were marked Paid after this part payment. Undo them first (${
-          Number(payment.installment)
-            ? `keep only up to #${payment.installment} Paid`
-            : "no installment should be Paid"
-        }).`,
-      });
-
-    // Rebuild the pending schedule as it stood before the payment
-    const monthlyRate = Number(loan.interestRate) / 12 / 100;
-    const futureRows = buildInstallments({
-      balance: payment.outstandingBefore,
-      monthlyRate,
-      emi: payment.emiBefore,
-      months: payment.installmentsLeftBefore,
-      baseDate: pos.baseDate,
-    });
-
-    loan.repayments = [...loan.repayments.slice(0, pos.lastPaid), ...futureRows];
-    loan.lumpSumPayments.splice(index, 1);
-
-    if (closedByThisPayment) {
-      loan.loanStatus = "Active";
-      loan.closedAt = undefined;
-      loan.closureReason = undefined;
+    try {
+      applyRebuild(loan, remaining);
+    } catch (e) {
+      if (e.status) return res.status(400).json({ message: e.message });
+      throw e;
     }
-
     await loan.save();
 
-    return res.json({ message: "Part payment deleted and schedule restored", loan });
+    return res.json({
+      message: "Part payment deleted and schedule recalculated",
+      loan,
+    });
   } catch (error) {
     console.error("Delete Lump Sum Error:", error);
-    return res.status(500).json({ message: "Server Error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server Error", error: error.message });
   }
 };
 

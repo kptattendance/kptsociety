@@ -221,13 +221,14 @@ const MemberLoan = () => {
                         <th className="px-2 py-2">Date</th>
                         <th className="px-2 py-2 text-right">Amount</th>
                         <th className="px-2 py-2 text-left">Option</th>
-                        <th className="px-2 py-2 text-right">After inst.</th>
                         <th className="px-2 py-2 text-right">Balance</th>
                         <th className="px-2 py-2 text-right">EMI</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {loan.lumpSumPayments.map((lump, i) => (
+                      {[...loan.lumpSumPayments]
+                        .sort((a, b) => new Date(a.paidAt) - new Date(b.paidAt))
+                        .map((lump, i) => (
                         <tr
                           key={i}
                           className="even:bg-gray-50 hover:bg-gray-100"
@@ -250,9 +251,6 @@ const MemberLoan = () => {
                             {lump.mode === "reduceTenure"
                               ? "Reduce tenure"
                               : "Reduce EMI"}
-                          </td>
-                          <td className="px-2 py-1 text-right">
-                            {lump.installment ? `#${lump.installment}` : "Start"}
                           </td>
                           <td className="px-2 py-1 text-right whitespace-nowrap">
                             {lump.outstandingBefore != null
