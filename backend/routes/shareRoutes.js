@@ -10,7 +10,7 @@ import {
   deletePurchaseEntry,
   updatePurchaseEntry,
 } from "../controllers/shareController.js";
-import { requireAuthWithRole } from "../middlewares/auth.js";
+import { requireAuthWithRole, selfOrAdmin } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -37,6 +37,7 @@ router.get("/", requireAuthWithRole(["admin"]), getAllShares);
 router.get(
   "/:memberId",
   requireAuthWithRole(["admin", "member"]),
+  selfOrAdmin("memberId"),
   getMemberShares
 );
 
@@ -53,6 +54,10 @@ router.post(
 // ✅ Delete a share record (Admin)
 router.delete("/:shareId", requireAuthWithRole(["admin"]), deleteShareAccount);
 
-router.post("/withdraw/:shareId", withdrawFromShareAccount);
+router.post(
+  "/withdraw/:shareId",
+  requireAuthWithRole(["admin"]),
+  withdrawFromShareAccount
+);
 
 export default router;

@@ -55,6 +55,9 @@
 import React, { useEffect, useState } from "react";
 import { Users, PiggyBank, Wallet, CreditCard } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
+import PageHeader from "../../components/PageHeader";
+import ExcelButton from "../../components/ExcelButton";
+import { downloadExcel } from "../../utils/excelExport";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -155,14 +158,26 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-      <div className="mb-6 sm:mb-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-600">
-          Overview
-        </p>
-        <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold text-gray-900">
-          Admin Dashboard
-        </h1>
-      </div>
+      <PageHeader
+        eyebrow="Overview"
+        title="Admin Dashboard"
+        className="sm:!mb-8"
+        actions={
+          <ExcelButton
+            onClick={() =>
+              downloadExcel("KPT_Dashboard", [
+                {
+                  name: "Summary",
+                  rows: dashboardCards.map((c) => ({
+                    Item: c.label,
+                    Count: c.value,
+                  })),
+                },
+              ])
+            }
+          />
+        }
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
         {dashboardCards.map((stat) => {

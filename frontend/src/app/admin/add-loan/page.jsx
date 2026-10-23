@@ -395,7 +395,7 @@ export default function AdminLoanApplicationForm() {
         <div className="md:col-span-2 flex justify-center mt-4">
           <button
             type="submit"
-            className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white font-semibold px-4 sm:px-8 py-2 rounded-lg shadow-md transition-all"
+            className="btn btn-primary !py-3 !px-8"
             disabled={loading}
           >
             {loading ? "Submitting..." : "Submit Loan"}

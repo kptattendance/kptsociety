@@ -18,6 +18,7 @@ import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import FDWithdrawalModal from "./FDWithdrawalModal";
+import ExcelButton from "../../../components/ExcelButton";
 
 export default function AdminFDTable() {
   const { getToken } = useAuth();
@@ -262,12 +263,7 @@ export default function AdminFDTable() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-indigo-400 outline-none"
           />
-          <button
-            onClick={handleDownloadExcel}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow cursor-pointer"
-          >
-            📥 Download Excel
-          </button>
+          <ExcelButton onClick={handleDownloadExcel} />
         </div>
 
         <div className="overflow-x-auto">
@@ -533,13 +529,13 @@ export default function AdminFDTable() {
                         <td className="px-4 py-2 text-center flex space-x-2 justify-center">
                           <button
                             onClick={() => handleSave(fd._id)}
-                            className="text-green-600 cursor-pointer hover:text-green-800"
+                            className="btn-icon btn-icon-save"
                           >
                             <Check size={18} />
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="text-red-600 cursor-pointer hover:text-red-800"
+                            className="btn-icon btn-icon-muted"
                           >
                             <X size={18} />
                           </button>
@@ -628,7 +624,7 @@ export default function AdminFDTable() {
                         <td className="px-4 py-2 text-center">
                           <button
                             onClick={() => handleWithdrawClick(fd)}
-                            className="text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
+                            className="btn btn-accent btn-sm"
                           >
                             <Wallet size={18} className="inline mr-1" />
                             Withdraw
@@ -637,20 +633,20 @@ export default function AdminFDTable() {
                         <td className="px-4 py-2 text-center flex space-x-2 justify-center">
                           <button
                             onClick={() => handleEditClick(fd)}
-                            className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                            className="btn-icon btn-icon-edit"
                           >
                             <Pencil size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(fd._id)}
-                            className="text-red-600 hover:text-red-800 cursor-pointer"
+                            className="btn-icon btn-icon-delete"
                           >
                             <Trash2 size={18} />
                           </button>
                           {fd.status === "Active" && (
                             <button
                               onClick={() => handleClose(fd._id)}
-                              className="text-gray-600 hover:text-gray-800 cursor-pointer"
+                              className="btn-icon btn-icon-muted"
                             >
                               <Lock size={18} />
                             </button>
@@ -670,7 +666,7 @@ export default function AdminFDTable() {
           <div className="flex justify-center mt-4 space-x-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
-              className="px-3 py-1 border rounded-lg"
+              className="page-btn"
             >
               Prev
             </button>
@@ -687,7 +683,7 @@ export default function AdminFDTable() {
             ))}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
-              className="px-3 py-1 border rounded-lg"
+              className="page-btn"
             >
               Next
             </button>
@@ -697,7 +693,7 @@ export default function AdminFDTable() {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             Prev
           </button>
@@ -706,11 +702,7 @@ export default function AdminFDTable() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 cursor-pointer rounded ${
-                currentPage === i + 1
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
-              }`}
+              className={`page-btn ${currentPage === i + 1 ? "page-btn-active" : ""}`}
             >
               {i + 1}
             </button>
@@ -719,7 +711,7 @@ export default function AdminFDTable() {
           <button
             disabled={currentPage === totalPages || totalPages === 0}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             Next
           </button>

@@ -16,6 +16,8 @@ import {
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, profileSheets } from "../../../utils/excelExport";
 
 export default function MemberProfileModal({ memberId, onClose }) {
   const { getToken } = useAuth();
@@ -64,7 +66,7 @@ export default function MemberProfileModal({ memberId, onClose }) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-red-600 transition"
+          className="absolute top-4 right-4 btn-close"
         >
           <X className="w-6 h-6" />
         </button>
@@ -109,6 +111,13 @@ export default function MemberProfileModal({ memberId, onClose }) {
                     Type: {profile.memberType || "A"}
                   </span>
                 </div>
+                <ExcelButton
+                  className="mt-4"
+                  label="Download profile"
+                  onClick={() =>
+                    downloadExcel(`Member_${profile.name}`, profileSheets(profile))
+                  }
+                />
               </div>
             </div>
 

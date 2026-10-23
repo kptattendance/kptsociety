@@ -5,6 +5,8 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, cdSheets } from "../../../utils/excelExport";
 
 export default function CDScheduleModal({ cdId, onClose }) {
   const { getToken } = useAuth();
@@ -112,7 +114,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
       <div className="bg-white rounded-2xl shadow-soft w-full max-w-5xl p-4 sm:p-6 relative max-h-[90vh] overflow-y-auto border border-gray-200">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 cursor-pointer text-gray-500 hover:text-red-500"
+          className="absolute top-3 right-3 btn-close"
         >
           <X size={22} />
         </button>
@@ -120,6 +122,11 @@ export default function CDScheduleModal({ cdId, onClose }) {
         <h2 className="text-2xl font-semibold text-center text-teal-700 mb-5 tracking-wide">
           💠 CD Account – {cd.accountNumber}
         </h2>
+        <div className="flex justify-center -mt-2 mb-5">
+          <ExcelButton
+            onClick={() => downloadExcel(`CD_${cd.accountNumber}`, cdSheets([cd]))}
+          />
+        </div>
 
         {/* --- Top Summary Box --- */}
         <div className="bg-gradient-to-r from-teal-50 via-green-50 to-emerald-100 border border-teal-200 shadow-sm rounded-xl p-4 mb-5">
@@ -309,7 +316,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
           <button
             onClick={() => setPageInstallments((p) => Math.max(1, p - 1))}
             disabled={pageInstallments === 1}
-            className="p-1 border rounded disabled:opacity-50"
+            className="page-btn !px-2"
           >
             <ChevronLeft size={18} />
           </button>
@@ -330,7 +337,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
               pageInstallments ===
               Math.ceil(cd.installments.length / itemsPerPage)
             }
-            className="p-1 border rounded disabled:opacity-50"
+            className="page-btn !px-2"
           >
             <ChevronRight size={18} />
           </button>
@@ -421,7 +428,7 @@ export default function CDScheduleModal({ cdId, onClose }) {
             </div>
             <button
               type="submit"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 rounded shadow hover:from-blue-700 hover:to-indigo-700"
+              className="btn btn-accent btn-sm"
             >
               Withdraw
             </button>

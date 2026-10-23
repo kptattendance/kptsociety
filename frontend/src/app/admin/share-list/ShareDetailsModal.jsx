@@ -4,6 +4,8 @@ import { X, Plus, Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, shareSheets } from "../../../utils/excelExport";
 
 export default function ShareDetailsModal({ share, onClose, refreshShares }) {
   const { getToken } = useAuth();
@@ -129,7 +131,7 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
       <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl shadow-soft w-full max-w-6xl p-4 sm:p-6 relative overflow-y-auto max-h-[90vh] border border-indigo-100">
         <button
           onClick={onClose}
-          className="absolute cursor-pointer top-3 right-3 text-gray-600 hover:text-red-600"
+          className="absolute top-3 right-3 btn-close"
         >
           <X size={22} />
         </button>
@@ -138,6 +140,16 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
           <h2 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
             Share Account Details
           </h2>
+          <div className="flex justify-center mt-3 mb-1">
+            <ExcelButton
+              onClick={() =>
+                downloadExcel(
+                  `Shares_${share.societyShareNumber || share.memberId?.name || "account"}`,
+                  shareSheets([{ ...share, withdrawalHistory: localWithdrawals }]),
+                )
+              }
+            />
+          </div>
           <p className="text-gray-600 mt-1">
             {share.memberId?.name || "Unknown Member"} (
             {share.societyShareNumber || "N/A"})
@@ -245,13 +257,13 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
                         <td className="px-3 py-2 flex gap-2">
                           <button
                             onClick={handleUpdate}
-                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                            className="btn btn-success btn-sm"
                           >
                             Save
                           </button>
                           <button
                             onClick={() => setEditingIndex(null)}
-                            className="px-2 py-1 bg-gray-400 text-white rounded text-xs"
+                            className="btn btn-ghost btn-sm"
                           >
                             Cancel
                           </button>
@@ -279,13 +291,13 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
                         <td className="px-3 py-2 flex gap-2">
                           <button
                             onClick={() => handleEditClick(p, i)}
-                            className="text-indigo-600 hover:text-indigo-800"
+                            className="btn-icon btn-icon-edit"
                           >
                             <Pencil size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(i)}
-                            className="text-red-600 hover:text-red-800"
+                            className="btn-icon btn-icon-delete"
                           >
                             <Trash2 size={16} />
                           </button>

@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
+import PageHeader from "../../../components/PageHeader";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, fdSheets } from "../../../utils/excelExport";
 
 const MemberFD = () => {
   const { getToken } = useAuth();
@@ -31,7 +34,7 @@ const MemberFD = () => {
 
   useEffect(() => {
     fetchFDs();
-  }, [user]);
+  }, [user?.id]);
 
   if (loading)
     return (
@@ -79,9 +82,14 @@ const MemberFD = () => {
         </div>
       )}
 
-      <h2 className="text-2xl font-bold text-center text-gray-800">
-        💰 My Fixed Deposit Accounts
-      </h2>
+      <PageHeader
+        eyebrow="My account"
+        title="My Fixed Deposits"
+        subtitle="Deposits, maturity and withdrawals"
+        actions={
+          <ExcelButton onClick={() => downloadExcel("My_FD_Accounts", fdSheets(fds))} disabled={!fds.length} />
+        }
+      />
 
       <div className="overflow-x-auto bg-white rounded-xl shadow-soft border border-gray-200">
         <table className="min-w-full text-sm">

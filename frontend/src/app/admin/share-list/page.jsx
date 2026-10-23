@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ShareDetailsModal from "./ShareDetailsModal";
+import ExcelButton from "../../../components/ExcelButton";
 
 export default function AdminShareTable() {
   const { getToken } = useAuth();
@@ -270,12 +271,7 @@ export default function AdminShareTable() {
               className="border border-gray-300 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
-          <button
-            onClick={handleDownloadExcel}
-            className="flex cursor-pointer items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
-          >
-            <FileDown size={18} /> Download Excel
-          </button>
+          <ExcelButton onClick={handleDownloadExcel} />
         </div>
 
         {/* Table */}
@@ -489,13 +485,13 @@ export default function AdminShareTable() {
                       <>
                         <button
                           onClick={() => handleSave(share._id)}
-                          className="text-green-600 cursor-pointer hover:text-green-800"
+                          className="btn-icon btn-icon-save"
                         >
                           <Check size={16} />
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          className="text-red-500 cursor-pointer hover:text-red-700"
+                          className="btn-icon btn-icon-muted"
                         >
                           <X size={16} />
                         </button>
@@ -504,20 +500,20 @@ export default function AdminShareTable() {
                       <>
                         <button
                           onClick={() => handleEditClick(share)}
-                          className="text-blue-600 cursor-pointer hover:text-blue-800"
+                          className="btn-icon btn-icon-edit"
                         >
                           <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(share._id)}
-                          className="text-red-600 cursor-pointer hover:text-red-800"
+                          className="btn-icon btn-icon-delete"
                         >
                           <Trash2 size={16} />
                         </button>
                         {share.status !== "Closed" && (
                           <button
                             onClick={() => handleClose(share._id)}
-                            className="text-gray-600 cursor-pointer hover:text-gray-800"
+                            className="btn-icon btn-icon-muted"
                           >
                             <Lock size={16} />
                           </button>
@@ -582,7 +578,7 @@ export default function AdminShareTable() {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => prev - 1)}
-              className="px-3 cursor-pointer py-1 bg-gray-200 rounded disabled:opacity-50"
+              className="page-btn"
             >
               Prev
             </button>
@@ -591,11 +587,7 @@ export default function AdminShareTable() {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 cursor-pointer rounded ${
-                  currentPage === i + 1
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
-                }`}
+                className={`page-btn ${currentPage === i + 1 ? "page-btn-active" : ""}`}
               >
                 {i + 1}
               </button>
@@ -604,7 +596,7 @@ export default function AdminShareTable() {
             <button
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage((prev) => prev + 1)}
-              className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+              className="page-btn"
             >
               Next
             </button>

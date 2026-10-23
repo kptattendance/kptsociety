@@ -11,6 +11,7 @@ import LoadOverlay from "../../../components/LoadOverlay";
 import * as XLSX from "xlsx";
 import { getLoanSummary } from "../../../utils/loanSummary";
 import { saveAs } from "file-saver";
+import ExcelButton from "../../../components/ExcelButton";
 
 export default function AdminLoanList() {
   const { getToken } = useAuth();
@@ -305,12 +306,7 @@ export default function AdminLoanList() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-orange-400 outline-none"
           />
-          <button
-            onClick={handleDownloadExcel}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow cursor-pointer"
-          >
-            📥 Download Excel
-          </button>
+          <ExcelButton onClick={handleDownloadExcel} />
         </div>
 
         {/* ✅ Table */}
@@ -544,13 +540,13 @@ export default function AdminLoanList() {
                         <>
                           <button
                             onClick={() => submitEdit(loan._id)}
-                            className="p-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 cursor-pointer"
+                            className="btn-icon btn-icon-save"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setEditingLoanId(null)}
-                            className="p-2 bg-gray-200 cursor-pointer text-gray-700 rounded-md hover:bg-gray-300"
+                            className="btn-icon btn-icon-muted"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -559,13 +555,13 @@ export default function AdminLoanList() {
                         <>
                           <button
                             onClick={() => startEditing(loan)}
-                            className="p-2 rounded-full cursor-pointer bg-blue-100 text-blue-600 hover:bg-blue-200"
+                            className="btn-icon btn-icon-edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(loan._id)}
-                            className="p-2 rounded-full cursor-pointer bg-red-100 text-red-600 hover:bg-red-200"
+                            className="btn-icon btn-icon-delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -582,7 +578,7 @@ export default function AdminLoanList() {
                               selectedLoanId === loan._id ? null : loan._id,
                             )
                           }
-                          className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm shadow cursor-pointer"
+                          className="btn btn-soft btn-sm"
                         >
                           View
                         </button>
@@ -590,11 +586,7 @@ export default function AdminLoanList() {
                         <button
                           onClick={() => closeLoan(loan._id)}
                           disabled={loan.loanStatus === "Closed"}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium shadow transition cursor-pointer ${
-                            loan.loanStatus === "Closed"
-                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              : "bg-gray-600 hover:bg-gray-700 text-white"
-                          }`}
+                          className="btn btn-ghost btn-sm"
                         >
                           {loan.loanStatus === "Closed"
                             ? "Closed"
@@ -624,7 +616,7 @@ export default function AdminLoanList() {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             ← Prev
           </button>
@@ -633,11 +625,7 @@ export default function AdminLoanList() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 cursor-pointer rounded ${
-                currentPage === i + 1
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
-              }`}
+              className={`page-btn ${currentPage === i + 1 ? "page-btn-active" : ""}`}
             >
               {i + 1}
             </button>
@@ -646,7 +634,7 @@ export default function AdminLoanList() {
           <button
             disabled={currentPage === totalPages || totalPages === 0}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             Next →
           </button>

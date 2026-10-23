@@ -6,6 +6,8 @@ import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { Pencil, Trash2, X } from "lucide-react"; // For cross icon
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, fdSheets } from "../../../utils/excelExport";
 
 export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
   const { getToken } = useAuth();
@@ -50,7 +52,7 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
 
   useEffect(() => {
     fetchWithdrawals();
-  }, [fd]);
+  }, [fd?._id]);
 
   const handleWithdrawSubmit = async (e) => {
     e.preventDefault();
@@ -122,7 +124,7 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 cursor-pointer text-gray-400 hover:text-red-500 transition"
+          className="absolute top-4 right-4 btn-close"
         >
           <X size={26} />
         </button>
@@ -130,6 +132,13 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
         <h2 className="text-2xl font-semibold mb-6 text-center bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent drop-shadow-sm">
           💸 FD Withdrawal — {fd?.memberId?.name}
         </h2>
+        <div className="flex justify-center -mt-3 mb-6">
+          <ExcelButton
+            onClick={() =>
+              downloadExcel(`FD_${fd?.fdNumber}`, fdSheets([{ ...fd, withdrawals }]))
+            }
+          />
+        </div>
 
         {/* FD Summary */}
         <div className="mb-6 rounded-2xl p-5 bg-gradient-to-r from-purple-50 to-pink-50 shadow-inner border border-purple-200">
@@ -187,7 +196,7 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
                   <td className="px-3 py-2 flex gap-2">
                     <button
                       onClick={() => handleDeleteWithdrawal(w._id)}
-                      className="text-red-600 hover:text-red-800"
+                      className="btn-icon btn-icon-delete"
                       title="Delete Withdrawal"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -254,7 +263,7 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 cursor-pointer hover:to-pink-700 transition font-semibold text-white shadow-md"
+                className="btn btn-accent btn-sm"
               >
                 Withdraw
               </button>

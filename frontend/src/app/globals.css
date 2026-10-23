@@ -289,6 +289,164 @@
     background-image: linear-gradient(135deg, #cdb4db 0%, #ffafcc 50%, #a2d2ff 100%);
   }
 
+  /* ---------- Buttons (shared across admin & member pages) ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    white-space: nowrap;
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-sm {
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+  }
+  .btn-primary {
+    background: var(--color-gray-900);
+    color: #fff;
+  }
+  .btn-primary:not(:disabled):hover {
+    background: var(--color-purple-700);
+  }
+  .btn-soft {
+    background: var(--color-purple-50);
+    color: var(--color-purple-700);
+    box-shadow: inset 0 0 0 1px var(--color-purple-200);
+  }
+  .btn-soft:not(:disabled):hover {
+    background: var(--color-purple-100);
+  }
+  .btn-accent {
+    background: var(--color-pink-50);
+    color: var(--color-pink-700);
+    box-shadow: inset 0 0 0 1px var(--color-pink-200);
+  }
+  .btn-accent:not(:disabled):hover {
+    background: var(--color-pink-100);
+  }
+  .btn-success {
+    background: #16a34a;
+    color: #fff;
+  }
+  .btn-success:not(:disabled):hover {
+    background: #15803d;
+  }
+  .btn-danger {
+    background: #fef2f2;
+    color: #dc2626;
+    box-shadow: inset 0 0 0 1px #fecaca;
+  }
+  .btn-danger:not(:disabled):hover {
+    background: #fee2e2;
+  }
+  .btn-ghost {
+    background: var(--color-gray-100);
+    color: var(--color-gray-700);
+  }
+  .btn-ghost:not(:disabled):hover {
+    background: var(--color-gray-200);
+  }
+
+  /* Round icon buttons in table rows */
+  .btn-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .btn-icon svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  .btn-icon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-icon-edit {
+    background: var(--color-blue-50);
+    color: var(--color-blue-700);
+  }
+  .btn-icon-edit:not(:disabled):hover {
+    background: var(--color-blue-100);
+  }
+  .btn-icon-delete {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  .btn-icon-delete:not(:disabled):hover {
+    background: #fee2e2;
+  }
+  .btn-icon-save {
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+  .btn-icon-save:not(:disabled):hover {
+    background: #dcfce7;
+  }
+  .btn-icon-muted {
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+  }
+  .btn-icon-muted:not(:disabled):hover {
+    background: var(--color-gray-200);
+  }
+
+  /* Modal close (×) */
+  .btn-close {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    color: var(--color-gray-500);
+    z-index: 10;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .btn-close:hover {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  /* Pagination */
+  .page-btn {
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: #fff;
+    color: var(--color-gray-700);
+    box-shadow: inset 0 0 0 1px var(--color-gray-200);
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .page-btn:not(:disabled):hover {
+    background: var(--color-purple-50);
+  }
+  .page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .page-btn-active,
+  .page-btn-active:not(:disabled):hover {
+    background: var(--color-gray-900);
+    color: #fff;
+    box-shadow: none;
+  }
+
   .brand-gradient-text {
     background-image: linear-gradient(90deg, #7f5a98, #cc3a6c 55%, #2a74bb);
     -webkit-background-clip: text;

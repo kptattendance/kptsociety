@@ -11,7 +11,7 @@ import {
   deleteCD,
   updateCDAccount,
 } from "../controllers/cdController.js";
-import { requireAuthWithRole } from "../middlewares/auth.js";
+import { requireAuthWithRole, selfOrAdmin } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -25,6 +25,7 @@ router.get("/", requireAuthWithRole(["admin"]), getAllCDs);
 router.get(
   "/member/:memberId",
   requireAuthWithRole(["admin", "member"]),
+  selfOrAdmin("memberId"),
   getMemberCDs
 );
 

@@ -11,7 +11,7 @@ import {
   closeLoan,
   deleteLumpSum,
 } from "../controllers/loanController.js";
-import { requireAuthWithRole } from "../middlewares/auth.js";
+import { requireAuthWithRole, selfOrAdmin } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -22,10 +22,15 @@ router.post("/create", requireAuthWithRole(["admin"]), createLoan);
 router.get("/", requireAuthWithRole(["admin"]), getLoans);
 
 // Get single loan (admin or member)
-router.get("/:id", requireAuthWithRole(["admin", "member"]), getLoan);
+router.get(
+  "/:id",
+  requireAuthWithRole(["admin", "member"]),
+  selfOrAdmin("id"),
+  getLoan,
+);
 router.get(
   "/:id/repay",
-  requireAuthWithRole(["admin", "member"]),
+  requireAuthWithRole(["admin"]),
   repaygetLoan,
 );
 router.patch("/:id/close", requireAuthWithRole(["admin"]), closeLoan);

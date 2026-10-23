@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
+import PageHeader from "../../../components/PageHeader";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, cdSheets } from "../../../utils/excelExport";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -44,7 +47,7 @@ const MemberCD = () => {
 
   useEffect(() => {
     fetchCDs();
-  }, [user]);
+  }, [user?.id]);
 
   if (loading)
     return (
@@ -73,9 +76,14 @@ const MemberCD = () => {
 
   return (
     <div className="p-2 sm:p-6 max-w-7xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
-        💰 My Compulsory Deposit (CD) Accounts
-      </h2>
+      <PageHeader
+        eyebrow="My account"
+        title="My Compulsory Deposits"
+        subtitle="Monthly installments and transactions"
+        actions={
+          <ExcelButton onClick={() => downloadExcel("My_CD_Accounts", cdSheets(cds))} disabled={!cds.length} />
+        }
+      />
       {cds.map((cd) => (
         <div
           key={cd._id}
@@ -223,7 +231,7 @@ const MemberCD = () => {
                     <button
                       onClick={() => paginate(cd._id, "installments", -1)}
                       disabled={pages.installments === 1}
-                      className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50"
+                      className="page-btn"
                     >
                       Prev
                     </button>
@@ -233,7 +241,7 @@ const MemberCD = () => {
                     <button
                       onClick={() => paginate(cd._id, "installments", 1)}
                       disabled={pages.installments === totalInstallmentPages}
-                      className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50"
+                      className="page-btn"
                     >
                       Next
                     </button>
@@ -280,7 +288,7 @@ const MemberCD = () => {
                     <button
                       onClick={() => paginate(cd._id, "withdrawals", -1)}
                       disabled={pages.withdrawals === 1}
-                      className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50"
+                      className="page-btn"
                     >
                       Prev
                     </button>
@@ -290,7 +298,7 @@ const MemberCD = () => {
                     <button
                       onClick={() => paginate(cd._id, "withdrawals", 1)}
                       disabled={pages.withdrawals === totalWithdrawalPages}
-                      className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50"
+                      className="page-btn"
                     >
                       Next
                     </button>
@@ -335,7 +343,7 @@ const MemberCD = () => {
                     <button
                       onClick={() => paginate(cd._id, "dividends", -1)}
                       disabled={pages.dividends === 1}
-                      className="px-3 py-1 bg-teal-600 text-white rounded disabled:opacity-50"
+                      className="page-btn"
                     >
                       Prev
                     </button>
@@ -345,7 +353,7 @@ const MemberCD = () => {
                     <button
                       onClick={() => paginate(cd._id, "dividends", 1)}
                       disabled={pages.dividends === totalDividendPages}
-                      className="px-3 py-1 bg-teal-600 text-white rounded disabled:opacity-50"
+                      className="page-btn"
                     >
                       Next
                     </button>

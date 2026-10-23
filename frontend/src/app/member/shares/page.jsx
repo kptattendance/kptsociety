@@ -4,6 +4,9 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
+import PageHeader from "../../../components/PageHeader";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, shareSheets } from "../../../utils/excelExport";
 
 export default function MemberSharePage() {
   const { user } = useUser();
@@ -44,7 +47,7 @@ export default function MemberSharePage() {
     if (user && user.id) {
       fetchShare();
     }
-  }, [user]);
+  }, [user?.id]);
 
   if (loading) return <LoadOverlay show={true} message={loadingMessage} />;
 
@@ -60,9 +63,14 @@ export default function MemberSharePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 p-3 sm:p-6">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
-          🪙 My Share Account
-        </h2>
+        <PageHeader
+          eyebrow="My account"
+          title="My Share Account"
+          subtitle="Purchases and withdrawals"
+          actions={
+            <ExcelButton onClick={() => downloadExcel("My_Shares", shareSheets([share]))} disabled={!share} />
+          }
+        />
 
         {/* ✅ Member Info */}
         {member && (

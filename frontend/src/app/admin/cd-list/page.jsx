@@ -16,6 +16,7 @@ import CDScheduleModal from "./CDScheduleModal";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import ExcelButton from "../../../components/ExcelButton";
 
 export default function AdminCDList() {
   const { getToken } = useAuth();
@@ -267,12 +268,7 @@ export default function AdminCDList() {
               className="w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
-          <button
-            onClick={handleDownloadExcel}
-            className="bg-green-600 cursor-pointer hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
-          >
-            📥 Download Excel
-          </button>
+          <ExcelButton onClick={handleDownloadExcel} />
         </div>
 
         {/* ✅ Table */}
@@ -442,13 +438,13 @@ export default function AdminCDList() {
                       <>
                         <button
                           onClick={() => handleSave(cd._id)}
-                          className="text-green-600 cursor-pointer hover:text-green-800"
+                          className="btn-icon btn-icon-save"
                         >
                           <Check size={16} />
                         </button>
                         <button
                           onClick={handleCancel}
-                          className="text-gray-600 cursor-pointer hover:text-gray-800"
+                          className="btn-icon btn-icon-muted"
                         >
                           <X size={16} />
                         </button>
@@ -457,20 +453,20 @@ export default function AdminCDList() {
                       <>
                         <button
                           onClick={() => handleEdit(cd)}
-                          className="text-blue-600 cursor-pointer hover:text-blue-800"
+                          className="btn-icon btn-icon-edit"
                         >
                           <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(cd._id)}
-                          className="text-red-600 cursor-pointer hover:text-red-800"
+                          className="btn-icon btn-icon-delete"
                         >
                           <Trash2 size={16} />
                         </button>
                         {cd.status === "Active" && (
                           <button
                             onClick={() => handleClose(cd._id)}
-                            className="text-gray-600 cursor-pointer hover:text-gray-800"
+                            className="btn-icon btn-icon-muted"
                           >
                             <Lock size={16} />
                           </button>
@@ -482,7 +478,7 @@ export default function AdminCDList() {
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => setSelectedCDId(cd._id)} // just set the CD id to open modal
-                      className="text-teal-500 cursor-pointer hover:text-green-700 font-medium"
+                      className="btn btn-soft btn-sm"
                     >
                       Schedule
                     </button>{" "}
@@ -504,7 +500,7 @@ export default function AdminCDList() {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             Prev
           </button>
@@ -513,11 +509,7 @@ export default function AdminCDList() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 cursor-pointer rounded ${
-                currentPage === i + 1
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
-              }`}
+              className={`page-btn ${currentPage === i + 1 ? "page-btn-active" : ""}`}
             >
               {i + 1}
             </button>
@@ -526,7 +518,7 @@ export default function AdminCDList() {
           <button
             disabled={currentPage === totalPages || totalPages === 0}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             Next
           </button>

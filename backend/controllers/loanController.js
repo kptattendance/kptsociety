@@ -600,9 +600,6 @@ export const closeLoan = async (req, res) => {
     const { id } = req.params;
     const { closedAt, reason } = req.body;
 
-    console.log("Loan ID:", id);
-    console.log("Closed Date:", closedAt);
-    console.log("Reason:", reason);
 
     const loan = await Loan.findById(id);
 
@@ -618,7 +615,6 @@ export const closeLoan = async (req, res) => {
 
     await loan.save();
 
-    console.log("Loan closed successfully");
 
     res.json({
       message: "Loan closed successfully",

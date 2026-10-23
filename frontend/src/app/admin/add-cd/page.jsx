@@ -243,7 +243,7 @@ export default function AdminCDForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto bg-gradient-to-r from-teal-500 via-purple-500 to-pink-500 text-white font-semibold py-3 px-4 sm:px-8 rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg disabled:opacity-50"
+              className="btn btn-primary !py-3 !px-8 w-full sm:w-auto"
             >
               {loading ? "Processing..." : "💳 Submit CD Deposit"}
             </button>

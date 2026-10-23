@@ -13,7 +13,7 @@ import {
   deleteFDWithdrawal,
 } from "../controllers/fdController.js";
 
-import { requireAuthWithRole } from "../middlewares/auth.js";
+import { requireAuthWithRole, selfOrAdmin } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -52,12 +52,13 @@ router.put("/:fdId/preclose", requireAuthWithRole(["admin"]), preCloseFD);
 router.get(
   "/member/:memberId",
   requireAuthWithRole(["admin", "member"]),
+  selfOrAdmin("memberId"),
   getMemberFDs
 );
 
 // ✅ Get a single FD by ID
-router.get("/:fdId", requireAuthWithRole(["admin", "member"]), getFDById);
+router.get("/:fdId", requireAuthWithRole(["admin"]), getFDById);
 
 router.post("/:fdId/withdraw", requireAuthWithRole(["admin"]), addFDWithdrawal);
-router.get("/:fdId/withdrawals", getFDWithdrawals);
+router.get("/:fdId/withdrawals", requireAuthWithRole(["admin"]), getFDWithdrawals);
 export default router;

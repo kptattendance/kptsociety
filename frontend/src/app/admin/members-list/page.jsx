@@ -11,6 +11,7 @@ import EditableRow from "./EditableRow";
 import ReadOnlyRow from "./ReadOnlyRow";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import MemberProfileModal from "./MemberProfileModal";
+import ExcelButton from "../../../components/ExcelButton";
 
 export default function MembersList() {
   const [members, setMembers] = useState([]);
@@ -278,12 +279,7 @@ export default function MembersList() {
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3 shadow-sm focus:ring-2 focus:ring-indigo-400 outline-none"
           />
 
-          <button
-            onClick={handleDownloadExcel}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 cursor-pointer rounded-lg shadow transition"
-          >
-            📥 Download Excel
-          </button>
+          <ExcelButton onClick={handleDownloadExcel} />
         </div>
 
         <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">
@@ -382,7 +378,7 @@ export default function MembersList() {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             Prev
           </button>
@@ -391,11 +387,7 @@ export default function MembersList() {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 cursor-pointer rounded ${
-                currentPage === i + 1
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
-              }`}
+              className={`page-btn ${currentPage === i + 1 ? "page-btn-active" : ""}`}
             >
               {i + 1}
             </button>
@@ -404,7 +396,7 @@ export default function MembersList() {
           <button
             disabled={currentPage === totalPages || totalPages === 0}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+            className="page-btn"
           >
             Next
           </button>

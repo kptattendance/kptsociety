@@ -1,6 +1,7 @@
 import Member from "../models/memberModel.js";
 import cloudinary from "../config/cloudinary.js";
 import { clerkClient } from "@clerk/express";
+import { forgetUser } from "../middlewares/auth.js";
 import XLSX from "xlsx";
 
 // -------------------- BULK UPLOAD MEMBERS --------------------
@@ -204,6 +205,7 @@ export const updateMember = async (req, res) => {
       await clerkClient.users.updateUser(userId, {
         publicMetadata: { role },
       });
+      forgetUser(userId);
 
       member.role = role;
     }
@@ -251,6 +253,7 @@ export const deleteMember = async (req, res) => {
 
     if (member.clerkId) {
       await clerkClient.users.deleteUser(member.clerkId);
+      forgetUser(member.clerkId);
     }
 
     if (member.photo) {

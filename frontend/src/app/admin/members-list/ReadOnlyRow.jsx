@@ -114,14 +114,14 @@ export default function ReadOnlyRow({
             setEditData(member);
           }}
           title="Edit"
-          className="p-2 cursor-pointer rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition shadow-sm"
+          className="btn-icon btn-icon-edit"
         >
           <Pencil size={16} />
         </button>
         <button
           onClick={() => handleDelete(member._id)}
           title="Delete"
-          className="p-2 rounded-full cursor-pointer bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition shadow-sm"
+          className="btn-icon btn-icon-delete"
         >
           <Trash2 size={16} />
         </button>

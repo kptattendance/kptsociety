@@ -4,7 +4,20 @@ import { Readable } from "stream";
 
 // Multer memory storage
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+});
+
+// Photos must be images
+const imageUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) =>
+    file.mimetype.startsWith("image/")
+      ? cb(null, true)
+      : cb(new Error("Only image files are allowed")),
+});
 
 // Convert buffer → stream and upload to Cloudinary
 export const uploadToCloudinary = (req, res, next) => {
@@ -27,4 +40,4 @@ export const uploadToCloudinary = (req, res, next) => {
 };
 
 // Middleware for single file
-export const uploadSingleImage = [upload.single("photo"), uploadToCloudinary];
+export const uploadSingleImage = [imageUpload.single("photo"), uploadToCloudinary];

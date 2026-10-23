@@ -4,6 +4,9 @@ import { requireAuth, clerkClient } from "@clerk/express";
 const userCache = new Map();
 const USER_CACHE_MS = 5 * 60 * 1000;
 
+// Call after changing a user's role or deleting them so it applies at once
+export const forgetUser = (userId) => userCache.delete(userId);
+
 const getCachedUser = (userId) => {
   const hit = userCache.get(userId);
   if (hit && Date.now() - hit.at < USER_CACHE_MS) return hit.user;
@@ -68,4 +71,12 @@ export const requireAuthWithRole = (allowedRoles = []) => {
       }
     },
   ];
+};
+
+// Members may only read their own records: the :param in the URL must be their
+// own Clerk user id. Admins can read anyone's. Use after requireAuthWithRole.
+export const selfOrAdmin = (param) => (req, res, next) => {
+  if (req.user?.role === "admin") return next();
+  if (req.user?.id && req.params[param] === req.user.id) return next();
+  return res.status(403).json({ error: "Forbidden: not your record" });
 };

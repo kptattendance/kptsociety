@@ -4,6 +4,17 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { Mail, Phone, Calendar, Home, Briefcase, User } from "lucide-react";
+import PageHeader from "../../../components/PageHeader";
+import ExcelButton from "../../../components/ExcelButton";
+import {
+  downloadExcel,
+  profileSheets,
+  loanSheets,
+  rdSheets,
+  fdSheets,
+  cdSheets,
+  shareSheets,
+} from "../../../utils/excelExport";
 
 export default function UserProfile() {
   const { getToken } = useAuth();
@@ -23,97 +34,106 @@ export default function UserProfile() {
     try {
       const token = await getToken();
 
-      // Member profile
-      try {
-        const profileRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/members/${user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setProfile(profileRes.data);
-      } catch (err) {
-        console.error("Error fetching member profile:", err);
-      }
-
-      // Loan details
-      try {
-        const loanRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setLoans(Array.isArray(loanRes.data) ? loanRes.data : [loanRes.data]);
-      } catch (err) {
-        console.error("Error fetching loan details:", err);
-      }
-
-      // RD details
-      try {
-        const rdRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        const data = rdRes.data;
-        // ✅ Normalize RD data into an array
-        const rdArray = data?.rdAccounts
-          ? data.rdAccounts // multiple RDs
-          : data?.rdAccount
-          ? [data.rdAccount] // single RD
-          : Array.isArray(data)
-          ? data
-          : data
-          ? [data]
-          : [];
-
-        setRds(rdArray);
-      } catch (err) {
-        console.error("Error fetching RD details:", err);
-      }
-
-      // FD details
-      try {
-        const fdRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/fd/member/${user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log(fdRes);
-        setFds(Array.isArray(fdRes.data) ? fdRes.data : [fdRes.data]);
-      } catch (err) {
-        console.error("Error fetching FD details:", err);
-      }
-
-      // CD details
-      try {
-        const cdRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/cd/member/${user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log(cdRes);
-        setCds(Array.isArray(cdRes.data) ? cdRes.data : [cdRes.data]);
-      } catch (err) {
-        console.error("Error fetching CD details:", err);
-      }
-
-      // Share details
-      try {
-        const shareRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log(shareRes);
-
-        const data = shareRes.data;
-        const shareArray = data?.shareAccount
-          ? [data.shareAccount] // ✅ extract the nested object
-          : Array.isArray(data)
-          ? data
-          : data
-          ? [data]
-          : [];
-
-        setShares(shareArray);
-      } catch (err) {
-        console.error("Error fetching share details:", err);
-      }
+      // All sections load at the same time instead of one after another
+      await Promise.all(
+        [
+          // Member profile
+          async () => {
+            try {
+              const profileRes = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/members/${user.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              setProfile(profileRes.data);
+            } catch (err) {
+              console.error("Error fetching member profile:", err);
+            }
+          },
+          // Loan details
+          async () => {
+            try {
+              const loanRes = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/loans/${user.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              setLoans(Array.isArray(loanRes.data) ? loanRes.data : [loanRes.data]);
+            } catch (err) {
+              console.error("Error fetching loan details:", err);
+            }
+          },
+          // RD details
+          async () => {
+            try {
+              const rdRes = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/rd/member/${user.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+  
+              const data = rdRes.data;
+              // ✅ Normalize RD data into an array
+              const rdArray = data?.rdAccounts
+                ? data.rdAccounts // multiple RDs
+                : data?.rdAccount
+                ? [data.rdAccount] // single RD
+                : Array.isArray(data)
+                ? data
+                : data
+                ? [data]
+                : [];
+  
+              setRds(rdArray);
+            } catch (err) {
+              console.error("Error fetching RD details:", err);
+            }
+          },
+          // FD details
+          async () => {
+            try {
+              const fdRes = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/fd/member/${user.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              setFds(Array.isArray(fdRes.data) ? fdRes.data : [fdRes.data]);
+            } catch (err) {
+              console.error("Error fetching FD details:", err);
+            }
+          },
+          // CD details
+          async () => {
+            try {
+              const cdRes = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/cd/member/${user.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              setCds(Array.isArray(cdRes.data) ? cdRes.data : [cdRes.data]);
+            } catch (err) {
+              console.error("Error fetching CD details:", err);
+            }
+          },
+          // Share details
+          async () => {
+            try {
+              const shareRes = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/share/${user.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+  
+              const data = shareRes.data;
+              const shareArray = data?.shareAccount
+                ? [data.shareAccount] // ✅ extract the nested object
+                : Array.isArray(data)
+                ? data
+                : data
+                ? [data]
+                : [];
+  
+              setShares(shareArray);
+            } catch (err) {
+              console.error("Error fetching share details:", err);
+            }
+          },
+        ].map((task) => task()),
+      );
     } catch (err) {
       console.error("Error in fetchData setup:", err);
     } finally {
@@ -123,7 +143,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [user?.id]);
 
   if (loading)
     return (
@@ -185,9 +205,27 @@ export default function UserProfile() {
 
   return (
     <div className="p-3 sm:p-4 max-w-7xl mx-auto space-y-6">
-      <h2 className="text-xl sm:text-2xl font-bold text-center text-indigo-700">
-        👤 Member Dashboard
-      </h2>
+      <PageHeader
+        eyebrow="Welcome back"
+        title="Member Dashboard"
+        subtitle="Your profile and all society accounts in one place"
+        actions={
+          <ExcelButton
+            label="Download full statement"
+            onClick={() =>
+              downloadExcel("My_KPT_Statement", [
+                ...profileSheets(profile),
+                ...loanSheets(loans),
+                ...rdSheets(rds),
+                ...fdSheets(fds),
+                ...cdSheets(cds),
+                ...shareSheets(shares),
+              ])
+            }
+          />
+        }
+        className="!mb-0"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Profile Card */}

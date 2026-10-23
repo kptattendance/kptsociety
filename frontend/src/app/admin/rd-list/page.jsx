@@ -8,6 +8,7 @@ import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import ExcelButton from "../../../components/ExcelButton";
 
 export default function AdminRDTable() {
   const { getToken } = useAuth();
@@ -258,12 +259,7 @@ export default function AdminRDTable() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-teal-400 outline-none"
           />
-          <button
-            onClick={handleDownloadExcel}
-            className="bg-green-600 cursor-pointer hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow"
-          >
-            📥 Download Excel
-          </button>
+          <ExcelButton onClick={handleDownloadExcel} />
         </div>
 
         <div className="overflow-x-auto">
@@ -504,13 +500,13 @@ export default function AdminRDTable() {
                         <>
                           <button
                             onClick={() => handleSave(rd._id)}
-                            className="text-green-600 cursor-pointer hover:text-green-800"
+                            className="btn-icon btn-icon-save"
                           >
                             <Check size={16} />
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="text-red-500 cursor-pointer hover:text-red-700"
+                            className="btn-icon btn-icon-muted"
                           >
                             <X size={16} />
                           </button>
@@ -519,20 +515,20 @@ export default function AdminRDTable() {
                         <>
                           <button
                             onClick={() => handleEditClick(rd)}
-                            className="text-blue-600 cursor-pointer hover:text-blue-800"
+                            className="btn-icon btn-icon-edit"
                           >
                             <Pencil size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(rd._id)}
-                            className="text-red-600 cursor-pointer hover:text-red-800"
+                            className="btn-icon btn-icon-delete"
                           >
                             <Trash2 size={16} />
                           </button>
                           {rd.status === "Active" && (
                             <button
                               onClick={() => handleClose(rd._id)}
-                              className="text-gray-600 cursor-pointer hover:text-gray-800"
+                              className="btn-icon btn-icon-muted"
                             >
                               <Lock size={16} />
                             </button>
@@ -544,7 +540,7 @@ export default function AdminRDTable() {
                     <td className="text-center">
                       <button
                         onClick={() => setSelectedRDId(rd._id)}
-                        className="text-teal-800 cursor-pointer hover:text-green-500"
+                        className="btn btn-soft btn-sm"
                       >
                         Schedule
                       </button>
@@ -559,7 +555,7 @@ export default function AdminRDTable() {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => prev - 1)}
-              className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+              className="page-btn"
             >
               Prev
             </button>
@@ -568,11 +564,7 @@ export default function AdminRDTable() {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 cursor-pointer rounded ${
-                  currentPage === i + 1
-                    ? "bg-teal-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-indigo-100"
-                }`}
+                className={`page-btn ${currentPage === i + 1 ? "page-btn-active" : ""}`}
               >
                 {i + 1}
               </button>
@@ -581,7 +573,7 @@ export default function AdminRDTable() {
             <button
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage((prev) => prev + 1)}
-              className="px-3 py-1 cursor-pointer bg-gray-200 rounded disabled:opacity-50"
+              className="page-btn"
             >
               Next
             </button>

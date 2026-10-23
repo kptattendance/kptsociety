@@ -23,6 +23,8 @@ import {
   getLoanSummary,
   lumpSumsByInstallment,
 } from "../../../utils/loanSummary";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, loanSheets } from "../../../utils/excelExport";
 
 const today = () => new Date().toISOString().split("T")[0];
 const toInputDate = (d) => new Date(d).toISOString().split("T")[0];
@@ -182,13 +184,21 @@ export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
                 )}
               </p>
             </div>
-            <button
-              onClick={close}
-              className="text-gray-500 hover:text-red-500 cursor-pointer"
-              aria-label="Close"
-            >
-              <X size={24} />
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <ExcelButton
+                label="Excel"
+                onClick={() =>
+                  downloadExcel(`Loan_${loan.accountNumber}`, loanSheets([loan]))
+                }
+              />
+              <button
+                onClick={close}
+                className="grid place-items-center w-9 h-9 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-500 cursor-pointer"
+                aria-label="Close"
+              >
+                <X size={22} />
+              </button>
+            </div>
           </div>
 
           <div className="p-4 sm:p-6 space-y-6">
@@ -334,7 +344,7 @@ export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
                   {!preview ? (
                     <button
                       onClick={() => runPrepay(true)}
-                      className="px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 cursor-pointer"
+                      className="btn btn-primary"
                     >
                       Preview
                     </button>
@@ -342,13 +352,13 @@ export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
                     <>
                       <button
                         onClick={() => setPreview(null)}
-                        className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
+                        className="btn btn-ghost"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => runPrepay(false)}
-                        className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 cursor-pointer"
+                        className="btn btn-success"
                       >
                         Confirm & save {inr(Number(amount))}
                       </button>
@@ -457,7 +467,7 @@ export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
                                   onClick={() =>
                                     setStatus(no, "Paid", paidDate || undefined)
                                   }
-                                  className="px-3 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 cursor-pointer"
+                                  className="btn btn-success btn-sm"
                                 >
                                   Mark paid
                                 </button>
@@ -522,7 +532,7 @@ export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
                             <button
                               onClick={() => deleteLumpSum(p)}
                               title="Delete this part payment"
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 cursor-pointer"
+                              className="btn btn-danger btn-sm"
                             >
                               <Trash2 className="w-3.5 h-3.5" /> Delete
                             </button>
@@ -538,7 +548,7 @@ export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
             <div className="flex justify-end">
               <button
                 onClick={close}
-                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 cursor-pointer"
+                className="btn btn-ghost"
               >
                 Close
               </button>

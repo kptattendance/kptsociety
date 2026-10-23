@@ -12,7 +12,7 @@ import {
   updateRDInstallmentStatus,
   makeRDWithdrawal,
 } from "../controllers/rdController.js";
-import { requireAuthWithRole } from "../middlewares/auth.js";
+import { requireAuthWithRole, selfOrAdmin } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -25,11 +25,12 @@ router.get("/", requireAuthWithRole(["admin"]), getAllRDs);
 router.get(
   "/member/:memberId",
   requireAuthWithRole(["admin", "member"]),
+  selfOrAdmin("memberId"),
   getMemberRDs
 );
 
 // Get single RD
-router.get("/:rdId", requireAuthWithRole(["admin", "member"]), getRDById);
+router.get("/:rdId", requireAuthWithRole(["admin"]), getRDById);
 
 // Make installment payment
 router.post("/deposit/:rdId", requireAuthWithRole(["admin"]), makeRDDeposit);

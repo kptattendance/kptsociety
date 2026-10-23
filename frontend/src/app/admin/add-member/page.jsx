@@ -66,7 +66,6 @@ export default function AdminAddMember() {
       );
 
       alert("✅ Member added successfully!");
-      console.log("Member added:", response.data);
     } catch (err) {
       console.error(err);
       alert("❌ Failed to add member.");
@@ -111,7 +110,6 @@ export default function AdminAddMember() {
         }
       );
       alert("✅ Bulk upload successful");
-      console.log(res.data);
     } catch (err) {
       console.error(err);
       alert("❌ Bulk upload failed");
@@ -174,7 +172,7 @@ export default function AdminAddMember() {
 
           <button
             onClick={handleBulkUpload}
-            className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition flex items-center gap-2 justify-center w-full md:w-auto"
+            className="btn btn-soft w-full md:w-auto"
           >
             <Upload className="w-5 h-5" />
             Upload Excel
@@ -511,7 +509,7 @@ export default function AdminAddMember() {
           <div className="md:col-span-2 flex justify-end mt-6">
             <button
               type="submit"
-              className="px-6 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 transition"
+              className="btn btn-primary !py-3 !px-8"
             >
               ➕ Add Member
             </button>

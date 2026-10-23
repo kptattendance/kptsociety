@@ -4,6 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { getLoanSummary, inr } from "../../../utils/loanSummary";
 import axios from "axios";
+import PageHeader from "../../../components/PageHeader";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, loanSheets } from "../../../utils/excelExport";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -37,7 +40,7 @@ const MemberLoan = () => {
 
   useEffect(() => {
     fetchLoanSchedule();
-  }, [user]);
+  }, [user?.id]);
 
   if (loading)
     return (
@@ -62,9 +65,14 @@ const MemberLoan = () => {
 
   return (
     <div className="p-3 sm:p-6 max-w-7xl mx-auto">
-      <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-gray-800">
-        💰 My Loans & Repayment Schedule
-      </h2>
+      <PageHeader
+        eyebrow="My account"
+        title="My Loans"
+        subtitle="Repayment schedule and part payments"
+        actions={
+          <ExcelButton onClick={() => downloadExcel("My_Loans", loanSheets(loans))} disabled={!loans.length} />
+        }
+      />
 
       {loans.map((loan) => {
         const summary = getLoanSummary(loan);
@@ -357,7 +365,7 @@ const MemberLoan = () => {
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-3 mt-3 text-sm sm:text-base">
                 <button
-                  className="px-3 py-1 bg-indigo-500 text-white rounded-full disabled:opacity-50"
+                  className="page-btn"
                   disabled={page === 1}
                   onClick={() => paginate(loan._id, -1)}
                 >
@@ -367,7 +375,7 @@ const MemberLoan = () => {
                   Page {page} / {totalPages}
                 </span>
                 <button
-                  className="px-3 py-1 bg-indigo-500 text-white rounded-full disabled:opacity-50"
+                  className="page-btn"
                   disabled={page === totalPages}
                   onClick={() => paginate(loan._id, 1)}
                 >

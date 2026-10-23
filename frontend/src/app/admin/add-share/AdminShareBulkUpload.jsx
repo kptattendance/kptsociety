@@ -89,7 +89,7 @@ export default function AdminShareBulkUpload() {
           <button
             onClick={handleUpload}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-indigo-500 via-pink-500 to-teal-500 text-white font-semibold py-3 px-6 rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg disabled:opacity-50"
+            className="btn btn-primary !py-3 !px-8 w-full"
           >
             {loading ? "Uploading..." : "✨ Upload CSV"}
           </button>

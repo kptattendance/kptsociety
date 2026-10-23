@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
+import PageHeader from "../../../components/PageHeader";
+import ExcelButton from "../../../components/ExcelButton";
+import { downloadExcel, rdSheets } from "../../../utils/excelExport";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -26,7 +29,6 @@ const MemberRD = () => {
       );
 
       const rdArray = Array.isArray(res.data) ? res.data : [res.data];
-      console.log(rdArray);
       // ✅ Compute available balance for each RD (same logic as AdminRDTable)
       const updatedRDs = rdArray.map((rd) => {
         const totalWithdrawn =
@@ -52,7 +54,7 @@ const MemberRD = () => {
 
   useEffect(() => {
     fetchRDs();
-  }, [user]);
+  }, [user?.id]);
 
   if (loading)
     return (
@@ -73,9 +75,14 @@ const MemberRD = () => {
 
   return (
     <div className="p-2 sm:p-4 max-w-7xl mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800 text-center">
-        💎 My Recurring Deposit Accounts
-      </h2>
+      <PageHeader
+        eyebrow="My account"
+        title="My Recurring Deposits"
+        subtitle="Installments and withdrawals"
+        actions={
+          <ExcelButton onClick={() => downloadExcel("My_RD_Accounts", rdSheets(rds))} disabled={!rds.length} />
+        }
+      />
 
       {rds.map((rd) => {
         const page = currentPage[rd._id] || 1;
@@ -241,7 +248,7 @@ const MemberRD = () => {
             {totalPages > 1 && (
               <div className="flex justify-center items-center space-x-2 mt-2 text-sm sm:text-base">
                 <button
-                  className="px-3 py-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+                  className="page-btn"
                   disabled={page === 1}
                   onClick={() => paginate(rd._id, -1)}
                 >
@@ -251,7 +258,7 @@ const MemberRD = () => {
                   Page {page} of {totalPages}
                 </span>
                 <button
-                  className="px-3 py-1 bg-indigo-500 text-white rounded disabled:opacity-50"
+                  className="page-btn"
                   disabled={page === totalPages}
                   onClick={() => paginate(rd._id, 1)}
                 >

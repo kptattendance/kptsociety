@@ -291,7 +291,7 @@ export default function AdminFDForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-xl hover:bg-indigo-700 transition-all shadow-md disabled:opacity-50 sm:col-span-2"
+            className="btn btn-primary !py-3 !px-8 w-full sm:col-span-2"
           >
             {loading ? "Saving..." : "Create FD"}
           </button>
