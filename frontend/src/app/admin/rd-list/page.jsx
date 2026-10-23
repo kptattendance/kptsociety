@@ -6,9 +6,8 @@ import { Pencil, Trash2, Check, X, Lock, ArrowUpDown } from "lucide-react";
 import RDScheduleModal from "./RDScheduleModal";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
+import { exportFile } from "../../../utils/exportFile";
 
 export default function AdminRDTable() {
   const { getToken } = useAuth();
@@ -157,7 +156,7 @@ export default function AdminRDTable() {
   };
 
   // Download Excel
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async (format = "excel") => {
     if (!rds.length) {
       toast.info("No data available to export!");
       return;
@@ -191,17 +190,10 @@ export default function AdminRDTable() {
       };
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "RD Records");
-    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, `RD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    toast.success("✅ Excel file downloaded");
+    await exportFile(format, "RD_Records", [
+      { name: "RD Records", title: "RD Accounts", rows: exportData },
+    ]);
+    toast.success("✅ File downloaded!");
   };
 
   // Filtered and sorted RDs
@@ -259,7 +251,9 @@ export default function AdminRDTable() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-teal-400 outline-none"
           />
-          <ExcelButton onClick={handleDownloadExcel} />
+          <ExportButtons
+            onExport={handleDownloadExcel}
+          />
         </div>
 
         <div className="overflow-x-auto">

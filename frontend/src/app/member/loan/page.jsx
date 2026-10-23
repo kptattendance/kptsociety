@@ -5,7 +5,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { getLoanSummary, inr } from "../../../utils/loanSummary";
 import axios from "axios";
 import PageHeader from "../../../components/PageHeader";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, loanSheets } from "../../../utils/excelExport";
 
 const ITEMS_PER_PAGE = 10;
@@ -70,7 +70,11 @@ const MemberLoan = () => {
         title="My Loans"
         subtitle="Repayment schedule and part payments"
         actions={
-          <ExcelButton onClick={() => downloadExcel("My_Loans", loanSheets(loans))} disabled={!loans.length} />
+          <ExportButtons
+            fileName={"My_Loans"}
+            getSheets={() => loanSheets(loans)}
+            disabled={!loans.length}
+          />
         }
       />
 

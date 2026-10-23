@@ -5,13 +5,12 @@ import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import EditableRow from "./EditableRow";
 import ReadOnlyRow from "./ReadOnlyRow";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import MemberProfileModal from "./MemberProfileModal";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
+import { exportFile } from "../../../utils/exportFile";
 
 export default function MembersList() {
   const [members, setMembers] = useState([]);
@@ -139,7 +138,7 @@ export default function MembersList() {
   }, []);
 
   // ---------- Excel Export ----------
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async (format = "excel") => {
     if (filteredMembers.length === 0) {
       toast.info("No member data available to export!");
       return;
@@ -172,20 +171,10 @@ export default function MembersList() {
       Role: m.role || "-",
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
-    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `Members_List_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    toast.success("✅ Excel file downloaded!");
+    await exportFile(format, "Members_List", [
+      { name: "Members", title: "Members List", rows: exportData },
+    ]);
+    toast.success("✅ File downloaded!");
   };
 
   // ---------- Delete ----------
@@ -279,7 +268,9 @@ export default function MembersList() {
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3 shadow-sm focus:ring-2 focus:ring-indigo-400 outline-none"
           />
 
-          <ExcelButton onClick={handleDownloadExcel} />
+          <ExportButtons
+            onExport={handleDownloadExcel}
+          />
         </div>
 
         <div className="overflow-x-auto rounded-xl shadow-md border border-gray-200 bg-white">

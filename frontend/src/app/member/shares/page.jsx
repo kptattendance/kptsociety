@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
 import PageHeader from "../../../components/PageHeader";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, shareSheets } from "../../../utils/excelExport";
 
 export default function MemberSharePage() {
@@ -68,7 +68,11 @@ export default function MemberSharePage() {
           title="My Share Account"
           subtitle="Purchases and withdrawals"
           actions={
-            <ExcelButton onClick={() => downloadExcel("My_Shares", shareSheets([share]))} disabled={!share} />
+            <ExportButtons
+              fileName={"My_Shares"}
+              getSheets={() => shareSheets([share])}
+              disabled={!share}
+            />
           }
         />
 

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import PageHeader from "../../../components/PageHeader";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, rdSheets } from "../../../utils/excelExport";
 
 const ITEMS_PER_PAGE = 10;
@@ -80,7 +80,11 @@ const MemberRD = () => {
         title="My Recurring Deposits"
         subtitle="Installments and withdrawals"
         actions={
-          <ExcelButton onClick={() => downloadExcel("My_RD_Accounts", rdSheets(rds))} disabled={!rds.length} />
+          <ExportButtons
+            fileName={"My_RD_Accounts"}
+            getSheets={() => rdSheets(rds)}
+            disabled={!rds.length}
+          />
         }
       />
 

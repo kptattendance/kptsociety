@@ -6,7 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { Pencil, Trash2, X } from "lucide-react"; // For cross icon
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, fdSheets } from "../../../utils/excelExport";
 
 export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
@@ -133,10 +133,9 @@ export default function FDWithdrawalModal({ fd, onClose, refreshFDs }) {
           💸 FD Withdrawal — {fd?.memberId?.name}
         </h2>
         <div className="flex justify-center -mt-3 mb-6">
-          <ExcelButton
-            onClick={() =>
-              downloadExcel(`FD_${fd?.fdNumber}`, fdSheets([{ ...fd, withdrawals }]))
-            }
+          <ExportButtons
+            fileName={`FD_${fd?.fdNumber}`}
+            getSheets={() => fdSheets([{ ...fd, withdrawals }])}
           />
         </div>
 

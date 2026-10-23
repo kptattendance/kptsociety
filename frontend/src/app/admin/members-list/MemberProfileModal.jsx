@@ -16,7 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, profileSheets } from "../../../utils/excelExport";
 
 export default function MemberProfileModal({ memberId, onClose }) {
@@ -111,12 +111,10 @@ export default function MemberProfileModal({ memberId, onClose }) {
                     Type: {profile.memberType || "A"}
                   </span>
                 </div>
-                <ExcelButton
+                <ExportButtons
+                  fileName={`Member_${profile.name}`}
+                  getSheets={() => profileSheets(profile)}
                   className="mt-4"
-                  label="Download profile"
-                  onClick={() =>
-                    downloadExcel(`Member_${profile.name}`, profileSheets(profile))
-                  }
                 />
               </div>
             </div>

@@ -23,7 +23,7 @@ import {
   getLoanSummary,
   lumpSumsByInstallment,
 } from "../../../utils/loanSummary";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, loanSheets } from "../../../utils/excelExport";
 
 const today = () => new Date().toISOString().split("T")[0];
@@ -185,11 +185,10 @@ export default function LoanRepaymentModal({ loanId, initialLoan, onClose }) {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <ExcelButton
-                label="Excel"
-                onClick={() =>
-                  downloadExcel(`Loan_${loan.accountNumber}`, loanSheets([loan]))
-                }
+              <ExportButtons
+                fileName={`Loan_${loan.accountNumber}`}
+                getSheets={() => loanSheets([loan])}
+                compact
               />
               <button
                 onClick={close}

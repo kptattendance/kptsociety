@@ -5,7 +5,7 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, cdSheets } from "../../../utils/excelExport";
 
 export default function CDScheduleModal({ cdId, onClose }) {
@@ -123,8 +123,9 @@ export default function CDScheduleModal({ cdId, onClose }) {
           💠 CD Account – {cd.accountNumber}
         </h2>
         <div className="flex justify-center -mt-2 mb-5">
-          <ExcelButton
-            onClick={() => downloadExcel(`CD_${cd.accountNumber}`, cdSheets([cd]))}
+          <ExportButtons
+            fileName={`CD_${cd.accountNumber}`}
+            getSheets={() => cdSheets([cd])}
           />
         </div>
 

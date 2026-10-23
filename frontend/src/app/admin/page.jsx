@@ -56,7 +56,7 @@ import React, { useEffect, useState } from "react";
 import { Users, PiggyBank, Wallet, CreditCard } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import PageHeader from "../../components/PageHeader";
-import ExcelButton from "../../components/ExcelButton";
+import ExportButtons from "../../components/ExportButtons";
 import { downloadExcel } from "../../utils/excelExport";
 
 export default function AdminDashboard() {
@@ -163,9 +163,9 @@ export default function AdminDashboard() {
         title="Admin Dashboard"
         className="sm:!mb-8"
         actions={
-          <ExcelButton
-            onClick={() =>
-              downloadExcel("KPT_Dashboard", [
+          <ExportButtons
+            fileName={"KPT_Dashboard"}
+            getSheets={() => [
                 {
                   name: "Summary",
                   rows: dashboardCards.map((c) => ({
@@ -173,8 +173,7 @@ export default function AdminDashboard() {
                     Count: c.value,
                   })),
                 },
-              ])
-            }
+              ]}
           />
         }
       />

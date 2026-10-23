@@ -4,7 +4,7 @@ import { X, Plus, Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, shareSheets } from "../../../utils/excelExport";
 
 export default function ShareDetailsModal({ share, onClose, refreshShares }) {
@@ -141,13 +141,9 @@ export default function ShareDetailsModal({ share, onClose, refreshShares }) {
             Share Account Details
           </h2>
           <div className="flex justify-center mt-3 mb-1">
-            <ExcelButton
-              onClick={() =>
-                downloadExcel(
-                  `Shares_${share.societyShareNumber || share.memberId?.name || "account"}`,
-                  shareSheets([{ ...share, withdrawalHistory: localWithdrawals }]),
-                )
-              }
+            <ExportButtons
+              fileName={`Shares_${share.societyShareNumber || share.memberId?.name || "account"}`}
+              getSheets={() => shareSheets([{ ...share, withdrawalHistory: localWithdrawals }])}
             />
           </div>
           <p className="text-gray-600 mt-1">

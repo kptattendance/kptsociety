@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import PageHeader from "../../../components/PageHeader";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, fdSheets } from "../../../utils/excelExport";
 
 const MemberFD = () => {
@@ -87,7 +87,11 @@ const MemberFD = () => {
         title="My Fixed Deposits"
         subtitle="Deposits, maturity and withdrawals"
         actions={
-          <ExcelButton onClick={() => downloadExcel("My_FD_Accounts", fdSheets(fds))} disabled={!fds.length} />
+          <ExportButtons
+            fileName={"My_FD_Accounts"}
+            getSheets={() => fdSheets(fds)}
+            disabled={!fds.length}
+          />
         }
       />
 

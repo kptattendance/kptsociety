@@ -5,7 +5,7 @@ import axios from "axios";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { Mail, Phone, Calendar, Home, Briefcase, User } from "lucide-react";
 import PageHeader from "../../../components/PageHeader";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import {
   downloadExcel,
   profileSheets,
@@ -210,18 +210,16 @@ export default function UserProfile() {
         title="Member Dashboard"
         subtitle="Your profile and all society accounts in one place"
         actions={
-          <ExcelButton
-            label="Download full statement"
-            onClick={() =>
-              downloadExcel("My_KPT_Statement", [
+          <ExportButtons
+            fileName={"My_KPT_Statement"}
+            getSheets={() => [
                 ...profileSheets(profile),
                 ...loanSheets(loans),
                 ...rdSheets(rds),
                 ...fdSheets(fds),
                 ...cdSheets(cds),
                 ...shareSheets(shares),
-              ])
-            }
+              ]}
           />
         }
         className="!mb-0"

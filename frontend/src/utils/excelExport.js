@@ -89,56 +89,79 @@ export function loanStatementSheets(loans = []) {
   return loans.filter(Boolean).map((l) => {
     const s = getLoanSummary(l);
     const lumps = lumpSumsByInstallment(l);
-    const aoa = [
-      ["Loan Repayment Schedule"],
-      [],
-      ["Member Name", memberName(l), "", "Loan No", l.accountNumber || ""],
-      ["Loan Type", l.loanType || "", "", "Loan Amount", n(l.loanAmount)],
-      ["Rate of Interest (%)", n(l.interestRate), "", "Tenure (months)", n(l.tenure)],
-      ["Start Date", d(l.startDate), "", "Current EMI", n(s.currentEMI)],
-      ["Installments Paid", `${s.paidCount} of ${s.totalInstallments}`, "", "Outstanding", n(s.outstanding)],
-      ["Part Payments", n(s.totalLumpSum), "", "Status", l.loanStatus || "Active"],
-      [],
-      [
-        "S.No",
-        "Due Date",
-        "Monthly Installment",
-        "Interest",
-        "Principal",
-        "Part Payment",
-        "Part Payment Date",
-        "Balance",
-        "Status",
-      ],
-      [0, d(l.startDate), "", "", "", "", "", n(l.loanAmount), ""],
-    ];
-    (l.repayments || []).forEach((r, i) => {
-      const paid = lumps[i + 1] || [];
-      aoa.push([
-        i + 1,
-        d(r.dueDate),
-        r2(r.totalEMI),
-        r2(r.interest),
-        r2(r.principal),
-        paid.length ? r2(paid.reduce((t, p) => t + Number(p.amount || 0), 0)) : "",
-        paid.map((p) => d(p.paidAt)).join(", "),
-        r2(r.scheduleOS),
-        r.status,
-      ]);
-    });
     const reps = l.repayments || [];
-    aoa.push(
-      [],
-      [
-        "Total",
-        "",
-        r2(reps.reduce((t, r) => t + Number(r.totalEMI || 0), 0)),
-        r2(reps.reduce((t, r) => t + Number(r.interest || 0), 0)),
-        r2(reps.reduce((t, r) => t + Number(r.principal || 0), 0)),
-        r2(s.totalLumpSum),
-      ],
-    );
-    return { name: `Loan ${l.accountNumber || ""}`.trim(), aoa };
+
+    const details = [
+      ["Member Name", memberName(l)],
+      ["Loan No", l.accountNumber || ""],
+      ["Loan Type", l.loanType || ""],
+      ["Loan Amount", n(l.loanAmount)],
+      ["Rate of Interest (%)", n(l.interestRate)],
+      ["Tenure (months)", n(l.tenure)],
+      ["Start Date", d(l.startDate)],
+      ["Current EMI", n(s.currentEMI)],
+      ["Installments Paid", `${s.paidCount} of ${s.totalInstallments}`],
+      ["Outstanding", n(s.outstanding)],
+      ["Part Payments", n(s.totalLumpSum)],
+      ["Status", l.loanStatus || "Active"],
+    ];
+    const head = [
+      "S.No",
+      "Due Date",
+      "Monthly Installment",
+      "Interest",
+      "Principal",
+      "Part Payment",
+      "Part Payment Date",
+      "Balance",
+      "Status",
+    ];
+    const body = [
+      [0, d(l.startDate), "", "", "", "", "", n(l.loanAmount), ""],
+      ...reps.map((r, i) => {
+        const paid = lumps[i + 1] || [];
+        return [
+          i + 1,
+          d(r.dueDate),
+          r2(r.totalEMI),
+          r2(r.interest),
+          r2(r.principal),
+          paid.length
+            ? r2(paid.reduce((t, p) => t + Number(p.amount || 0), 0))
+            : "",
+          paid.map((p) => d(p.paidAt)).join(", "),
+          r2(r.scheduleOS),
+          r.status,
+        ];
+      }),
+    ];
+    const foot = [
+      "Total",
+      "",
+      r2(reps.reduce((t, r) => t + Number(r.totalEMI || 0), 0)),
+      r2(reps.reduce((t, r) => t + Number(r.interest || 0), 0)),
+      r2(reps.reduce((t, r) => t + Number(r.principal || 0), 0)),
+      r2(s.totalLumpSum),
+      "",
+      "",
+      "",
+    ];
+
+    // Excel layout: details two per line, then the schedule table
+    const aoa = [["Loan Repayment Schedule"], []];
+    for (let k = 0; k < details.length; k += 2)
+      aoa.push([...details[k], "", ...(details[k + 1] || [])]);
+    aoa.push([], head, ...body, [], foot);
+
+    return {
+      name: `Loan ${l.accountNumber || ""}`.trim(),
+      title: `Loan Repayment Schedule – ${l.accountNumber || ""}`,
+      aoa,
+      details,
+      head,
+      body,
+      foot,
+    };
   });
 }
 

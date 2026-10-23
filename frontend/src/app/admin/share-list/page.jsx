@@ -16,10 +16,9 @@ import {
 } from "lucide-react";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import ShareDetailsModal from "./ShareDetailsModal";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
+import { exportFile } from "../../../utils/exportFile";
 
 export default function AdminShareTable() {
   const { getToken } = useAuth();
@@ -138,7 +137,7 @@ export default function AdminShareTable() {
   };
 
   // Excel Export
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async (format = "excel") => {
     if (!shares.length) return toast.warn("No share data to export");
 
     const data = shares.map((s, i) => ({
@@ -156,22 +155,10 @@ export default function AdminShareTable() {
       Status: s.status || "Active",
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Shares");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const fileData = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(
-      fileData,
-      `Share_Accounts_${new Date().toISOString().slice(0, 10)}.xlsx`
-    );
-    toast.success("✅ Excel file downloaded");
+    await exportFile(format, "Share_Records", [
+      { name: "Shares", title: "Share Accounts", rows: data },
+    ]);
+    toast.success("✅ File downloaded!");
   };
 
   // Filtering
@@ -271,7 +258,9 @@ export default function AdminShareTable() {
               className="border border-gray-300 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
-          <ExcelButton onClick={handleDownloadExcel} />
+          <ExportButtons
+            onExport={handleDownloadExcel}
+          />
         </div>
 
         {/* Table */}

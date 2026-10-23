@@ -4,7 +4,7 @@ import axios from "axios";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, rdSheets } from "../../../utils/excelExport";
 
 export default function RDScheduleModal({ rdId, onClose }) {
@@ -96,8 +96,9 @@ export default function RDScheduleModal({ rdId, onClose }) {
           📅 RD Account – {rd.accountNumber}
         </h2>
         <div className="flex justify-center -mt-2 mb-5">
-          <ExcelButton
-            onClick={() => downloadExcel(`RD_${rd.accountNumber}`, rdSheets([rd]))}
+          <ExportButtons
+            fileName={`RD_${rd.accountNumber}`}
+            getSheets={() => rdSheets([rd])}
           />
         </div>
 

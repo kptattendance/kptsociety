@@ -14,9 +14,8 @@ import {
 import LoadOverlay from "../../../components/LoadOverlay";
 import CDScheduleModal from "./CDScheduleModal";
 import { toast } from "react-toastify";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
+import { exportFile } from "../../../utils/exportFile";
 
 export default function AdminCDList() {
   const { getToken } = useAuth();
@@ -202,7 +201,7 @@ export default function AdminCDList() {
     if (updated) fetchCDs();
   };
 
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async (format = "excel") => {
     if (cds.length === 0) {
       toast.info("No data available to export!");
       return;
@@ -228,17 +227,9 @@ export default function AdminCDList() {
       Status: cd.status || "-",
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "CD Records");
-    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, `CD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    await exportFile(format, "CD_Records", [
+      { name: "CD Records", title: "CD Accounts", rows: exportData },
+    ]);
   };
 
   return (
@@ -268,7 +259,9 @@ export default function AdminCDList() {
               className="w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
             />
           </div>
-          <ExcelButton onClick={handleDownloadExcel} />
+          <ExportButtons
+            onExport={handleDownloadExcel}
+          />
         </div>
 
         {/* ✅ Table */}

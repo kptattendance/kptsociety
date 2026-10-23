@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import PageHeader from "../../../components/PageHeader";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
 import { downloadExcel, cdSheets } from "../../../utils/excelExport";
 
 const ITEMS_PER_PAGE = 6;
@@ -81,7 +81,11 @@ const MemberCD = () => {
         title="My Compulsory Deposits"
         subtitle="Monthly installments and transactions"
         actions={
-          <ExcelButton onClick={() => downloadExcel("My_CD_Accounts", cdSheets(cds))} disabled={!cds.length} />
+          <ExportButtons
+            fileName={"My_CD_Accounts"}
+            getSheets={() => cdSheets(cds)}
+            disabled={!cds.length}
+          />
         }
       />
       {cds.map((cd) => (

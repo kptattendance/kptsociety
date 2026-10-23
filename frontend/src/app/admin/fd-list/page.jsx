@@ -15,10 +15,9 @@ import {
 import Swal from "sweetalert2";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { toast } from "react-toastify";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import FDWithdrawalModal from "./FDWithdrawalModal";
-import ExcelButton from "../../../components/ExcelButton";
+import ExportButtons from "../../../components/ExportButtons";
+import { exportFile } from "../../../utils/exportFile";
 
 export default function AdminFDTable() {
   const { getToken } = useAuth();
@@ -199,7 +198,7 @@ export default function AdminFDTable() {
     setSortConfig({ key, direction });
   };
 
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async (format = "excel") => {
     if (fds.length === 0) {
       toast.info("No data available to export!");
       return;
@@ -229,16 +228,9 @@ export default function AdminFDTable() {
       };
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "FD Records");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, `FD_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    await exportFile(format, "FD_Records", [
+      { name: "FD Records", title: "FD Accounts", rows: exportData },
+    ]);
 
     toast.success("✅ FD records exported successfully!");
   };
@@ -263,7 +255,9 @@ export default function AdminFDTable() {
             }}
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-indigo-400 outline-none"
           />
-          <ExcelButton onClick={handleDownloadExcel} />
+          <ExportButtons
+            onExport={handleDownloadExcel}
+          />
         </div>
 
         <div className="overflow-x-auto">

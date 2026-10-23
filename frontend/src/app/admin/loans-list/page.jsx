@@ -9,11 +9,9 @@ import LoanRepaymentModal from "./LoanRepaymentModal";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
 import { getLoanSummary } from "../../../utils/loanSummary";
-import ExcelButton from "../../../components/ExcelButton";
-import {
-  downloadExcel,
-  loanStatementSheets,
-} from "../../../utils/excelExport";
+import ExportButtons from "../../../components/ExportButtons";
+import { loanStatementSheets } from "../../../utils/excelExport";
+import { exportFile } from "../../../utils/exportFile";
 
 export default function AdminLoanList() {
   const { getToken } = useAuth();
@@ -247,7 +245,7 @@ export default function AdminLoanList() {
   };
 
   // ✅ Excel export
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async (format = "excel") => {
     const dataToExport = filteredLoans.length > 0 ? filteredLoans : loans;
     if (!dataToExport.length) {
       toast.info("No loan data available to export!");
@@ -277,8 +275,8 @@ export default function AdminLoanList() {
     }));
 
     // First sheet: all loans; then one full repayment schedule per loan
-    downloadExcel("Loan_Records", [
-      { name: "Loan Records", rows: exportData },
+    await exportFile(format, "Loan_Records", [
+      { name: "Loan Records", title: "Loan Accounts", rows: exportData },
       ...loanStatementSheets(dataToExport),
     ]);
   };
@@ -302,7 +300,9 @@ export default function AdminLoanList() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-orange-400 outline-none"
           />
-          <ExcelButton onClick={handleDownloadExcel} />
+          <ExportButtons
+            onExport={handleDownloadExcel}
+          />
         </div>
 
         {/* ✅ Table */}
