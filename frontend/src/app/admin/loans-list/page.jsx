@@ -8,10 +8,12 @@ import Swal from "sweetalert2";
 import LoanRepaymentModal from "./LoanRepaymentModal";
 import { toast } from "react-toastify";
 import LoadOverlay from "../../../components/LoadOverlay";
-import * as XLSX from "xlsx";
 import { getLoanSummary } from "../../../utils/loanSummary";
-import { saveAs } from "file-saver";
 import ExcelButton from "../../../components/ExcelButton";
+import {
+  downloadExcel,
+  loanStatementSheets,
+} from "../../../utils/excelExport";
 
 export default function AdminLoanList() {
   const { getToken } = useAuth();
@@ -274,17 +276,11 @@ export default function AdminLoanList() {
       Status: loan.status || "-",
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Loan Records");
-    worksheet["!cols"] = Object.keys(exportData[0]).map(() => ({ wch: 22 }));
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, `Loan_Records_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    // First sheet: all loans; then one full repayment schedule per loan
+    downloadExcel("Loan_Records", [
+      { name: "Loan Records", rows: exportData },
+      ...loanStatementSheets(dataToExport),
+    ]);
   };
 
   if (loading) return <LoadOverlay show={true} message={loadingMessage} />;

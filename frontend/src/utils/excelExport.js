@@ -13,8 +13,8 @@ export function downloadExcel(fileName, sheets) {
   const used = new Set();
 
   sheets
-    .filter((s) => s && s.rows && s.rows.length)
-    .forEach(({ name, rows }) => {
+    .filter((s) => s && ((s.rows && s.rows.length) || (s.aoa && s.aoa.length)))
+    .forEach(({ name, rows, aoa }) => {
       // Excel sheet names: max 31 chars, unique, no []:*?/\
       let base = String(name).replace(/[[\]:*?/\\]/g, " ").slice(0, 31);
       let sheetName = base;
@@ -22,11 +22,17 @@ export function downloadExcel(fileName, sheets) {
         sheetName = `${base.slice(0, 28)} ${i}`;
       used.add(sheetName);
 
-      const ws = XLSX.utils.json_to_sheet(rows);
-      ws["!cols"] = Object.keys(rows[0]).map((key) => ({
+      // `rows` = table of objects; `aoa` = free layout (array of row arrays)
+      const grid = aoa || [
+        Object.keys(rows[0]),
+        ...rows.map((r) => Object.values(r)),
+      ];
+      const ws = aoa ? XLSX.utils.aoa_to_sheet(aoa) : XLSX.utils.json_to_sheet(rows);
+      const width = Math.max(...grid.map((r) => r.length));
+      ws["!cols"] = Array.from({ length: width }, (_, c) => ({
         wch: Math.min(
           40,
-          Math.max(key.length, ...rows.map((r) => String(r[key] ?? "").length)) + 2,
+          Math.max(8, ...grid.map((r) => String(r[c] ?? "").length)) + 2,
         ),
       }));
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
@@ -75,9 +81,71 @@ export const profileSheets = (m) =>
     : [];
 
 // -------------------- Loans --------------------
+const r2 = (v) => Math.round(Number(v || 0) * 100) / 100;
+
+// One sheet per loan, laid out like the society's EMI sheet:
+// loan details on top, then the full repayment schedule.
+export function loanStatementSheets(loans = []) {
+  return loans.filter(Boolean).map((l) => {
+    const s = getLoanSummary(l);
+    const lumps = lumpSumsByInstallment(l);
+    const aoa = [
+      ["Loan Repayment Schedule"],
+      [],
+      ["Member Name", memberName(l), "", "Loan No", l.accountNumber || ""],
+      ["Loan Type", l.loanType || "", "", "Loan Amount", n(l.loanAmount)],
+      ["Rate of Interest (%)", n(l.interestRate), "", "Tenure (months)", n(l.tenure)],
+      ["Start Date", d(l.startDate), "", "Current EMI", n(s.currentEMI)],
+      ["Installments Paid", `${s.paidCount} of ${s.totalInstallments}`, "", "Outstanding", n(s.outstanding)],
+      ["Part Payments", n(s.totalLumpSum), "", "Status", l.loanStatus || "Active"],
+      [],
+      [
+        "S.No",
+        "Due Date",
+        "Monthly Installment",
+        "Interest",
+        "Principal",
+        "Part Payment",
+        "Part Payment Date",
+        "Balance",
+        "Status",
+      ],
+      [0, d(l.startDate), "", "", "", "", "", n(l.loanAmount), ""],
+    ];
+    (l.repayments || []).forEach((r, i) => {
+      const paid = lumps[i + 1] || [];
+      aoa.push([
+        i + 1,
+        d(r.dueDate),
+        r2(r.totalEMI),
+        r2(r.interest),
+        r2(r.principal),
+        paid.length ? r2(paid.reduce((t, p) => t + Number(p.amount || 0), 0)) : "",
+        paid.map((p) => d(p.paidAt)).join(", "),
+        r2(r.scheduleOS),
+        r.status,
+      ]);
+    });
+    const reps = l.repayments || [];
+    aoa.push(
+      [],
+      [
+        "Total",
+        "",
+        r2(reps.reduce((t, r) => t + Number(r.totalEMI || 0), 0)),
+        r2(reps.reduce((t, r) => t + Number(r.interest || 0), 0)),
+        r2(reps.reduce((t, r) => t + Number(r.principal || 0), 0)),
+        r2(s.totalLumpSum),
+      ],
+    );
+    return { name: `Loan ${l.accountNumber || ""}`.trim(), aoa };
+  });
+}
+
 export function loanSheets(loans = []) {
   const list = loans.filter(Boolean);
   return [
+    ...loanStatementSheets(list),
     {
       name: "Loans",
       rows: list.map((l) => {
@@ -98,26 +166,6 @@ export function loanSheets(loans = []) {
           Status: l.loanStatus || "Active",
           "Closed On": d(l.closedAt),
         };
-      }),
-    },
-    {
-      name: "Loan Schedule",
-      rows: list.flatMap((l) => {
-        const lumps = lumpSumsByInstallment(l);
-        return (l.repayments || []).map((r, i) => ({
-          "Account No": l.accountNumber,
-          "#": i + 1,
-          "Due Date": d(r.dueDate),
-          Principal: n(r.principal),
-          Interest: n(r.interest),
-          EMI: n(r.totalEMI),
-          "Part Payment": n(
-            (lumps[i + 1] || []).reduce((t, p) => t + Number(p.amount || 0), 0) ||
-              "",
-          ),
-          Balance: n(r.scheduleOS),
-          Status: r.status,
-        }));
       }),
     },
     {
